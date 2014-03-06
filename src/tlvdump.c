@@ -139,7 +139,7 @@ cleanup:
 int main(int argc, char **argv) {
 	int res = GT_UNKNOWN_ERROR;
 	uint8_t *header = NULL;
-	int header_len = 8;
+	int header_len = 0;
 	FILE *input = NULL;
 	GTTlvReader *reader = NULL;
 	int c;
