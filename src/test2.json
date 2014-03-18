@@ -1,0 +1,20 @@
+{
+	"tag": "0x0301",
+	"lenient": false,
+	"forward": false,
+	"nested": [
+		{
+			"tag": "0x01",
+			"strVal": "Jalalaba"
+		},
+		{
+			"tag": "0x02",
+			"strVal": "Test"
+		},
+		{
+			"tag": "0x03",
+			"hexVal": "cafebabe"
+		}
+	]
+}
+
