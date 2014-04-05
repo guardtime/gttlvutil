@@ -10,9 +10,9 @@ extern "C" {
 /* Determine the TLV size - TLV8 or TLV16 */
 #define GT_is_tlv_flag_tlv16(tlv) (*(tlv)->header & 0x80)
 /* If the TLV is unknown and lenient - should the value be forwarded after processing. */
-#define GT_is_tlv_flag_forward(tlv) (*(tlv)->header & 0x40)
+#define GT_is_tlv_flag_forward(tlv) (*(tlv)->header & 0x20)
 /* If the TLV is unknown but lenient then no error is produced */
-#define GT_is_tlv_flag_lenient(tlv) ((*(tlv)->header & 0x20))
+#define GT_is_tlv_flag_lenient(tlv) ((*(tlv)->header & 0x40))
 
 /*
  * Basic representation of a TLV. The payload itself may contain one or more TLVs.
