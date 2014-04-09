@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -74,14 +75,26 @@ cleanup:
 	return result;
 }
 
-int dumpReader(char *prefix, GTTlvReader *reader) {
+int dumpReader(int seek, char *prefix, GTTlvReader *reader) {
 	int res = GT_UNKNOWN_ERROR;
 	GTTlvReader *nestedReader = NULL;
 	GTTlv *tlv = NULL;
 	char *newPrefix = NULL;
+	int relativeSeek;
 	while (1) {
+		relativeSeek = reader->relativeOffset;
+
 		res = GTTlvReader_readTlv(reader, &tlv);
 		if (res != GT_OK) {
+			if (tlv != NULL) {
+				int i;
+				/* Assume we have the header. */
+				fprintf(stderr, "Invalid header: ");
+				for (i = 0; i < tlv->header_len; i++) {
+					fprintf(stderr, "%02x ", tlv->header[i]);
+				}
+				fprintf(stderr, "\n");
+			}
 			goto cleanup;
 		}
 
@@ -90,20 +103,21 @@ int dumpReader(char *prefix, GTTlvReader *reader) {
 			goto cleanup;
 		}
 
+		printf("%4d:", seek + relativeSeek);
 		if (tlv->type < 0xff) {
 			printf("%sTLV[0x%02x] ",prefix, tlv->type);
 		} else {
 			printf("%sTLV[0x%04x] ",prefix, tlv->type);
 		}
-		printf("%c%c len = %d: ", GT_is_tlv_flag_lenient(tlv) ? 'L' : '-', GT_is_tlv_flag_forward(tlv) ? 'F' : '-', tlv->payload_length);
+		printf("%c%c len = %lu: ", GT_is_tlv_flag_lenient(tlv) ? 'L' : '-', GT_is_tlv_flag_forward(tlv) ? 'F' : '-', tlv->payload_length);
 		if (isSubTlv(tlv->payload, tlv->payload_length)) {
-			newPrefix = strconcat(prefix, "     ");
+			newPrefix = strconcat(prefix, "    ");
 			printf("\n");
 			res = GTTlvTReader_initMem(tlv->payload, tlv->payload_length, &nestedReader);
 			if (res != GT_OK) {
 				goto cleanup;
 			}
-			dumpReader(newPrefix, nestedReader);
+			dumpReader(seek + relativeSeek, newPrefix, nestedReader);
 			GTTlvReader_free(nestedReader);
 			nestedReader = NULL;
 			free(newPrefix);
@@ -112,7 +126,7 @@ int dumpReader(char *prefix, GTTlvReader *reader) {
 			if (tlv->payload_length < 40) {
 				dumpBytesHex(stdout, tlv->payload, tlv->payload_length);
 			} else {
-				newPrefix = strconcat(prefix, "     ");
+				newPrefix = strconcat(prefix, "          ");
 
 				int i;
 				for (i = 0; i < tlv->payload_length; i++) {
@@ -138,7 +152,7 @@ cleanup:
 
 int main(int argc, char **argv) {
 	int res = GT_UNKNOWN_ERROR;
-	uint8_t *header = NULL;
+	char *header = NULL;
 	int header_len = 0;
 	FILE *input = NULL;
 	GTTlvReader *reader = NULL;
@@ -188,7 +202,7 @@ int main(int argc, char **argv) {
 	}
 	res = GTTlvTReader_initFile(input, &reader);
 
-	res = dumpReader("",reader);
+	res = dumpReader(0, "",reader);
 
 	if (res != GT_OK) {
 		goto cleanup;
