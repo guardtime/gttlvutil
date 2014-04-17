@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <getopt.h>
 #include <stdbool.h>
+#include <limits.h>
 
 #include "gt_tlv.h"
 #include "common.h"
@@ -75,7 +76,7 @@ cleanup:
 	return result;
 }
 
-int dumpReader(int seek, char *prefix, GTTlvReader *reader) {
+int dumpReader(int seek, char *prefix, int max_depth, GTTlvReader *reader) {
 	int res = GT_UNKNOWN_ERROR;
 	GTTlvReader *nestedReader = NULL;
 	GTTlv *tlv = NULL;
@@ -110,14 +111,14 @@ int dumpReader(int seek, char *prefix, GTTlvReader *reader) {
 			printf("%sTLV[0x%04x] ",prefix, tlv->type);
 		}
 		printf("%c%c len = %lu: ", GT_is_tlv_flag_lenient(tlv) ? 'L' : '-', GT_is_tlv_flag_forward(tlv) ? 'F' : '-', tlv->payload_length);
-		if (isSubTlv(tlv->payload, tlv->payload_length)) {
+		if (max_depth > 0 && isSubTlv(tlv->payload, tlv->payload_length)) {
 			newPrefix = strconcat(prefix, "    ");
 			printf("\n");
 			res = GTTlvTReader_initMem(tlv->payload, tlv->payload_length, &nestedReader);
 			if (res != GT_OK) {
 				goto cleanup;
 			}
-			dumpReader(seek + relativeSeek, newPrefix, nestedReader);
+			dumpReader(seek + relativeSeek + tlv->header_len, newPrefix, max_depth - 1, nestedReader);
 			GTTlvReader_free(nestedReader);
 			nestedReader = NULL;
 			free(newPrefix);
@@ -154,11 +155,12 @@ int main(int argc, char **argv) {
 	int res = GT_UNKNOWN_ERROR;
 	char *header = NULL;
 	int header_len = 0;
+	int max_depth = INT_MAX;
 	FILE *input = NULL;
 	GTTlvReader *reader = NULL;
 	int c;
 
-	while ((c = getopt(argc, argv, "hH:")) != -1) {
+	while ((c = getopt(argc, argv, "hH:d:")) != -1) {
 		switch(c) {
 			case 'H':
 				header_len = atoi(optarg);
@@ -167,9 +169,13 @@ int main(int argc, char **argv) {
 				printf("Usage:\n"
 						"  gttlvdump [-h] [-H number] tlvfile\n"
 						"    -h      This help message\n"
-						"    -H num  Constant header lenght.\n");
+						"    -H num  Constant header lenght.\n"
+						"    -d num  Max depth of nested elements\n");
 				res = GT_OK;
 				goto cleanup;
+			case 'd':
+				max_depth = atoi(optarg);
+				break;	
 			default:
 				fprintf(stderr, "Unknown parameter, try -h.");
 				goto cleanup;
@@ -202,7 +208,7 @@ int main(int argc, char **argv) {
 	}
 	res = GTTlvTReader_initFile(input, &reader);
 
-	res = dumpReader(0, "",reader);
+	res = dumpReader(0, "", max_depth, reader);
 
 	if (res != GT_OK) {
 		goto cleanup;
