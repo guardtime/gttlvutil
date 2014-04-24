@@ -18,6 +18,15 @@ static void dumpBytesHex(FILE *f, const uint8_t *data, const size_t data_length)
 	for (i = 0; i < data_length; i++) {
 		fprintf(f, "%02x", *(data + i));
 	}
+
+	if (data_length <= 8) {
+		uint64_t val = 0;
+		for (i = 0; i < data_length; i++) {
+			val = (val << 8) | data[i];
+		}
+
+		fprintf(f, " (dec = %lld)", val);
+	}
 }
 
 /*
