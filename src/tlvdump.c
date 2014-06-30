@@ -79,7 +79,9 @@ static bool isSubTlv(const uint8_t *data, const size_t data_length) {
 		tlv = NULL;
 	}
 	result = true;
+
 cleanup:
+
 	GTTlvReader_free(reader);
 	GTTlv_free(tlv);
 	return result;
