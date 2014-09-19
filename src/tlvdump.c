@@ -10,6 +10,8 @@
 #include "gt_tlv.h"
 #include "common.h"
 
+static bool compact = false;
+
 /*
  * Dump number of hex encoded bytes into stream.
  */
@@ -142,8 +144,12 @@ int dumpReader(int seek, char *prefix, int max_depth, GTTlvReader *reader) {
 
 				int i;
 				for (i = 0; i < tlv->payload_length; i++) {
-					if (i % 40 == 0) printf("\n%s", newPrefix);
-					printf("%02x ", *(tlv->payload + i));
+					if (compact) {
+						printf("%02x", tlv->payload[i]);
+					} else {
+						if (i % 40 == 0) printf("\n%s", newPrefix);
+						printf("%02x ", *(tlv->payload + i));
+					}
 				}
 
 				free(newPrefix);
@@ -171,7 +177,7 @@ int main(int argc, char **argv) {
 	GTTlvReader *reader = NULL;
 	int c;
 
-	while ((c = getopt(argc, argv, "hH:d:")) != -1) {
+	while ((c = getopt(argc, argv, "hH:d:c")) != -1) {
 		switch(c) {
 			case 'H':
 				header_len = atoi(optarg);
@@ -181,9 +187,13 @@ int main(int argc, char **argv) {
 						"  gttlvdump [-h] [-H number] tlvfile\n"
 						"    -h      This help message\n"
 						"    -H num  Constant header lenght.\n"
-						"    -d num  Max depth of nested elements\n");
+						"    -d num  Max depth of nested elements\n"
+						"    -c      Print binary data in compact format\n");
 				res = GT_OK;
 				goto cleanup;
+			case 'c':
+				compact = true;
+				break;
 			case 'd':
 				max_depth = atoi(optarg);
 				break;	
