@@ -222,13 +222,17 @@ int main(int argc, char **argv) {
 	res = dumpReader(0, "", max_depth, reader);
 
 	if (res != GT_OK) {
+		size_t cnt = 0;
+		unsigned char blob[1024];
+		printf("Unparsable:\n%d:\n", reader->relativeOffset);
+
 		goto cleanup;
 	}
 
 	res = GT_OK;
 
 cleanup:
-   if (input != stdin) {
+   if (input != NULL && input != stdin) {
 		fclose(input);
    }
    free(header);
