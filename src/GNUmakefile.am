@@ -1,5 +1,5 @@
 AM_CFLAGS=-g -O0
 bin_PROGRAMS=gttlvdump gttlvcreate
-gttlvdump_SOURCES=common.h gt_tlv.h gt_tlv.c tlvdump.c
+gttlvdump_SOURCES=tlvdump.h tlvdump.c fast_tlv.h fast_tlv.c
 gttlvcreate_SOURCES=common.h tlvcreate.c
 

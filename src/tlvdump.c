@@ -1,186 +1,142 @@
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
 #include <getopt.h>
-#include <stdbool.h>
-#include <limits.h>
 
-#include "gt_tlv.h"
-#include "common.h"
+#include "fast_tlv.h"
+#include "tlvdump.h"
 
-static bool compact = false;
+#define INDENT_LEN 4
 
-/*
- * Dump number of hex encoded bytes into stream.
- */
-static void dumpBytesHex(FILE *f, const uint8_t *data, const size_t data_length) {
-	size_t i;
-	for (i = 0; i < data_length; i++) {
-		fprintf(f, "%02x", *(data + i));
+struct conf_st {
+	const char *file_name;
+	size_t hdr_len;
+	size_t max_depth;
+	bool print_off;
+	bool wrap;
+	bool print_len;
+	bool convert;
+};
+
+static void printTlv(unsigned char *buf, size_t buf_len, KSI_FTLV *t, int level, struct conf_st *conf) {
+	int res;
+	unsigned char *ptr = buf + t->hdr_len;
+	size_t len = t->dat_len;
+	size_t prefix_len = 0;
+
+	if (conf->print_off) {
+		prefix_len += printf("%4llu:", (unsigned long long)t->off);
 	}
 
-	if (data_length <= 8) {
-		uint64_t val = 0;
-		for (i = 0; i < data_length; i++) {
-			val = (val << 8) | data[i];
+	prefix_len += printf("%*sTLV[0x%02x%s%s]: ", level * INDENT_LEN, "", t->tag, (t->is_fwd ? ",F" : ""), (t->is_nc ? ",N" : ""));
+	if (conf->print_len) {
+		prefix_len += printf("(len = %llu) ", (unsigned long long)t->dat_len);
+	}
+
+	/* Just check if it is a nested TLV. */
+	res = KSI_FTLV_memReadN(ptr, len, NULL, 0, NULL);
+
+	if (res != KSI_OK || (conf->max_depth && level + 1 >= conf->max_depth)) {
+		size_t i;
+
+		for (i = 0; i < len; i++) {
+			if (conf->wrap &&  i > 0 && i % 64 == 0 ) {
+				printf("\n%*s", prefix_len, "");
+			}
+			printf("%02x", ptr[i]);
 		}
 
-		fprintf(f, " (dec = %lld)", val);
-	}
-}
+		if (conf->convert && len <= 8) {
+			size_t val = 0;
+			for (i = 0; i < len; i++) {
+				val = (val << 8) | ptr[i];
+			}
+			printf(" (dec = %llu)", (unsigned long long)val); 
+		}
+		putchar('\n');
+	} else {
+		size_t off = t->off + t->hdr_len;
+		KSI_FTLV n;
 
-/*
- * Concat two strings and return new string. The new string needs to
- * be freed by the user.
- */
-char *strconcat(const char *str1, const char *str2) {
-	char *str = NULL;
+		putchar('\n');
+		while (len > 0) {
+			size_t consumed;
+			KSI_FTLV_memRead(ptr, len, &n);
+			n.off = off;
 
-	str = malloc(strlen(str1) + strlen(str2) + 1);
+			consumed = n.hdr_len + n.dat_len;
 
-	if (str != NULL) {
-		sprintf(str, "%s%s", str1, str2);
-	}
+			printTlv(ptr, consumed, &n, level + 1, conf);
 
-	return str;
-}
+			off += consumed;
 
-/*
- * Dump number of bytes into stream. If a character is ASCII print the
- * corresponding character otherwise escape the numeric value with a
- * backslash.
- */
-void dumpBytesAscii(FILE *f, const char *data, const size_t data_length) {
-	size_t i;
-	for (i = 0; i < data_length; i++) {
-		if (isascii(*(data + i))) {
-			fprintf(f,"%c", *(data + i));
-		} else {
-			fprintf(f,"\\%d", (unsigned char)*(data + i));
+			ptr += consumed;
+			len -= consumed;
 		}
 	}
 }
 
-static bool isSubTlv(const uint8_t *data, const size_t data_length) {
-	bool result = false;
-	GTTlvReader *reader = NULL;
-	GTTlv *tlv = NULL;
+static int read_from(FILE *f, struct conf_st *conf) {
+	int res;
+	char *header = NULL;
+	KSI_FTLV t;
+	unsigned char buf[0xffff + 4];
+	size_t len;
+	size_t off = 0;
 
-	if (data_length < 2) goto cleanup;
+	if (conf->hdr_len > 0) {
+		header = calloc(conf->hdr_len, 1);
+		if (header == NULL) {
+			res = KSI_OUT_OF_MEMORY;
+			goto cleanup;
+		}
+		if (fread(header, conf->hdr_len, 1, f) != 1) {
+			res = KSI_INVALID_FORMAT;
+			goto cleanup;
+		}
 
-	if (GTTlvTReader_initMem(data, data_length, &reader) != GT_OK) goto cleanup;
-
-	while (true) {
-		if (GTTlvReader_readTlv(reader, &tlv) != GT_OK) goto cleanup;
-		if (tlv == NULL) break;
-		/* This setup is unlikely with Guardtime TLV's, but nevertheless is a hack. */
-		if (tlv->type == 0 && tlv->payload_length == 0) goto cleanup;
-		GTTlv_free(tlv);
-		tlv = NULL;
+		for (len = 0; len < conf->hdr_len; len++) {
+			printf("%02x", header[len]);
+		}
+		printf("\n");
 	}
-	result = true;
 
-cleanup:
-
-	GTTlvReader_free(reader);
-	GTTlv_free(tlv);
-	return result;
-}
-
-int dumpReader(int seek, char *prefix, int max_depth, GTTlvReader *reader) {
-	int res = GT_UNKNOWN_ERROR;
-	GTTlvReader *nestedReader = NULL;
-	GTTlv *tlv = NULL;
-	char *newPrefix = NULL;
-	int relativeSeek;
 	while (1) {
-		relativeSeek = reader->relativeOffset;
-
-		res = GTTlvReader_readTlv(reader, &tlv);
-		if (res != GT_OK) {
-			if (tlv != NULL) {
-				int i;
-				/* Assume we have the header. */
-				fprintf(stderr, "Invalid header: ");
-				for (i = 0; i < tlv->header_len; i++) {
-					fprintf(stderr, "%02x ", tlv->header[i]);
-				}
-				fprintf(stderr, "\n");
-			}
-			goto cleanup;
+		res = KSI_FTLV_fileRead(f, buf, sizeof(buf), &len, &t);
+		if (res != KSI_OK) {
+			if (len == 0) break;
+			fprintf(stderr, "%s: Failed to parse %llu bytes\n", conf->file_name, (unsigned long long) len);
+			break;
 		}
 
-		if (tlv == NULL) {
-			res = GT_OK;
-			goto cleanup;
-		}
+		t.off = off;
 
-		printf("%4d:", seek + relativeSeek);
-		if (tlv->type < 0xff) {
-			printf("%sTLV[0x%02x] ",prefix, tlv->type);
-		} else {
-			printf("%sTLV[0x%04x] ",prefix, tlv->type);
-		}
-		printf("%c%c len = %lu: ", GT_is_tlv_flag_lenient(tlv) ? 'L' : '-', GT_is_tlv_flag_forward(tlv) ? 'F' : '-', tlv->payload_length);
-		if (max_depth > 0 && isSubTlv(tlv->payload, tlv->payload_length)) {
-			newPrefix = strconcat(prefix, "    ");
-			printf("\n");
-			res = GTTlvTReader_initMem(tlv->payload, tlv->payload_length, &nestedReader);
-			if (res != GT_OK) {
-				goto cleanup;
-			}
-			dumpReader(seek + relativeSeek + tlv->header_len, newPrefix, max_depth - 1, nestedReader);
-			GTTlvReader_free(nestedReader);
-			nestedReader = NULL;
-			free(newPrefix);
-			newPrefix = NULL;
-		} else {
-			if (tlv->payload_length < 40) {
-				dumpBytesHex(stdout, tlv->payload, tlv->payload_length);
-			} else {
-				newPrefix = strconcat(prefix, "          ");
-
-				int i;
-				for (i = 0; i < tlv->payload_length; i++) {
-					if (compact) {
-						printf("%02x", tlv->payload[i]);
-					} else {
-						if (i % 40 == 0) printf("\n%s", newPrefix);
-						printf("%02x ", *(tlv->payload + i));
-					}
-				}
-
-				free(newPrefix);
-				newPrefix = NULL;
-			}
-			printf("\n");
-		}
-
-		GTTlv_free(tlv);
-		tlv = NULL;
+		printTlv(buf, len, &t, 0, conf);
+		off += len;
 	}
+
+	res = KSI_OK;
+
 cleanup:
-	GTTlvReader_free(nestedReader);
-	GTTlv_free(tlv);
-	free(newPrefix);
+
+	if (header != NULL) free(header);
+
 	return res;
 }
 
 int main(int argc, char **argv) {
-	int res = GT_UNKNOWN_ERROR;
-	char *header = NULL;
-	int header_len = 0;
-	int max_depth = INT_MAX;
-	FILE *input = NULL;
-	GTTlvReader *reader = NULL;
+	int res;
 	int c;
+	FILE *input = NULL;
+	size_t i;
+	struct conf_st conf;
 
-	while ((c = getopt(argc, argv, "hH:d:c")) != -1) {
+	memset(&conf, 0, sizeof(conf));
+
+	while ((c = getopt(argc, argv, "hH:d:xwyz")) != -1) {
 		switch(c) {
 			case 'H':
-				header_len = atoi(optarg);
+				conf.hdr_len = atoi(optarg);
 				break;
 			case 'h':
 				printf("Usage:\n"
@@ -188,65 +144,58 @@ int main(int argc, char **argv) {
 						"    -h      This help message\n"
 						"    -H num  Constant header lenght.\n"
 						"    -d num  Max depth of nested elements\n"
-						"    -c      Print binary data in compact format\n");
-				res = GT_OK;
+						"    -x      Display file offset for every TLV\n"
+						"    -w      Wrap the output.\n"
+						"    -y      Show content length.\n"
+						"    -z      Convert payload with length les than 8 bytes to decimal.\n"
+				);
+				res = KSI_OK;
 				goto cleanup;
-			case 'c':
-				compact = true;
-				break;
 			case 'd':
-				max_depth = atoi(optarg);
-				break;	
+				conf.max_depth = atoi(optarg);
+				break;
+			case 'x':
+				conf.print_off = true;
+				break;
+			case 'w':
+				conf.wrap = true;
+				break;
+			case 'y':
+				conf.print_len = true;
+				break;
+			case 'z':
+				conf.convert = true;
+				break;
 			default:
 				fprintf(stderr, "Unknown parameter, try -h.");
 				goto cleanup;
 		}
 	}
 
-	if (optind + 1 == argc) {
-		if ((input = fopen(argv[optind], "rb")) == NULL) {
-			fprintf(stderr, "Unable to open file %s\n", argv[1]);
-			res = GT_IO_ERROR;
-			goto cleanup;
-		}
-	} else if (optind >= argc){
-		input = stdin;
+	if (optind >= argc) {
+		res = read_from(stdin, &conf);
+		if (res != KSI_OK) goto cleanup;
 	} else {
-		fprintf(stderr, "Unknown parameters, try -h\n");
-		goto cleanup;
-	}
+		size_t i;
+		for (i = 0; optind + i < argc; i++) {
+			conf.file_name = argv[optind + i];
 
-	if (header_len > 0) {
-		header = calloc(header_len, 1);
-		if (fread(header, header_len, 1, input) != 1) {
-			res = GT_FORMAT_ERROR;
-			goto cleanup;
+			input = fopen(conf.file_name, "rb");
+			if (input == NULL) {
+				fprintf(stderr, "%s: Unable to open file.\n", argv[optind + i]);
+				continue;
+			}
+
+			res = read_from(input, &conf);
+			fclose(input);
+			input = NULL;
+			if (res != KSI_OK) goto cleanup;
 		}
-		printf("Header: ");
-		dumpBytesAscii(stdout, header, header_len);
-		printf("\n");
-
 	}
-	res = GTTlvTReader_initFile(input, &reader);
-
-	res = dumpReader(0, "", max_depth, reader);
-
-	if (res != GT_OK) {
-		size_t cnt = 0;
-		unsigned char blob[1024];
-		printf("Unparsable:\n%d:\n", reader->relativeOffset);
-
-		goto cleanup;
-	}
-
-	res = GT_OK;
 
 cleanup:
-   if (input != NULL && input != stdin) {
-		fclose(input);
-   }
-   free(header);
-   GTTlvReader_free(reader);
-   return res;
-}
 
+	if (input != NULL) fclose(input);
+
+	return 0;
+}
