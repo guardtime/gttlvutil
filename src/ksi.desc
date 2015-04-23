@@ -2,11 +2,11 @@
 0801.02			Aggregation Time.
 0801.03			Chain index.
 0801.04			Input data.
-0801.05			Input hash.
+0801.05			Input imprint.
 0801.06			Aggregation algorithm.
 0801.07			Left link.
 0801.07.01		Level correction.
-0801.07.02		Sibling hash.
+0801.07.02		Sibling imprint.
 0801.07.03		Meta-hash.
 0801.07.04		Metadata.
 0801.07.04.01	Client id.
@@ -15,7 +15,7 @@
 0801.07.04.04	Request time.
 0801.08			Right link.
 0801.08.01		Level correction.
-0801.08.02		Sibling hash.
+0801.08.02		Sibling imprint.
 0801.08.03		Meta-hash.
 0801.08.04		Metadata.
 0801.08.04.01	Client id.
@@ -25,19 +25,19 @@
 0802			Calendar chain.
 0802.01			Publication time.
 0802.02			Aggregation time.
-0802.05			Input hash.
-0802.07			Left link.
-0802.08			Right link.
+0802.05			Input imprint.
+0802.07			Left link imprint.
+0802.08			Right link imprint.
 0803			Publication record.
 0803.10			Published data.
 0803.10.02		Published time.
-0803.10.04		Published hash.
+0803.10.04		Published imprint.
 0803.09			Publication reference.
 0803.0a			Publication repositori URI.
 0804 			Aggregation auth record.
 0804.02			Aggregation time.
 0804.03			Chain index.
-0804.05			Input hash.
+0804.05			Input imprint.
 0804.0b			Signed data.
 0804.0b.01		Signature type.
 0804.0b.02		Signature value.
@@ -46,7 +46,7 @@
 0805			Calendar auth record.
 0805.10			Published data.
 0805.10.02		Published time.
-0805.10.04		Published hash.
+0805.10.04		Published imprint.
 0805.0b			Signature data.
 0805.0b.01		Signature type.
 0805.0b.02		Signature value.
@@ -62,13 +62,13 @@
 0703			Publication record.
 0703.10			Published data.
 0703.10.02		Published time.
-0703.10.04		Published hash.
+0703.10.04		Published imprint.
 0703.09			Publication reference.
 0704			Publications file signature.
 0806			RFC3161 compatibility record.
 0806.02			Aggregation time.
 0806.03			Chain index.
-0806.05			Input hash.
+0806.05			Input imprint.
 0806.10			TST info prefix.
 0806.11			TST info suffix.
 0806.12			TST info hash algorithm.
@@ -83,7 +83,7 @@
 0200.1f			HMAC.
 0201			Aggregation request.
 0201.01			Request id.
-0201.02			Request hash.
+0201.02			Request imprint.
 0201.03			Request level.
 0201.10			Config.
 0201.10.01		Max level.
@@ -123,10 +123,4 @@
 0303			Extension error.
 0303.04			Status.
 0303.05			Error message.
-
 0800			Uni-signature PDU.
-
-
-
-
-

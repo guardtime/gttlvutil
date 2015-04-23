@@ -51,6 +51,12 @@ static int parseHdr(const unsigned char *hdr, size_t hdrLen, struct fast_tlv_s *
 		t->dat_len = hdr[1];
 	}
 
+	/* Eliminate false positives. */
+	if (t->tag == 0 && t->dat_len == 0) {
+		res = KSI_INVALID_FORMAT;
+		goto cleanup;
+	}
+
 	t->hdr_len = hdrLen;
 	t->is_nc = (hdr[0] & KSI_TLV_MASK_LENIENT) != 0;
 	t->is_fwd = (hdr[0] & KSI_TLV_MASK_FORWARD) != 0;
@@ -103,6 +109,7 @@ int KSI_FTLV_fileRead(FILE *fd, unsigned char *buf, size_t len, size_t *consumed
 		if (res != KSI_OK) goto cleanup;
 	}
 
+	/* Make sure the TLV fits into the original buffer. */
 	if (len < t->hdr_len + t->dat_len) {
 		res = KSI_BUFFER_OVERFLOW;
 		goto cleanup;
