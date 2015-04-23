@@ -227,6 +227,8 @@ int main(int argc, char **argv) {
 cleanup:
 
 	if (input != NULL) fclose(input);
+	if (conf.use_desc) desc_cleanup(&conf.desc);
+
 
 	return 0;
 }

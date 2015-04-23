@@ -5,11 +5,18 @@
 #include "tlvdump.h"
 #include "desc.h"
 
-void chain_map_free(struct desc_st *map) {
-	if (map != NULL) {
-		if (map->val != NULL) free(map->val);
-		free(map);
-	} 
+void desc_cleanup(struct desc_st *desc) {
+	if (desc != NULL) {
+		size_t i;
+		if (desc->val != NULL) free(desc->val);
+		for (i = 0; i < sizeof(desc->map) / sizeof(struct desc_st *); i++) {
+			if (desc->map[i] != NULL) {
+				desc_cleanup(desc->map[i]);
+				free(desc->map[i]);
+				desc->map[i] = NULL;
+			}
+		}
+	}
 }
 
 static int desc_get(struct desc_st *in, unsigned tag, bool create, struct desc_st **out) {
