@@ -3,8 +3,9 @@
 #include <string.h>
 #include <getopt.h>
 
-#include "fast_tlv.h"
 #include "tlvdump.h"
+#include "fast_tlv.h"
+#include "desc.h"
 
 #define INDENT_LEN 4
 
@@ -16,13 +17,48 @@ struct conf_st {
 	bool wrap;
 	bool print_len;
 	bool convert;
+	bool use_desc;
+	struct desc_st desc;
 };
 
-static void printTlv(unsigned char *buf, size_t buf_len, KSI_FTLV *t, int level, struct conf_st *conf) {
+const char *descFile = DATA_DIR "ksi.desc";
+
+static print_raw_data(unsigned char *buf, size_t len, size_t prefix_len, struct conf_st *conf) {
+	size_t i;
+
+	for (i = 0; i < len; i++) {
+		if (conf->wrap &&  i > 0 && i % 64 == 0 ) {
+			printf("\n%*s", prefix_len, "");
+		}
+		printf("%02x", buf[i]);
+	}
+
+	if (conf->convert && len <= 8) {
+		size_t val = 0;
+		for (i = 0; i < len; i++) {
+			val = (val << 8) | buf[i];
+		}
+		printf(" (dec = %llu)", (unsigned long long)val); 
+	}
+	putchar('\n');
+}
+
+static void printTlv(unsigned char *buf, size_t buf_len, KSI_FTLV *t, int level, struct conf_st *conf, struct desc_st *desc) {
 	int res;
 	unsigned char *ptr = buf + t->hdr_len;
 	size_t len = t->dat_len;
 	size_t prefix_len = 0;
+	struct desc_st *sub = NULL;
+
+	if (conf->use_desc) {
+		if (desc == NULL) {
+			desc_find(&conf->desc, t->tag, &desc);
+		}
+
+		if (desc != NULL && desc->val != NULL) {
+			printf("%*s# %s\n", level * INDENT_LEN, "", desc->val);
+		}
+	}
 
 	if (conf->print_off) {
 		prefix_len += printf("%4llu:", (unsigned long long)t->off);
@@ -37,23 +73,7 @@ static void printTlv(unsigned char *buf, size_t buf_len, KSI_FTLV *t, int level,
 	res = KSI_FTLV_memReadN(ptr, len, NULL, 0, NULL);
 
 	if (res != KSI_OK || (conf->max_depth && level + 1 >= conf->max_depth)) {
-		size_t i;
-
-		for (i = 0; i < len; i++) {
-			if (conf->wrap &&  i > 0 && i % 64 == 0 ) {
-				printf("\n%*s", prefix_len, "");
-			}
-			printf("%02x", ptr[i]);
-		}
-
-		if (conf->convert && len <= 8) {
-			size_t val = 0;
-			for (i = 0; i < len; i++) {
-				val = (val << 8) | ptr[i];
-			}
-			printf(" (dec = %llu)", (unsigned long long)val); 
-		}
-		putchar('\n');
+		print_raw_data(ptr, len, prefix_len, conf);
 	} else {
 		size_t off = t->off + t->hdr_len;
 		KSI_FTLV n;
@@ -64,9 +84,11 @@ static void printTlv(unsigned char *buf, size_t buf_len, KSI_FTLV *t, int level,
 			KSI_FTLV_memRead(ptr, len, &n);
 			n.off = off;
 
+			desc_find(desc, n.tag, &sub);
+
 			consumed = n.hdr_len + n.dat_len;
 
-			printTlv(ptr, consumed, &n, level + 1, conf);
+			printTlv(ptr, consumed, &n, level + 1, conf, sub);
 
 			off += consumed;
 
@@ -111,7 +133,7 @@ static int read_from(FILE *f, struct conf_st *conf) {
 
 		t.off = off;
 
-		printTlv(buf, len, &t, 0, conf);
+		printTlv(buf, len, &t, 0, conf, NULL);
 		off += len;
 	}
 
@@ -133,7 +155,7 @@ int main(int argc, char **argv) {
 
 	memset(&conf, 0, sizeof(conf));
 
-	while ((c = getopt(argc, argv, "hH:d:xwyz")) != -1) {
+	while ((c = getopt(argc, argv, "hH:d:xwyza")) != -1) {
 		switch(c) {
 			case 'H':
 				conf.hdr_len = atoi(optarg);
@@ -141,13 +163,14 @@ int main(int argc, char **argv) {
 			case 'h':
 				printf("Usage:\n"
 						"  gttlvdump [-h] [-H number] tlvfile\n"
-						"    -h      This help message\n"
-						"    -H num  Constant header lenght.\n"
-						"    -d num  Max depth of nested elements\n"
-						"    -x      Display file offset for every TLV\n"
-						"    -w      Wrap the output.\n"
-						"    -y      Show content length.\n"
-						"    -z      Convert payload with length les than 8 bytes to decimal.\n"
+						"    -h       This help message\n"
+						"    -H num   Constant header lenght.\n"
+						"    -d num   Max depth of nested elements\n"
+						"    -x       Display file offset for every TLV\n"
+						"    -w       Wrap the output.\n"
+						"    -y       Show content length.\n"
+						"    -z       Convert payload with length les than 8 bytes to decimal.\n"
+						"    -a       Annotate known KSI elements.\n"
 				);
 				res = KSI_OK;
 				goto cleanup;
@@ -165,6 +188,14 @@ int main(int argc, char **argv) {
 				break;
 			case 'z':
 				conf.convert = true;
+				break;
+			case 'a':
+				res = desc_init(&conf.desc, DATA_DIR "ksi.desc");
+				if (res != KSI_OK) {
+					fprintf(stderr, "Unable to parse description file '%s' (error = %d) -  option ignored.\n", optarg, res);
+				} else {
+					conf.use_desc = true;
+				}
 				break;
 			default:
 				fprintf(stderr, "Unknown parameter, try -h.");

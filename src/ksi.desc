@@ -13,7 +13,7 @@
 0801.07.04.02	Machine id.
 0801.07.04.03	Sequence nr.
 0801.07.04.04	Request time.
-0801.08			Left link.
+0801.08			Right link.
 0801.08.01		Level correction.
 0801.08.02		Sibling hash.
 0801.08.03		Meta-hash.
@@ -123,6 +123,10 @@
 0303			Extension error.
 0303.04			Status.
 0303.05			Error message.
+
 0800			Uni-signature PDU.
+
+
+
 
 

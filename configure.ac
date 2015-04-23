@@ -1,6 +1,5 @@
 AC_INIT([gt-tlv-util], [0.0.1], [support@guardtime.com])
 AC_CONFIG_SRCDIR([src/common.h])
-AC_CONFIG_HEADERS([config.h])
 
 AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 
@@ -18,8 +17,6 @@ AC_TYPE_SIZE_T
 AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT8_T
-
-# Checks for library functions.
 
 AC_CONFIG_FILES([GNUmakefile src/GNUmakefile])
 AC_OUTPUT
