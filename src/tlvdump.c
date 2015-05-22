@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#include <stdint.h>
+#include <time.h>
 
 #include "tlvdump.h"
 #include "fast_tlv.h"
@@ -19,10 +21,28 @@ struct conf_st {
 	bool convert;
 	bool use_desc;
 	bool type_strict;
+	bool pretty_val;
+	bool pretty_key;
 	struct desc_st desc;
 };
 
 const char *descFile = DATA_DIR "ksi.desc";
+
+static char *hash_alg[] = {
+	"sha-1", "sha2-256", "ripemd-160", "sha2-224", "sha2-384", "sha2-512", "ripemd-256", "sha3-224", "sha3-256", "sha3-512", "sm3"
+};
+
+static uint64_t get_uint64(unsigned char *buf, size_t len) {
+	uint64_t val = 0;
+	size_t i;
+
+	for (i = 0; i < len; i++) {
+		val = (val << 8) | buf[i];
+	}
+
+	return val;
+}
+
 
 static print_raw_data(unsigned char *buf, size_t len, size_t prefix_len, struct conf_st *conf) {
 	size_t i;
@@ -36,19 +56,21 @@ static print_raw_data(unsigned char *buf, size_t len, size_t prefix_len, struct 
 
 	if (conf->convert && len <= 8) {
 		size_t val = 0;
-		for (i = 0; i < len; i++) {
-			val = (val << 8) | buf[i];
-		}
-		printf(" (dec = %llu)", (unsigned long long)val); 
+		printf(" (dec = %llu)", (unsigned long long)get_uint64(buf, len)); 
 	}
 	putchar('\n');
 }
 
-static int check_nested(unsigned char *buf, size_t buf_len, struct conf_st *conf, struct desc_st *desc) {
+static int get_payload_type(unsigned char *buf, size_t buf_len, struct conf_st *conf, struct desc_st *desc) {
 	int res = KSI_UNKNOWN_ERROR;
+	int type = TLV_RAW;
 	size_t len = buf_len;
 	unsigned char *ptr = buf;
 
+	if (desc != NULL) {
+		type = desc->type;
+		goto cleanup;
+	}
 
 	res = KSI_FTLV_memReadN(ptr, len, NULL, 0, NULL);
 	if (res != KSI_OK) goto cleanup;
@@ -71,23 +93,68 @@ static int check_nested(unsigned char *buf, size_t buf_len, struct conf_st *conf
 				desc_find(&conf->desc, n.tag, &d);
 			}
 	
-			/* If still not found, return an error, as this is an unexpected subtype. */	
-			if (d == NULL) {
-				res = KSI_INVALID_FORMAT;
-				goto cleanup;
-			}
+			/* If still not found, mark as raw. */
+			if (d == NULL) goto cleanup;
 
 			len -= n.hdr_len + n.dat_len;
 			ptr += n.hdr_len + n.dat_len;
 		}
 	}
 
-	res = KSI_OK;
+	type = TLV_COMPOSITE;
 
 cleanup:
 
-	return res;
+	return type;
 }
+
+static void print_int(unsigned char *buf, size_t len, size_t prefix_len, struct conf_st *conf) {
+
+	if (len > 8) {
+		printf("0x");
+		print_raw_data(buf, len, prefix_len, conf);
+	} else {
+		printf("%llu\n", get_uint64(buf, len));
+	}
+}
+
+static void print_str(unsigned char *buf, size_t len, size_t prefix_len, struct conf_st *conf) {
+	size_t i;
+	putchar('"');
+	for (i = 0; i < len; i++) {
+		if (isprint(buf[i])) putchar(buf[i]);
+		else printf("\\%u", buf[i]);
+	}
+	putchar('"');
+	putchar('\n');
+}
+
+static void print_imprint(unsigned char *buf, size_t len, size_t prefix_len, struct conf_st *conf) {
+	if (len > 0) {
+		if (buf[0] < sizeof(hash_alg) / sizeof(char *)) {
+			printf("%s:", hash_alg[0]);
+			print_raw_data(buf + 1, len - 1, prefix_len, conf);
+		} else {
+			print_raw_data(buf, len, prefix_len, conf);
+		}
+	}
+}
+
+static void print_time(unsigned char *buf, size_t len, size_t prefix_len, struct conf_st *conf) {
+	if (len > 8) {
+		print_raw_data(buf, len, prefix_len, conf);
+	} else {
+		char tmp[0xff];
+		struct tm *tm_info;
+		time_t t = (time_t) get_uint64(buf, len);
+		tm_info = gmtime(&t);
+			
+		strftime(tmp, sizeof(tmp), "%Y-%m-%d %H:%M:%S %Z", tm_info);
+
+		printf("%s\n", tmp);
+	}
+}
+
 
 static void printTlv(unsigned char *buf, size_t buf_len, KSI_FTLV *t, int level, struct conf_st *conf, struct desc_st *desc) {
 	int res;
@@ -95,18 +162,18 @@ static void printTlv(unsigned char *buf, size_t buf_len, KSI_FTLV *t, int level,
 	size_t len = t->dat_len;
 	size_t prefix_len = 0;
 	struct desc_st *sub = NULL;
+	int type;
+	bool limited = false;
 
-	/* Find the description only if needed (annotations or type strictness) */
-	if (conf->use_desc || conf->type_strict) {
-		if (desc == NULL) {
-			desc_find(&conf->desc, t->tag, &desc);
-		}
+	/* Find the description. */
+	if (desc == NULL) {
+		desc_find(&conf->desc, t->tag, &desc);
 	}
 
 	/* Print annotations? */
 	if (conf->use_desc) {
 		if (desc != NULL && desc->val != NULL) {
-			printf("%*s# %s\n", level * INDENT_LEN, "", desc->val);
+			printf("%*s# %s.\n", level * INDENT_LEN, "", desc->val);
 		}
 	}
 
@@ -118,17 +185,20 @@ static void printTlv(unsigned char *buf, size_t buf_len, KSI_FTLV *t, int level,
 	/* Print only the indent. */
 	prefix_len += printf("%*s", level * INDENT_LEN, "");
 
-	prefix_len += printf("TLV[0x%02x%s%s]: ", t->tag, (t->is_fwd ? ",F" : ""), (t->is_nc ? ",N" : ""));
+	if (conf->pretty_key && desc != NULL && desc->val != NULL && *desc->val) {
+		prefix_len += printf("%s: ", desc->val);
+	} else {
+		prefix_len += printf("TLV[0x%02x%s%s]: ", t->tag, (t->is_fwd ? ",F" : ""), (t->is_nc ? ",N" : ""));
+	}
 	if (conf->print_len) {
 		prefix_len += printf("(len = %llu) ", (unsigned long long)t->dat_len);
 	}
 
-	/* Just check if it is a nested TLV. */
-	res = check_nested(ptr, len, conf, desc);
+	limited = conf->max_depth != 0 && level + 1 >= conf->max_depth;
 
-	if (res != KSI_OK || (conf->max_depth && level + 1 >= conf->max_depth)) {
-		print_raw_data(ptr, len, prefix_len, conf);
-	} else {
+	type = get_payload_type(ptr, len, conf, desc);
+
+	if (type == TLV_COMPOSITE && !limited) {
 		size_t off = t->off + t->hdr_len;
 		KSI_FTLV n;
 
@@ -149,6 +219,23 @@ static void printTlv(unsigned char *buf, size_t buf_len, KSI_FTLV *t, int level,
 			ptr += consumed;
 			len -= consumed;
 		}
+	} else if (type != TLV_RAW && conf->pretty_val && !limited) {
+		switch (type) {
+			case TLV_INT:
+				print_int(ptr, len, prefix_len, conf);
+				break;
+			case TLV_STR:
+				print_str(ptr, len, prefix_len, conf);
+				break;
+			case TLV_TIME:
+				print_time(ptr, len, prefix_len, conf);
+				break;
+			case TLV_IMPRINT:
+				print_imprint(ptr, len, prefix_len, conf);
+				break;
+		}
+	} else {
+		print_raw_data(ptr, len, prefix_len, conf);
 	}
 }
 
@@ -206,10 +293,11 @@ int main(int argc, char **argv) {
 	FILE *input = NULL;
 	size_t i;
 	struct conf_st conf;
+	bool desc_free = false;
 
 	memset(&conf, 0, sizeof(conf));
 
-	while ((c = getopt(argc, argv, "hH:d:xwyzas")) != -1) {
+	while ((c = getopt(argc, argv, "hH:d:xwyzaspP")) != -1) {
 		switch(c) {
 			case 'H':
 				conf.hdr_len = atoi(optarg);
@@ -226,6 +314,8 @@ int main(int argc, char **argv) {
 						"    -z       Convert payload with length les than 8 bytes to decimal.\n"
 						"    -a       Annotate known KSI elements.\n"
 						"    -s       Strict types - do not parse TLV's with unknown types.\n"
+						"    -p       Pretty print values.\n"
+						"    -P       Pretty print keys.\n"
 				);
 				res = KSI_OK;
 				goto cleanup;
@@ -250,6 +340,12 @@ int main(int argc, char **argv) {
 			case 's':
 				conf.type_strict = true;
 				break;
+			case 'p':
+				conf.pretty_val = true;
+				break;
+			case 'P':
+				conf.pretty_key = true;
+				break;
 			default:
 				fprintf(stderr, "Unknown parameter, try -h.");
 				goto cleanup;
@@ -257,13 +353,12 @@ int main(int argc, char **argv) {
 	}
 
 	/* Initialize the description structure. */
-	if (conf.use_desc || conf.type_strict) {
-		res = desc_init(&conf.desc, DATA_DIR "ksi.desc");
-		if (res != KSI_OK) {
-			fprintf(stderr, "%s: Unable to read description file.\n", DATA_DIR "ksi.desc");
-			goto cleanup;
-		}
+	res = desc_init(&conf.desc, DATA_DIR "ksi.desc");
+	if (res != KSI_OK) {
+		fprintf(stderr, "%s: Unable to read description file.\n", DATA_DIR "ksi.desc");
+		goto cleanup;
 	}
+	desc_free = true;
 
 	/* If there are no input files, read from the standard in. */
 	if (optind >= argc) {
@@ -292,7 +387,7 @@ int main(int argc, char **argv) {
 cleanup:
 
 	if (input != NULL) fclose(input);
-	if (conf.use_desc) desc_cleanup(&conf.desc);
+	if (desc_free) desc_cleanup(&conf.desc);
 
 
 	return 0;
