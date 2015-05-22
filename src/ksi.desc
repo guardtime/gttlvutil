@@ -1,126 +1,126 @@
-0801		 	Aggregation chain.
-0801.02			Aggregation Time.
-0801.03			Chain index.
-0801.04			Input data.
-0801.05			Input imprint.
-0801.06			Aggregation algorithm.
-0801.07			Left link.
-0801.07.01		Level correction.
-0801.07.02		Sibling imprint.
-0801.07.03		Meta-hash.
-0801.07.04		Metadata.
-0801.07.04.01	Client id.
-0801.07.04.02	Machine id.
-0801.07.04.03	Sequence nr.
-0801.07.04.04	Request time.
-0801.08			Right link.
-0801.08.01		Level correction.
-0801.08.02		Sibling imprint.
-0801.08.03		Meta-hash.
-0801.08.04		Metadata.
-0801.08.04.01	Client id.
-0801.08.04.02	Machine id.
-0801.08.04.03	Sequence nr.
-0801.08.04.04	Request time.
-0802			Calendar chain.
-0802.01			Publication time.
-0802.02			Aggregation time.
-0802.05			Input imprint.
-0802.07			Left link imprint.
-0802.08			Right link imprint.
-0803			Publication record.
-0803.10			Published data.
-0803.10.02		Published time.
-0803.10.04		Published imprint.
-0803.09			Publication reference.
-0803.0a			Publication repositori URI.
-0804 			Aggregation auth record.
-0804.02			Aggregation time.
-0804.03			Chain index.
-0804.05			Input imprint.
-0804.0b			Signed data.
-0804.0b.01		Signature type.
-0804.0b.02		Signature value.
-0804.0b.03		Certificate id.
-0804.0b.04		Certificate repository URI.
-0805			Calendar auth record.
-0805.10			Published data.
-0805.10.02		Published time.
-0805.10.04		Published imprint.
-0805.0b			Signature data.
-0805.0b.01		Signature type.
-0805.0b.02		Signature value.
-0805.0b.03		Certificate id.
-0805.0b.04		Cert repository URI.
-0701			Publicationsfile header.
-0701.01			Vesion
-0701.02			Time created.
-0701.03			Repository URI.
-0702			Certificate record.
-0702.01			Certificate id.
-0702.02			Certificate.
-0703			Publication record.
-0703.10			Published data.
-0703.10.02		Published time.
-0703.10.04		Published imprint.
-0703.09			Publication reference.
-0704			Publications file signature.
-0806			RFC3161 compatibility record.
-0806.02			Aggregation time.
-0806.03			Chain index.
-0806.05			Input imprint.
-0806.10			TST info prefix.
-0806.11			TST info suffix.
-0806.12			TST info hash algorithm.
-0806.13			Signed attributes prefix.
-0806.14			Signed attributes suffix.
-0806.15			Signed attributed hash algorithm.
-0200			Aggregation PDU
-0200.01			PDU header.
-0200.01.01		Login id.
-0200.01.02		Instance id.
-0200.01.03		Message id.
-0200.1f			HMAC.
-0201			Aggregation request.
-0201.01			Request id.
-0201.02			Request imprint.
-0201.03			Request level.
-0201.10			Config.
-0201.10.01		Max level.
-0201.10.02		Aggregation algorithm.
-0201.10.03		Aggregation period.
-0201.10.04		Parent URI.
-0202			Aggregation response.
-0202.01			Request id.
-0202.04			Status.
-0202.05			Error message.
-0202.10			Config
-0202.10.01		Max level.
-0202.10.02		Aggregation algorithm.
-0202.10.03		Aggregation period.
-0202.10.04		Parent URI.
-0202.11			Request acknowledgement.
-0202.11.01		Aggregation period.
-0202.11.02		Aggregation delay.
-0203			Aggregation error.
-0203.04			Status.
-0203.05			Error message.
-0300			Extension PDU
-0300.01         PDU header.
-0300.01.01      Login id.
-0300.01.02      Instance id.
-0300.01.03      Message id.
-0300.1f         HMAC.
-0301			Extension request.
-0301.01			Request id.
-0301.02			Aggregation time.
-0301.03			Publication time.
-0302			Extension response.
-0302.01			Request id.
-0302.04			Status.
-0302.05			Error message.
-0302.10			Last time.
-0303			Extension error.
-0303.04			Status.
-0303.05			Error message.
-0800			Uni-signature PDU.
+0801		 	*			Aggregation chain.
+0801.02			TIME		Aggregation Time.
+0801.03			INT			Chain index.
+0801.04			RAW			Input data.
+0801.05			IMPRINT		Input imprint.
+0801.06			INT			Aggregation algorithm.
+0801.07			*			Left link.
+0801.07.01		INT			Level correction.
+0801.07.02		IMPRINT		Sibling imprint.
+0801.07.03		IMPRINT		Meta-hash.
+0801.07.04		*			Metadata.
+0801.07.04.01	STR			Client id.
+0801.07.04.02	STR			Machine id.
+0801.07.04.03	INT			Sequence nr.
+0801.07.04.04	INT			Request time.
+0801.08			*			Right link.
+0801.08.01		INT			Level correction.
+0801.08.02		IMPRINT		Sibling imprint.
+0801.08.03		IMPRINT		Meta-hash.
+0801.08.04		*			Metadata.
+0801.08.04.01	STR			Client id.
+0801.08.04.02	STR			Machine id.
+0801.08.04.03	INT			Sequence nr.
+0801.08.04.04	INT			Request time.
+0802			*			Calendar chain.
+0802.01			TIME		Publication time.
+0802.02			TIME		Aggregation time.
+0802.05			IMPRINT		Input imprint.
+0802.07			IMPRINT		Left link imprint.
+0802.08			IMPRINT		Right link imprint.
+0803			*			Publication record.
+0803.10			*			Published data.
+0803.10.02		TIME		Published time.
+0803.10.04		IMPRINT		Published imprint.
+0803.09			STR			Publication reference.
+0803.0a			STR			Publication repositori URI.
+0804 			*			Aggregation auth record.
+0804.02			TIME		Aggregation time.
+0804.03			INT			Chain index.
+0804.05			IMPRINT		Input imprint.
+0804.0b			*			Signed data.
+0804.0b.01		STR			Signature type.
+0804.0b.02		RAW			Signature value.
+0804.0b.03		RAW			Certificate id.
+0804.0b.04		STR			Certificate repository URI.
+0805			*			Calendar auth record.
+0805.10			*			Published data.
+0805.10.02		TIME		Published time.
+0805.10.04		IMPRINT		Published imprint.
+0805.0b			*			Signature data.
+0805.0b.01		STR			Signature type.
+0805.0b.02		RAW			Signature value.
+0805.0b.03		RAW			Certificate id.
+0805.0b.04		STR			Cert repository URI.
+0701			*			Publicationsfile header.
+0701.01			INT			Vesion
+0701.02			TIME		Time created.
+0701.03			STR			Repository URI.
+0702			*			Certificate record.
+0702.01			RAW			Certificate id.
+0702.02			RAW			Certificate.
+0703			*			Publication record.
+0703.10			*			Published data.
+0703.10.02		TIME		Published time.
+0703.10.04		IMPRINT		Published imprint.
+0703.09			STR			Publication reference.
+0704			RAW			Publications file signature.
+0806			*			RFC3161 compatibility record.
+0806.02			TIME		Aggregation time.
+0806.03			INT			Chain index.
+0806.05			IMPRINT		Input imprint.
+0806.10			RAW			TST info prefix.
+0806.11			RAW			TST info suffix.
+0806.12			INT			TST info hash algorithm.
+0806.13			RAW			Signed attributes prefix.
+0806.14			RAW			Signed attributes suffix.
+0806.15			INT			Signed attributed hash algorithm.
+0200			*			Aggregation PDU
+0200.01			*			PDU header.
+0200.01.01		STR			Login id.
+0200.01.02		INT			Instance id.
+0200.01.03		INT			Message id.
+0200.1f			IMPRINT		HMAC.
+0201			*			Aggregation request.
+0201.01			INT			Request id.
+0201.02			IMPRINT		Request imprint.
+0201.03			INT			Request level.
+0201.10			*			Config.
+0201.10.01		INT			Max level.
+0201.10.02		INT			Aggregation algorithm.
+0201.10.03		INT			Aggregation period.
+0201.10.04		STR			Parent URI.
+0202			*			Aggregation response.
+0202.01			INT			Request id.
+0202.04			INT			Status.
+0202.05			STR			Error message.
+0202.10			*			Config
+0202.10.01		INT			Max level.
+0202.10.02		INT			Aggregation algorithm.
+0202.10.03		INT			Aggregation period.
+0202.10.04		STR			Parent URI.
+0202.11			*			Request acknowledgement.
+0202.11.01		INT			Aggregation period.
+0202.11.02		INT			Aggregation delay.
+0203			*			Aggregation error.
+0203.04			INT			Status.
+0203.05			STR			Error message.
+0300			*			Extension PDU
+0300.01         *			PDU header.
+0300.01.01      STR			Login id.
+0300.01.02      INT			Instance id.
+0300.01.03      INT			Message id.
+0300.1f         IMPRINT		HMAC.
+0301			*			Extension request.
+0301.01			INT			Request id.
+0301.02			TIME		Aggregation time.
+0301.03			TIME		Publication time.
+0302			*			Extension response.
+0302.01			INT			Request id.
+0302.04			INT			Status.
+0302.05			STR			Error message.
+0302.10			TIME		Last time.
+0303			*			Extension error.
+0303.04			INT			Status.
+0303.05			STR			Error message.
+0800			*			Uni-signature PDU.

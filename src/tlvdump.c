@@ -18,6 +18,7 @@ struct conf_st {
 	bool print_len;
 	bool convert;
 	bool use_desc;
+	bool type_strict;
 	struct desc_st desc;
 };
 
@@ -43,6 +44,51 @@ static print_raw_data(unsigned char *buf, size_t len, size_t prefix_len, struct 
 	putchar('\n');
 }
 
+static int check_nested(unsigned char *buf, size_t buf_len, struct conf_st *conf, struct desc_st *desc) {
+	int res = KSI_UNKNOWN_ERROR;
+	size_t len = buf_len;
+	unsigned char *ptr = buf;
+
+
+	res = KSI_FTLV_memReadN(ptr, len, NULL, 0, NULL);
+	if (res != KSI_OK) goto cleanup;
+
+	if (conf->type_strict) {
+		while (len > 0) {
+			KSI_FTLV n;
+			struct desc_st *d = NULL;
+
+			res = KSI_FTLV_memRead(ptr, len, &n);
+			if (res != KSI_OK) goto cleanup;
+
+			/* Try to find sub type. */
+			if (desc != NULL) {
+				desc_find(desc, n.tag, &d);
+			}
+
+			/* Try to find top-level type, if sub type not found. */
+			if (d == NULL) {
+				desc_find(&conf->desc, n.tag, &d);
+			}
+	
+			/* If still not found, return an error, as this is an unexpected subtype. */	
+			if (d == NULL) {
+				res = KSI_INVALID_FORMAT;
+				goto cleanup;
+			}
+
+			len -= n.hdr_len + n.dat_len;
+			ptr += n.hdr_len + n.dat_len;
+		}
+	}
+
+	res = KSI_OK;
+
+cleanup:
+
+	return res;
+}
+
 static void printTlv(unsigned char *buf, size_t buf_len, KSI_FTLV *t, int level, struct conf_st *conf, struct desc_st *desc) {
 	int res;
 	unsigned char *ptr = buf + t->hdr_len;
@@ -50,27 +96,35 @@ static void printTlv(unsigned char *buf, size_t buf_len, KSI_FTLV *t, int level,
 	size_t prefix_len = 0;
 	struct desc_st *sub = NULL;
 
-	if (conf->use_desc) {
+	/* Find the description only if needed (annotations or type strictness) */
+	if (conf->use_desc || conf->type_strict) {
 		if (desc == NULL) {
 			desc_find(&conf->desc, t->tag, &desc);
 		}
+	}
 
+	/* Print annotations? */
+	if (conf->use_desc) {
 		if (desc != NULL && desc->val != NULL) {
 			printf("%*s# %s\n", level * INDENT_LEN, "", desc->val);
 		}
 	}
 
+	/* Print offset? */
 	if (conf->print_off) {
 		prefix_len += printf("%4llu:", (unsigned long long)t->off);
 	}
 
-	prefix_len += printf("%*sTLV[0x%02x%s%s]: ", level * INDENT_LEN, "", t->tag, (t->is_fwd ? ",F" : ""), (t->is_nc ? ",N" : ""));
+	/* Print only the indent. */
+	prefix_len += printf("%*s", level * INDENT_LEN, "");
+
+	prefix_len += printf("TLV[0x%02x%s%s]: ", t->tag, (t->is_fwd ? ",F" : ""), (t->is_nc ? ",N" : ""));
 	if (conf->print_len) {
 		prefix_len += printf("(len = %llu) ", (unsigned long long)t->dat_len);
 	}
 
 	/* Just check if it is a nested TLV. */
-	res = KSI_FTLV_memReadN(ptr, len, NULL, 0, NULL);
+	res = check_nested(ptr, len, conf, desc);
 
 	if (res != KSI_OK || (conf->max_depth && level + 1 >= conf->max_depth)) {
 		print_raw_data(ptr, len, prefix_len, conf);
@@ -155,7 +209,7 @@ int main(int argc, char **argv) {
 
 	memset(&conf, 0, sizeof(conf));
 
-	while ((c = getopt(argc, argv, "hH:d:xwyza")) != -1) {
+	while ((c = getopt(argc, argv, "hH:d:xwyzas")) != -1) {
 		switch(c) {
 			case 'H':
 				conf.hdr_len = atoi(optarg);
@@ -171,6 +225,7 @@ int main(int argc, char **argv) {
 						"    -y       Show content length.\n"
 						"    -z       Convert payload with length les than 8 bytes to decimal.\n"
 						"    -a       Annotate known KSI elements.\n"
+						"    -s       Strict types - do not parse TLV's with unknown types.\n"
 				);
 				res = KSI_OK;
 				goto cleanup;
@@ -190,12 +245,10 @@ int main(int argc, char **argv) {
 				conf.convert = true;
 				break;
 			case 'a':
-				res = desc_init(&conf.desc, DATA_DIR "ksi.desc");
-				if (res != KSI_OK) {
-					fprintf(stderr, "Unable to parse description file '%s' (error = %d) -  option ignored.\n", optarg, res);
-				} else {
-					conf.use_desc = true;
-				}
+				conf.use_desc = true;
+				break;
+			case 's':
+				conf.type_strict = true;
 				break;
 			default:
 				fprintf(stderr, "Unknown parameter, try -h.");
@@ -203,11 +256,23 @@ int main(int argc, char **argv) {
 		}
 	}
 
+	/* Initialize the description structure. */
+	if (conf.use_desc || conf.type_strict) {
+		res = desc_init(&conf.desc, DATA_DIR "ksi.desc");
+		if (res != KSI_OK) {
+			fprintf(stderr, "%s: Unable to read description file.\n", DATA_DIR "ksi.desc");
+			goto cleanup;
+		}
+	}
+
+	/* If there are no input files, read from the standard in. */
 	if (optind >= argc) {
 		res = read_from(stdin, &conf);
 		if (res != KSI_OK) goto cleanup;
 	} else {
 		size_t i;
+
+		/* Loop over all the inputfiles. */
 		for (i = 0; optind + i < argc; i++) {
 			conf.file_name = argv[optind + i];
 
