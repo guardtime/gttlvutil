@@ -132,7 +132,7 @@ static void print_str(unsigned char *buf, size_t len, size_t prefix_len, struct 
 static void print_imprint(unsigned char *buf, size_t len, size_t prefix_len, struct conf_st *conf) {
 	if (len > 0) {
 		if (buf[0] < sizeof(hash_alg) / sizeof(char *)) {
-			printf("%s:", hash_alg[0]);
+			printf("%s:", hash_alg[buf[0]]);
 			print_raw_data(buf + 1, len - 1, prefix_len, conf);
 		} else {
 			print_raw_data(buf, len, prefix_len, conf);
