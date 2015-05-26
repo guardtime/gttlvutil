@@ -31,7 +31,7 @@ struct desc_st {
 /**
  * Initialize the description with the contents of the file.
  */
-int desc_init(struct desc_st *desc, const char *descFile);
+int desc_add_file(struct desc_st *desc, const char *descFile);
 
 /**
  * Find the given key in the description.

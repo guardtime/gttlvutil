@@ -210,7 +210,7 @@ cleanup:
 	return res;
 }
 
-int desc_init(struct desc_st *desc, const char *descFile) {
+int desc_add_file(struct desc_st *desc, const char *descFile) {
 	int res = KSI_UNKNOWN_ERROR;
 	FILE *f = NULL;
 	size_t ln = 0;
@@ -219,10 +219,6 @@ int desc_init(struct desc_st *desc, const char *descFile) {
 		res = KSI_INVALID_ARGUMENT;
 		goto cleanup;
 	}
-
-
-	desc->val = NULL;
-	memset(desc->map, 0, sizeof(desc->map));
 
 	f = fopen(descFile, "r");
 	if (f == NULL) {

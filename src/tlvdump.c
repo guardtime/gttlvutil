@@ -4,6 +4,7 @@
 #include <getopt.h>
 #include <stdint.h>
 #include <time.h>
+#include <dirent.h>
 
 #include "tlvdump.h"
 #include "fast_tlv.h"
@@ -287,6 +288,45 @@ cleanup:
 	return res;
 }
 
+static int read_desc_dir(struct desc_st *desc, const char *dir_name) {
+	int res = KSI_UNKNOWN_ERROR;
+	DIR	*dir = NULL;
+	struct dirent *ent = NULL;
+
+	memset(desc, 0, sizeof(struct desc_st));
+
+	dir = opendir(dir_name);
+	if (dir == NULL) {
+		fprintf(stderr, "%s:Unable to access description directory.\n", dir_name);
+		res = KSI_OK;
+		goto cleanup;
+	}
+
+	while ((ent = readdir(dir)) != NULL) {
+		size_t len;
+		if (ent->d_type != DT_REG) continue;
+
+		len = strlen(ent->d_name);
+
+		if (len > 5 && !strcmp(ent->d_name + len - 5, ".desc")) {
+			char buf[1024];
+
+			snprintf(buf, sizeof(buf), "%s/%s", DATA_DIR, ent->d_name);
+
+			res = desc_add_file(desc, buf);
+			if (res != KSI_OK) {
+				fprintf(stderr, "%s/%s: Unable to read description file\n", dir_name, ent->d_name);
+			}
+		}
+	}
+
+cleanup:
+
+	if (dir != NULL) closedir(dir);
+
+	return res;
+}
+
 int main(int argc, char **argv) {
 	int res;
 	int c;
@@ -353,7 +393,7 @@ int main(int argc, char **argv) {
 	}
 
 	/* Initialize the description structure. */
-	res = desc_init(&conf.desc, DATA_DIR "ksi.desc");
+	res = read_desc_dir(&conf.desc, DATA_DIR);
 	if (res != KSI_OK) {
 		fprintf(stderr, "%s: Unable to read description file.\n", DATA_DIR "ksi.desc");
 		goto cleanup;

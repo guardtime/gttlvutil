@@ -1,0 +1,19 @@
+0901		*			Header record of the log block
+0901.01		INT			Hash algorithm used for aggregation
+0901.02		RAW			Random seed for the blinding mask
+0901.03		IMPRINT		Last hash value from the previous block
+0902		IMPRINT		Hash value of a record
+0903		IMPRINT		Intermediade aggregate hash value
+0904		*			Signature data for a log block
+0904.01		INT			Record count
+0905		*			KSI signeture on the log block root hash value
+0906		RAW			RFC 3161 signature on the log block root hash value
+0907		*			Hash chain for one log record
+0907.01		IMPRINT		Hash value for the record
+0907.02		*			Hash step where input data is left child
+0907.02.01	INT			Level correction value
+0907.02.02	IMPRINT		Sibling hash value
+0907.03		*			Hash step where input data is right child
+0907.03.01	INT			Level correction value
+0907.03.02	IMPRINT		Sibling hash value
+
