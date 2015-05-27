@@ -45,5 +45,6 @@ make install DESTDIR=%{buildroot}
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_bindir}/gttlvdump
 %attr(755,root,root) %{_bindir}/gttlvcreate
+%dir %{_datadir}/%{name}
 %{_datadir}/%{name}/ksi.desc
 %{_datadir}/%{name}/logsig.desc
