@@ -27,8 +27,6 @@ struct conf_st {
 	struct desc_st desc;
 };
 
-const char *descFile = DATA_DIR "ksi.desc";
-
 static char *hash_alg[] = {
 	"sha-1", "sha2-256", "ripemd-160", "sha2-224", "sha2-384", "sha2-512", "ripemd-256", "sha3-224", "sha3-256", "sha3-512", "sm3"
 };
@@ -395,10 +393,10 @@ int main(int argc, char **argv) {
 	/* Initialize the description structure. */
 	res = read_desc_dir(&conf.desc, DATA_DIR);
 	if (res != KSI_OK) {
-		fprintf(stderr, "%s: Unable to read description file.\n", DATA_DIR "ksi.desc");
-		goto cleanup;
+		fprintf(stderr, "Unable to read description directory.\n");
+	} else {
+		desc_free = true;
 	}
-	desc_free = true;
 
 	/* If there are no input files, read from the standard in. */
 	if (optind >= argc) {
