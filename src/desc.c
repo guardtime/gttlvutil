@@ -212,6 +212,13 @@ static int ignore_line(char *line) {
 	return (*line == '\0' || *line == '#');
 }
 
+static size_t trim_line(char *line, size_t len) {
+	while (len--> 0 && (isspace(line[len]) || line[len] == '\n' || line[len] == '\r')) {
+		line[len] = '\0';
+	}
+	return len;
+}
+
 static int read_line(FILE *f, struct desc_st *map) {
 	int res = KSI_UNKNOWN_ERROR;
 	char key[256];
@@ -222,9 +229,11 @@ static int read_line(FILE *f, struct desc_st *map) {
 	int rd;
 
 	/* Read the whole line and drop any character that does not fit the buffer. */
-	consume_line(f, line, sizeof(line));
+	len = consume_line(f, line, sizeof(line));
 
 	if (!ignore_line(line)) {
+		trim_line(line, len);
+
 		rd = sscanf(line, " %256s %16s %1024[^\n]\n", key, type, val);
 		if (rd == 3) {
 			res = store_line(map, key, type, strdup(val));
