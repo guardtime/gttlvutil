@@ -10,7 +10,7 @@
 #include "fast_tlv.h"
 #include "desc.h"
 
-#define INDENT_LEN 4
+#define INDENT_LEN 2
 
 struct conf_st {
 	const char *file_name;
@@ -150,7 +150,7 @@ static void print_time(unsigned char *buf, size_t len, size_t prefix_len, struct
 			
 		strftime(tmp, sizeof(tmp), "%Y-%m-%d %H:%M:%S %Z", tm_info);
 
-		printf("%s\n", tmp);
+		printf("(%llu) %s\n", t, tmp);
 	}
 }
 
@@ -184,13 +184,18 @@ static void printTlv(unsigned char *buf, size_t buf_len, KSI_FTLV *t, int level,
 	/* Print only the indent. */
 	prefix_len += printf("%*s", level * INDENT_LEN, "");
 
+	if (t->tag > 32 || t->dat_len > 255) {
+		prefix_len += printf("TLV[%04x%s%s]:", t->tag, (t->is_fwd ? ",F" : ""), (t->is_nc ? ",N" : ""));
+	} else {
+		prefix_len += printf("TLV[%02x%s%s]: ", t->tag, (t->is_fwd ? ",F" : ""), (t->is_nc ? ",N" : ""));
+	}
+
+	if (conf->print_len) {
+		prefix_len += printf("(L = %llu) ", (unsigned long long)t->dat_len);
+	}
+
 	if (conf->pretty_key && desc != NULL && desc->val != NULL && *desc->val) {
 		prefix_len += printf("%s: ", desc->val);
-	} else {
-		prefix_len += printf("TLV[0x%02x%s%s]: ", t->tag, (t->is_fwd ? ",F" : ""), (t->is_nc ? ",N" : ""));
-	}
-	if (conf->print_len) {
-		prefix_len += printf("(len = %llu) ", (unsigned long long)t->dat_len);
 	}
 
 	limited = conf->max_depth != 0 && level + 1 >= conf->max_depth;
