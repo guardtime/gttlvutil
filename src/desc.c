@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -190,19 +191,46 @@ cleanup:
 	return res;
 }
 
+static size_t consume_line(FILE *f, char *dest, size_t size) {
+	size_t len = 0;
+	int c;
+	while ((c = fgetc(f)) != EOF && c != '\n') {
+		if (len + 1 < size) {
+			dest[len++] = c;
+		}
+	}
+	dest[len] = '\0';
+
+	return len;
+}
+
+static int ignore_line(char *line) {
+	/* Ignore whitespace. */
+	while (*line != '\0' && isspace(*line)) ++line;
+
+	/* Ignore empty and comment lines. */
+	return (*line == '\0' || *line == '#');
+}
+
 static int read_line(FILE *f, struct desc_st *map) {
 	int res = KSI_UNKNOWN_ERROR;
 	char key[256];
 	char type[16];
 	char val[1024];
+	char line[2048];
+	size_t len;
 	int rd;
 
-	rd = fscanf(f, " %256s %16s %1024[^\n]\n", key, type, val);
-	if (rd == 3) {
-		res = store_line(map, key, type, strdup(val));
-		if (res != KSI_OK) goto cleanup;
-	}
+	/* Read the whole line and drop any character that does not fit the buffer. */
+	consume_line(f, line, sizeof(line));
 
+	if (!ignore_line(line)) {
+		rd = sscanf(line, " %256s %16s %1024[^\n]\n", key, type, val);
+		if (rd == 3) {
+			res = store_line(map, key, type, strdup(val));
+			if (res != KSI_OK) goto cleanup;
+		}
+	}
 	res = KSI_OK;
 
 cleanup:
