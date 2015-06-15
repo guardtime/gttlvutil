@@ -1,4 +1,4 @@
-AC_INIT([gttlvutil], [0.2.1], [support@guardtime.com])
+AC_INIT([gttlvutil], [0.2.2], [support@guardtime.com])
 AC_CONFIG_SRCDIR([src/common.h])
 
 AM_INIT_AUTOMAKE([foreign -Wall -Werror])
