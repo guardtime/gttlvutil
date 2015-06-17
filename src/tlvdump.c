@@ -139,17 +139,42 @@ static void print_imprint(unsigned char *buf, size_t len, size_t prefix_len, str
 	}
 }
 
-static void print_time(unsigned char *buf, size_t len, size_t prefix_len, struct conf_st *conf) {
+static void print_time(unsigned char *buf, size_t len, size_t prefix_len, int type, struct conf_st *conf) {
 	if (len > 8) {
 		print_raw_data(buf, len, prefix_len, conf);
 	} else {
 		char tmp[0xff];
+		char fract[0x1f];
 		struct tm *tm_info;
-		time_t t = (time_t) get_uint64(buf, len);
-		tm_info = gmtime(&t);
-			
-		strftime(tmp, sizeof(tmp), "%Y-%m-%d %H:%M:%S %Z", tm_info);
+		uint64_t t = get_uint64(buf, len);
+		time_t seconds;
+		size_t len;
 
+		fract[0] = '\0';
+
+		switch (type) {
+			case TLV_MTIME:
+				seconds = (time_t) t / 1000;
+				snprintf(fract, sizeof(fract), "%03u", t % 1000);
+				break;
+			case TLV_UTIME:
+				seconds = (time_t) t / 1000 / 1000;
+				snprintf(fract, sizeof(fract), "%06u", t % (1000 * 1000));
+				break;
+			case TLV_TIME:
+			default:
+				seconds = (time_t) t;
+				break;
+		}
+			
+		tm_info = gmtime(&seconds);
+		len = strftime(tmp, sizeof(tmp), "%Y-%m-%d %H:%M:%S", tm_info);
+		if (fract[0] != '\0') {
+			len += snprintf(tmp + len, sizeof(tmp) - len, ".%s", fract);
+		}
+
+		strftime(tmp + len, sizeof(tmp) - len, " %Z", tm_info);
+	
 		printf("(%llu) %s\n", t, tmp);
 	}
 }
@@ -232,7 +257,9 @@ static void printTlv(unsigned char *buf, size_t buf_len, KSI_FTLV *t, int level,
 				print_str(ptr, len, prefix_len, conf);
 				break;
 			case TLV_TIME:
-				print_time(ptr, len, prefix_len, conf);
+			case TLV_MTIME:
+			case TLV_UTIME:
+				print_time(ptr, len, prefix_len, type, conf);
 				break;
 			case TLV_IMPRINT:
 				print_imprint(ptr, len, prefix_len, conf);
@@ -347,7 +374,7 @@ int main(int argc, char **argv) {
 				break;
 			case 'h':
 				printf("Usage:\n"
-						"  gttlvdump [-h] [-H number] tlvfile\n"
+						"  gttlvdump [-h] [options] tlvfile\n"
 						"    -h       This help message\n"
 						"    -H num   Constant header lenght.\n"
 						"    -d num   Max depth of nested elements\n"

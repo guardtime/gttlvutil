@@ -2,11 +2,21 @@
 #define DESC_H_
 
 enum {
+	/** Composite payload. */
 	TLV_COMPOSITE,
+	/** Unsigned integer value. */
 	TLV_INT,
+	/** Raw, uninterpreded value. */
 	TLV_RAW,
+	/** Utf-8 string value. */
 	TLV_STR,
+	/** Time in seconds. */
 	TLV_TIME,
+	/** Time in milli seconds. */
+	TLV_MTIME,
+	/** Time in micro seconds. */
+	TLV_UTIME,
+	/** Imprint value. */
 	TLV_IMPRINT	
 };
 

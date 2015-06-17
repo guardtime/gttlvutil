@@ -143,6 +143,8 @@ static int get_type(char *ts) {
 	if (!strcmp("RAW", ts)) return TLV_RAW;
 	if (!strcmp("STR", ts)) return TLV_STR;
 	if (!strcmp("TIME", ts)) return TLV_TIME;
+	if (!strcmp("MTIME", ts)) return TLV_MTIME;
+	if (!strcmp("UTIME", ts)) return TLV_UTIME;
 	if (!strcmp("IMPRINT", ts)) return TLV_IMPRINT;
 	
 	return -1;
@@ -232,10 +234,10 @@ static int read_line(FILE *f, struct desc_st *map) {
 	len = consume_line(f, line, sizeof(line));
 
 	if (!ignore_line(line)) {
-		trim_line(line, len);
-
 		rd = sscanf(line, " %256s %16s %1024[^\n]\n", key, type, val);
 		if (rd == 3) {
+			trim_line(val, strlen(val));
+
 			res = store_line(map, key, type, strdup(val));
 			if (res != KSI_OK) goto cleanup;
 		}
