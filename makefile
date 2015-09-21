@@ -24,6 +24,10 @@ RTL = MT
 !ERROR RTL can only have one of the following values "MT", "MTd", "MD" or "MDd", but it is "$(RTL)". Default valu is "MT".
 !ENDIF
 
+!IF "$(INSTALL_MACHINE)" != "32" && "$(INSTALL_MACHINE)" != "64"
+!ERROR set INSTALL_MACHINE=32 or INSTALL_MACHINE=64
+!ENDIF
+
 SRC_DIR = src
 OBJ_DIR = obj
 BIN_DIR = bin
@@ -86,7 +90,18 @@ $(BIN_DIR)\tlvcreate.exe: $(BIN_DIR) $(OBJ_DIR) $(TLV_CREATE_OBJ)
 	
 $(OBJ_DIR) $(BIN_DIR):
 	@if not exist $@ mkdir $@
-	
+
+
+installer:$(BIN_DIR) $(OBJ_DIR) $(BIN_DIR)\$(TOOL_NAME).exe
+!IF [candle.exe > nul] != 0
+!MESSAGE Please install WiX to build installer.
+!ELSE
+	cd windows
+	candle.exe $(TOOL_NAME).wxs -o ..\$(OBJ_DIR)\$(TOOL_NAME).wixobj -dVersion="1.0.0" -dName=$(TOOL_NAME) -dtoolName=$(BIN_DIR)\$(TOOL_NAME).exe -darch=$(INSTALL_MACHINE)
+	light.exe ..\$(OBJ_DIR)\$(TOOL_NAME).wixobj -o ..\$(BIN_DIR)\$(TOOL_NAME) -pdbout ..\$(BIN_DIR)\$(TOOL_NAME).wixpdb -cultures:en-us -ext WixUIExtension
+	cd ..
+!ENDIF
+
 clean:
 	@for %i in ($(OBJ_DIR) $(BIN_DIR)) do @if exist .\%i rmdir /s /q .\%i
 	
