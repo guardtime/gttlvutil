@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "common.h"
+#include "tlvdump.h"
 
 int encode(unsigned int type, int lenient, int forward, FILE *in, FILE *out) {
 	int res = GT_UNKNOWN_ERROR;
@@ -20,11 +21,17 @@ int encode(unsigned int type, int lenient, int forward, FILE *in, FILE *out) {
 		if (len == 0 && count > 0) break;
 		count++;
 
+		if (len >> 8 > UCHAR_MAX) {
+			res = KSI_INVALID_ARGUMENT;
+			fprintf(stderr, "Len is too great: '%d'\n", len);
+			goto cleanup;
+		}
+
 		/* TLV 18? */
 		if (type > 0x1f || len > 0xff) {
 			*hdr = 0x80 | (lenient * 0x40) | (forward * 0x20) | (type >> 8);
 			*(hdr + 1) = type & 0xff;
-			*(hdr + 2) = len >> 8;
+			*(hdr + 2) = (unsigned char)(len >> 8);
 			*(hdr + 3) = len & 0xff;
 			fwrite(hdr, 1, 4, out);
 		} else {

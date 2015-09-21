@@ -82,7 +82,7 @@ static int desc_get(struct desc_st *in, unsigned tag, bool create, struct desc_s
 	res = KSI_OK;
 
 cleanup:
-	
+
 	if (ptr != NULL) free(ptr);
 
 	return res;
@@ -90,7 +90,7 @@ cleanup:
 
 int desc_find(struct desc_st *in, unsigned tag, struct desc_st **out) {
 	return desc_get(in, tag, false, out);
-}	
+}
 
 static int store_nested(struct desc_st *map_in, char *key, int type, char *val) {
 	int res = KSI_UNKNOWN_ERROR;
@@ -146,7 +146,7 @@ static int get_type(char *ts) {
 	if (!strcmp("MTIME", ts)) return TLV_MTIME;
 	if (!strcmp("UTIME", ts)) return TLV_UTIME;
 	if (!strcmp("IMPRINT", ts)) return TLV_IMPRINT;
-	
+
 	return -1;
 }
 
@@ -155,7 +155,7 @@ static int store_line(struct desc_st *map_in, char *key, char *ts, char *val) {
 	long tag;
 	int type;
 	char *ptr;
-	struct desc_st *map = NULL;	
+	struct desc_st *map = NULL;
 
 	if (map_in == NULL || key == NULL || *key == '\0' || val == NULL) {
 		res = KSI_INVALID_ARGUMENT;
@@ -237,8 +237,11 @@ static int read_line(FILE *f, struct desc_st *map) {
 		rd = sscanf(line, " %256s %16s %1024[^\n]\n", key, type, val);
 		if (rd == 3) {
 			trim_line(val, strlen(val));
-
+#ifdef _WIN32
+			res = store_line(map, key, type, _strdup(val));
+#else
 			res = store_line(map, key, type, strdup(val));
+#endif
 			if (res != KSI_OK) goto cleanup;
 		}
 	}
@@ -278,10 +281,10 @@ int desc_add_file(struct desc_st *desc, const char *descFile) {
 	}
 
 	res = KSI_OK;
-	
+
 cleanup:
 
 	if (f != NULL) fclose(f);
 	return res;
-	
+
 }
