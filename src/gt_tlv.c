@@ -66,7 +66,7 @@ static int bufAppendRaw(void *out_buf, size_t *out_buf_len, const size_t out_buf
 		goto cleanup;
 	}
 
-	memcpy(out_buf + *out_buf_len, in_buf, in_buf_len);
+	memcpy((unsigned char *)out_buf + *out_buf_len, in_buf, in_buf_len);
 	*out_buf_len += in_buf_len;
 
 	res = GT_OK;
@@ -76,7 +76,8 @@ cleanup:
 
 int GTTlvReader_readTlv(GTTlvReader *rdr, GTTlv **outTlv) {
 	int res = GT_UNKNOWN_ERROR;
-
+	uint8_t *raw_data;
+	
 	GTTlv *tlv = NULL;
 	int read;
 
@@ -117,7 +118,7 @@ int GTTlvReader_readTlv(GTTlvReader *rdr, GTTlv **outTlv) {
 		tlv->payload_length = (size_t) tlv->header[1];
 	}
 
-	uint8_t *raw_data = calloc(tlv->payload_length, sizeof(char));
+	raw_data = calloc(tlv->payload_length, sizeof(char));
 	if (raw_data == NULL) {
 		res = GT_OUT_OF_MEMORY;
 		goto cleanup;
@@ -346,6 +347,8 @@ int bufAppendTlv(void *out_buf, size_t *out_buf_len, const size_t out_buf_size, 
 	int res = GT_UNKNOWN_ERROR;
 	uint8_t header[4];
 	size_t header_len;
+	size_t len;
+	
 	if (type & 0xe000) {
 		res = GT_FORMAT_ERROR;
 		goto cleanup;
@@ -365,7 +368,7 @@ int bufAppendTlv(void *out_buf, size_t *out_buf_len, const size_t out_buf_size, 
 		header[0] = 0x001f & type;
 		header[1] = 0x00ff & in_buf_len;
 	}
-	size_t len = *out_buf_len;
+	len = *out_buf_len;
 
 	res = bufAppendRaw(out_buf, &len, out_buf_size, header, header_len);
 

@@ -4,11 +4,13 @@
 #include <getopt.h>
 #include <stdint.h>
 #include <time.h>
-#include <dirent.h>
-
+#include <ctype.h>
 #include "tlvdump.h"
 #include "fast_tlv.h"
 #include "desc.h"
+#include "common.h"
+#include "dir.h"
+
 
 #define INDENT_LEN 2
 
@@ -31,6 +33,57 @@ static char *hash_alg[] = {
 	"sha-1", "sha2-256", "ripemd-160", "sha2-224", "sha2-384", "sha2-512", "ripemd-256", "sha3-224", "sha3-256", "sha3-512", "sm3"
 };
 
+
+
+static const char *path_removeFile(const char *origPath, char *buf, size_t buf_len) {
+	char *beginingOfFile = NULL;
+	size_t path_len;
+	char *ret = NULL;
+
+#ifdef _WIN32
+	beginingOfFile = strrchr(origPath, '\\');
+	if (beginingOfFile == NULL) {
+		beginingOfFile = strrchr(origPath, '/');
+	}
+#else
+	beginingOfFile = strrchr(origPath, '/');
+#endif
+
+	if (beginingOfFile ==  NULL) {
+		buf[0] = '\0';
+		return buf;
+	}
+
+	path_len = beginingOfFile - origPath;
+	if (path_len + 1 > buf_len) return NULL;
+
+	ret = strncpy(buf, origPath, path_len + 1);
+	buf[path_len + 1] = 0;
+	return  ret;
+}
+
+static char descriptionDir[2048];
+
+static const char *getDescriptionFileDir(void) {
+	if (descriptionDir[0] == '\0') {
+		return ".";
+	} else {
+		return descriptionDir;
+	}
+}
+
+void setDescriptionFileDir(const char *dir) {
+	if (dir == NULL) {
+		descriptionDir[0] = '\0';
+		return;
+	}
+
+	strncpy(descriptionDir, dir, sizeof(descriptionDir));
+	descriptionDir[sizeof(descriptionDir) - 1] = '\0';
+}
+
+
+
 static uint64_t get_uint64(unsigned char *buf, size_t len) {
 	uint64_t val = 0;
 	size_t i;
@@ -43,7 +96,7 @@ static uint64_t get_uint64(unsigned char *buf, size_t len) {
 }
 
 
-static print_raw_data(unsigned char *buf, size_t len, size_t prefix_len, struct conf_st *conf) {
+static void print_raw_data(unsigned char *buf, size_t len, size_t prefix_len, struct conf_st *conf) {
 	size_t i;
 
 	for (i = 0; i < len; i++) {
@@ -55,7 +108,7 @@ static print_raw_data(unsigned char *buf, size_t len, size_t prefix_len, struct 
 
 	if (conf->convert && len <= 8) {
 		size_t val = 0;
-		printf(" (dec = %llu)", (unsigned long long)get_uint64(buf, len)); 
+		printf(" (dec = %llu)", (unsigned long long)get_uint64(buf, len));
 	}
 	putchar('\n');
 }
@@ -91,7 +144,7 @@ static int get_payload_type(unsigned char *buf, size_t buf_len, struct conf_st *
 			if (d == NULL) {
 				desc_find(&conf->desc, n.tag, &d);
 			}
-	
+
 			/* If still not found, mark as raw. */
 			if (d == NULL) goto cleanup;
 
@@ -166,7 +219,7 @@ static void print_time(unsigned char *buf, size_t len, size_t prefix_len, int ty
 				seconds = (time_t) t;
 				break;
 		}
-			
+
 		tm_info = gmtime(&seconds);
 		len = strftime(tmp, sizeof(tmp), "%Y-%m-%d %H:%M:%S", tm_info);
 		if (fract[0] != '\0') {
@@ -174,14 +227,13 @@ static void print_time(unsigned char *buf, size_t len, size_t prefix_len, int ty
 		}
 
 		strftime(tmp + len, sizeof(tmp) - len, " %Z", tm_info);
-	
+
 		printf("(%llu) %s\n", t, tmp);
 	}
 }
 
 
 static void printTlv(unsigned char *buf, size_t buf_len, KSI_FTLV *t, int level, struct conf_st *conf, struct desc_st *desc) {
-	int res;
 	unsigned char *ptr = buf + t->hdr_len;
 	size_t len = t->dat_len;
 	size_t prefix_len = 0;
@@ -320,39 +372,40 @@ cleanup:
 
 static int read_desc_dir(struct desc_st *desc, const char *dir_name) {
 	int res = KSI_UNKNOWN_ERROR;
-	DIR	*dir = NULL;
-	struct dirent *ent = NULL;
+	DIRECTORY *dir = NULL;
+	ENTITY *ent;
 
 	memset(desc, 0, sizeof(struct desc_st));
 
-	dir = opendir(dir_name);
-	if (dir == NULL) {
+	if (DIRECTORY_open(dir_name, &dir) != DIR_OK) {
 		fprintf(stderr, "%s:Unable to access description directory.\n", dir_name);
 		res = KSI_OK;
 		goto cleanup;
 	}
 
-	while ((ent = readdir(dir)) != NULL) {
+
+	while (DIRECTORY_getNextEntity(dir, &ent) == DIR_OK) {
 		size_t len;
-		if (ent->d_type != DT_REG) continue;
+		const char *name = NULL;
+		if(ENTITY_getType(ent) == DIR_DIR) continue;
+		name = ENTITY_getName(ent);
+		len = strlen(name);
 
-		len = strlen(ent->d_name);
-
-		if (len > 5 && !strcmp(ent->d_name + len - 5, ".desc")) {
+		if (len > 5 && !strcmp(name + len - 5, ".desc")) {
 			char buf[1024];
 
-			snprintf(buf, sizeof(buf), "%s/%s", DATA_DIR, ent->d_name);
+			snprintf(buf, sizeof(buf), "%s/%s", getDescriptionFileDir(), name);
 
 			res = desc_add_file(desc, buf);
 			if (res != KSI_OK) {
-				fprintf(stderr, "%s/%s: Unable to read description file\n", dir_name, ent->d_name);
+				fprintf(stderr, "%s/%s: Unable to read description file\n", dir_name, name);
 			}
 		}
 	}
 
 cleanup:
 
-	if (dir != NULL) closedir(dir);
+	DIRECTORY_close(dir);
 
 	return res;
 }
@@ -361,9 +414,19 @@ int main(int argc, char **argv) {
 	int res;
 	int c;
 	FILE *input = NULL;
-	size_t i;
 	struct conf_st conf;
 	bool desc_free = false;
+
+#ifdef DATA_DIR
+	setDescriptionFileDir(DATA_DIR);
+#else
+	char buf[1024];
+	if (path_removeFile(argv[0], buf, sizeof(buf)) == NULL) {
+		fprintf(stderr, "Unable to set description file dir.\n");
+	}
+
+	setDescriptionFileDir(buf);
+#endif
 
 	memset(&conf, 0, sizeof(conf));
 
@@ -423,9 +486,9 @@ int main(int argc, char **argv) {
 	}
 
 	/* Initialize the description structure. */
-	res = read_desc_dir(&conf.desc, DATA_DIR);
+	res = read_desc_dir(&conf.desc, getDescriptionFileDir());
 	if (res != KSI_OK) {
-		fprintf(stderr, "Unable to read description directory.\n");
+		fprintf(stderr, "Unable to read description directory '%s'.\n", getDescriptionFileDir());
 	} else {
 		desc_free = true;
 	}
