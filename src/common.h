@@ -5,6 +5,12 @@
 extern "C" {
 #endif
 
+#ifdef _WIN32
+#	ifndef snprintf
+#		define snprintf _snprintf
+#	endif
+#endif	
+	
 enum StatusCodes {
 	GT_OK,
 	GT_OUT_OF_MEMORY,
