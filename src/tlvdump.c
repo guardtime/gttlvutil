@@ -488,7 +488,7 @@ int main(int argc, char **argv) {
 	/* Initialize the description structure. */
 	res = read_desc_dir(&conf.desc, getDescriptionFileDir());
 	if (res != KSI_OK) {
-		fprintf(stderr, "Unable to read description directory.\n");
+		fprintf(stderr, "Unable to read description directory '%s'.\n", getDescriptionFileDir());
 	} else {
 		desc_free = true;
 	}
