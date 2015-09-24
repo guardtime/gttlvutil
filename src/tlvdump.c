@@ -261,7 +261,7 @@ static void printTlv(unsigned char *buf, size_t buf_len, KSI_FTLV *t, int level,
 	/* Print only the indent. */
 	prefix_len += printf("%*s", level * INDENT_LEN, "");
 
-	if (t->tag > 32 || t->dat_len > 255) {
+	if (t->tag > 31 || t->dat_len > 255) {
 		prefix_len += printf("TLV[%04x%s%s]:", t->tag, (t->is_fwd ? ",F" : ""), (t->is_nc ? ",N" : ""));
 	} else {
 		prefix_len += printf("TLV[%02x%s%s]: ", t->tag, (t->is_fwd ? ",F" : ""), (t->is_nc ? ",N" : ""));
