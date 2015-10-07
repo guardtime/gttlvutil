@@ -35,7 +35,6 @@ BIN_DIR = bin
 TOOL_NAME = gttlvdump
 
 TOOL_OBJ = \
-	$(OBJ_DIR)\gt_tlv.obj \
 	$(OBJ_DIR)\tlvdump.obj \
 	$(OBJ_DIR)\getopt.obj \
 	$(OBJ_DIR)\fast_tlv.obj \
