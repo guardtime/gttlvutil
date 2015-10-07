@@ -22,30 +22,30 @@
 #include <stdio.h>
 
 #include "fast_tlv.h"
-#include "tlvdump.h"
+#include "common.h"
 
 typedef int (*reader_t)(void *, unsigned char *, size_t, size_t *);
 
 static int parseHdr(const unsigned char *hdr, size_t hdrLen, struct fast_tlv_s *t) {
-	int res = KSI_UNKNOWN_ERROR;
+	int res = GT_UNKNOWN_ERROR;
 
 	if (hdr == NULL || t == NULL) {
-		res = KSI_INVALID_FORMAT;
+		res = GT_INVALID_FORMAT;
 		goto cleanup;
 	}
 
-	t->tag = hdr[0] & KSI_TLV_MASK_TLV8_TYPE;
+	t->tag = hdr[0] & GT_TLV_MASK_TLV8_TYPE;
 
-	if (hdr[0] & KSI_TLV_MASK_TLV16) {
+	if (hdr[0] & GT_TLV_MASK_TLV16) {
 		if (hdrLen != 4) {
-			res = KSI_INVALID_FORMAT;
+			res = GT_INVALID_FORMAT;
 			goto cleanup;
 		}
 		t->tag = ((t->tag << 8) | hdr[1]);
 		t->dat_len = ((hdr[2] << 8) | hdr[3]) & 0xffff;
 	} else {
 		if (hdrLen != 2) {
-			res = KSI_INVALID_FORMAT;
+			res = GT_INVALID_FORMAT;
 			goto cleanup;
 		}
 		t->dat_len = hdr[1];
@@ -53,15 +53,15 @@ static int parseHdr(const unsigned char *hdr, size_t hdrLen, struct fast_tlv_s *
 
 	/* Eliminate false positives. */
 	if (t->tag == 0 && t->dat_len == 0) {
-		res = KSI_INVALID_FORMAT;
+		res = GT_INVALID_FORMAT;
 		goto cleanup;
 	}
 
 	t->hdr_len = hdrLen;
-	t->is_nc = (hdr[0] & KSI_TLV_MASK_LENIENT) != 0;
-	t->is_fwd = (hdr[0] & KSI_TLV_MASK_FORWARD) != 0;
+	t->is_nc = (hdr[0] & GT_TLV_MASK_LENIENT) != 0;
+	t->is_fwd = (hdr[0] & GT_TLV_MASK_FORWARD) != 0;
 
-	res = KSI_OK;
+	res = GT_OK;
 
 cleanup:
 
@@ -69,13 +69,13 @@ cleanup:
 }
 
 
-int KSI_FTLV_fileRead(FILE *fd, unsigned char *buf, size_t len, size_t *consumed, struct fast_tlv_s *t) {
-	int res = KSI_UNKNOWN_ERROR;
+int GT_FTLV_fileRead(FILE *fd, unsigned char *buf, size_t len, size_t *consumed, struct fast_tlv_s *t) {
+	int res = GT_UNKNOWN_ERROR;
 	size_t rd;
 	size_t count = 0;
 
 	if (fd == NULL || buf == NULL || len < 2 || t == NULL) {
-		res = KSI_INVALID_ARGUMENT;
+		res = GT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
@@ -83,13 +83,13 @@ int KSI_FTLV_fileRead(FILE *fd, unsigned char *buf, size_t len, size_t *consumed
 	count += rd;
 
 	if (rd != 2) {
-		res = KSI_INVALID_FORMAT;
+		res = GT_INVALID_FORMAT;
 		goto cleanup;
 	}
 
-	if (buf[0] & KSI_TLV_MASK_TLV16) {
+	if (buf[0] & GT_TLV_MASK_TLV16) {
 		if (len < 4) {
-			res = KSI_BUFFER_OVERFLOW;
+			res = GT_BUFFER_OVERFLOW;
 			goto cleanup;
 		}
 
@@ -97,21 +97,21 @@ int KSI_FTLV_fileRead(FILE *fd, unsigned char *buf, size_t len, size_t *consumed
 		count += rd;
 
 		if (rd != 2) {
-			res = KSI_INVALID_FORMAT;
+			res = GT_INVALID_FORMAT;
 			goto cleanup;
 		}
 
 		res = parseHdr(buf, 4, t);
-		if (res != KSI_OK) goto cleanup;
+		if (res != GT_OK) goto cleanup;
 
 	} else {
 		res = parseHdr(buf, 2, t);
-		if (res != KSI_OK) goto cleanup;
+		if (res != GT_OK) goto cleanup;
 	}
 
 	/* Make sure the TLV fits into the original buffer. */
 	if (len < t->hdr_len + t->dat_len) {
-		res = KSI_BUFFER_OVERFLOW;
+		res = GT_BUFFER_OVERFLOW;
 		goto cleanup;
 	}
 
@@ -121,12 +121,12 @@ int KSI_FTLV_fileRead(FILE *fd, unsigned char *buf, size_t len, size_t *consumed
 		count += rd;
 
 		if (rd != t->dat_len) {
-			res = KSI_INVALID_FORMAT;
+			res = GT_INVALID_FORMAT;
 			goto cleanup;
 		}
 	}
 
-	res = KSI_OK;
+	res = GT_OK;
 
 cleanup:
 
@@ -135,63 +135,63 @@ cleanup:
 	return res;
 }
 
-int KSI_FTLV_memRead(const unsigned char *m, size_t l, KSI_FTLV *t) {
-	int res = KSI_UNKNOWN_ERROR;
+int GT_FTLV_memRead(const unsigned char *m, size_t l, GT_FTLV *t) {
+	int res = GT_UNKNOWN_ERROR;
 
 	if (m == NULL || l < 2 || t == NULL) {
-		res = KSI_INVALID_ARGUMENT;
+		res = GT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
 	/* Initialize offset. */
 	t->off = 0;
 
-	if (m[0] & KSI_TLV_MASK_TLV16) {
+	if (m[0] & GT_TLV_MASK_TLV16) {
 		if (l < 4) {
-			res = KSI_INVALID_FORMAT;
+			res = GT_INVALID_FORMAT;
 			goto cleanup;
 		}
 		res = parseHdr(m, 4, t);
-		if (res != KSI_OK) goto cleanup;
+		if (res != GT_OK) goto cleanup;
 	} else {
 		res = parseHdr(m, 2, t);
-		if (res != KSI_OK) goto cleanup;
+		if (res != GT_OK) goto cleanup;
 	}
 
 	if (l < t->hdr_len + t->dat_len) {
-		res = KSI_INVALID_FORMAT;
+		res = GT_INVALID_FORMAT;
 		goto cleanup;
 	}
 
-	res = KSI_OK;
+	res = GT_OK;
 
 cleanup:
 
 	return res;
 }
 
-int KSI_FTLV_memReadN(const unsigned char *buf, size_t buf_len, KSI_FTLV *arr, size_t arr_len, size_t *rd) {
-	int res = KSI_UNKNOWN_ERROR;
+int GT_FTLV_memReadN(const unsigned char *buf, size_t buf_len, GT_FTLV *arr, size_t arr_len, size_t *rd) {
+	int res = GT_UNKNOWN_ERROR;
 	const unsigned char *ptr = buf;
 	size_t len = buf_len;
 	size_t i = 0;
 	/* Dummy buffer, used if arr == NULL. */
-	KSI_FTLV dummy;
+	GT_FTLV dummy;
 	size_t off = 0;
 
 	if (buf == NULL || buf_len == 0 || (arr != NULL && arr_len == 0) || (arr == NULL && arr_len != 0)) {
-		res = KSI_INVALID_ARGUMENT;
+		res = GT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
 	/* Read up-to arr_len tlvs from the buffer. */
 	while ((arr_len == 0 || i < arr_len) && len > 0) {
 		size_t tlvLen;
-		KSI_FTLV *target = (arr == NULL ? &dummy : &arr[i]);
+		GT_FTLV *target = (arr == NULL ? &dummy : &arr[i]);
 
 		/* Read the next tlv. */
-		res = KSI_FTLV_memRead(ptr, len, target);
-		if (res != KSI_OK) goto cleanup;
+		res = GT_FTLV_memRead(ptr, len, target);
+		if (res != GT_OK) goto cleanup;
 
 		target->off = off;
 
@@ -209,7 +209,7 @@ int KSI_FTLV_memReadN(const unsigned char *buf, size_t buf_len, KSI_FTLV *arr, s
 		*rd = i;
 	}
 
-	res = KSI_OK;
+	res = GT_OK;
 
 cleanup:
 

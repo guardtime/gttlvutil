@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "tlvdump.h"
+#include "common.h"
 #include "desc.h"
 
 void desc_cleanup(struct desc_st *desc) {
@@ -21,7 +21,7 @@ void desc_cleanup(struct desc_st *desc) {
 }
 
 static int desc_get(struct desc_st *in, unsigned tag, bool create, struct desc_st **out) {
-	int res = KSI_UNKNOWN_ERROR;
+	int res = GT_UNKNOWN_ERROR;
 
 	struct desc_st *ptr = NULL;
 	size_t pos;
@@ -33,13 +33,13 @@ static int desc_get(struct desc_st *in, unsigned tag, bool create, struct desc_s
      * the last query failed. */
 	if (in == NULL) {
 		*out = NULL;
-		res = KSI_OK;
+		res = GT_OK;
 		goto cleanup;
 	}
 
 	/* The output parameter shouldn't be NULL in any case. */
 	if (out == NULL) {
-		res = KSI_INVALID_ARGUMENT;
+		res = GT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
@@ -54,20 +54,20 @@ static int desc_get(struct desc_st *in, unsigned tag, bool create, struct desc_s
 	}
 
 	if (in->map[pos] != NULL && in->map[pos]->key != tag) {
-		res = KSI_BUFFER_OVERFLOW;
+		res = GT_BUFFER_OVERFLOW;
 		goto cleanup;
 	}
 
 	/* If it was uninitialized, initialize. */
 	if (in->map[pos] == NULL && create) {
 		if (in->map[pos] != NULL) {
-			res = KSI_BUFFER_OVERFLOW;
+			res = GT_BUFFER_OVERFLOW;
 			goto cleanup;
 		}
 
 		ptr = calloc(sizeof(struct desc_st), 1);
 		if (ptr == NULL) {
-			res = KSI_OUT_OF_MEMORY;
+			res = GT_OUT_OF_MEMORY;
 			goto cleanup;
 		}
 
@@ -79,7 +79,7 @@ static int desc_get(struct desc_st *in, unsigned tag, bool create, struct desc_s
 
 	*out = in->map[pos];
 
-	res = KSI_OK;
+	res = GT_OK;
 
 cleanup:
 
@@ -93,14 +93,14 @@ int desc_find(struct desc_st *in, unsigned tag, struct desc_st **out) {
 }
 
 static int store_nested(struct desc_st *map_in, char *key, int type, char *val) {
-	int res = KSI_UNKNOWN_ERROR;
+	int res = GT_UNKNOWN_ERROR;
 	long tag;
 	char *ptr;
 	struct desc_st *map = NULL;
 
 	/* Validate input. */
 	if (key == NULL || *key == '\0' || val == NULL) {
-		res = KSI_INVALID_ARGUMENT;
+		res = GT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
@@ -108,25 +108,25 @@ static int store_nested(struct desc_st *map_in, char *key, int type, char *val) 
 	tag = strtol(key, &ptr, 16);
 
 	/* Validate tag value and reminder. */
-	if (key == ptr || tag < 0 || tag > ((KSI_TLV_MASK_TLV8_TYPE << 8) | 0xff) || (*ptr && *ptr != '.')) {
-		res = KSI_INVALID_FORMAT;
+	if (key == ptr || tag < 0 || tag > ((GT_TLV_MASK_TLV8_TYPE << 8) | 0xff) || (*ptr && *ptr != '.')) {
+		res = GT_INVALID_FORMAT;
 		goto cleanup;
 	}
 
 	/* Find or create the container for this tag. */
 	res = desc_get(map_in, tag, true, &map);
-	if (res != KSI_OK) goto cleanup;
+	if (res != GT_OK) goto cleanup;
 
 	/* If the key is longer, recurse. */
 	if (*ptr) {
 		res = store_nested(map, ptr + 1, type, val);
-		if (res != KSI_OK) goto cleanup;
+		if (res != GT_OK) goto cleanup;
 	} else {
 		map->val = val;
 		map->type = type;
 	}
 
-	res = KSI_OK;
+	res = GT_OK;
 
 cleanup:
 
@@ -151,42 +151,42 @@ static int get_type(char *ts) {
 }
 
 static int store_line(struct desc_st *map_in, char *key, char *ts, char *val) {
-	int res = KSI_UNKNOWN_ERROR;
+	int res = GT_UNKNOWN_ERROR;
 	long tag;
 	int type;
 	char *ptr;
 	struct desc_st *map = NULL;
 
 	if (map_in == NULL || key == NULL || *key == '\0' || val == NULL) {
-		res = KSI_INVALID_ARGUMENT;
+		res = GT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
 	tag = strtol(key, &ptr, 16);
-	if (key == ptr || tag < 0 || tag > ((KSI_TLV_MASK_TLV8_TYPE << 8) | 0xff) || (*ptr && *ptr != '.')) {
-		res = KSI_INVALID_FORMAT;
+	if (key == ptr || tag < 0 || tag > ((GT_TLV_MASK_TLV8_TYPE << 8) | 0xff) || (*ptr && *ptr != '.')) {
+		res = GT_INVALID_FORMAT;
 		goto cleanup;
 	}
 
 	/* Convert the type into a number .*/
 	type = get_type(ts);
 	if (type < 0) {
-		res = KSI_INVALID_FORMAT;
+		res = GT_INVALID_FORMAT;
 		goto cleanup;
 	}
 
 	res = desc_get(map_in, tag, true, &map);
-	if (res != KSI_OK) goto cleanup;
+	if (res != GT_OK) goto cleanup;
 
 	if (*ptr) {
 		res = store_nested(map, ptr + 1, type, val);
-		if (res != KSI_OK) goto cleanup;
+		if (res != GT_OK) goto cleanup;
 	} else {
 		map->val = val;
 		map->type = type;
 	}
 
-	res = KSI_OK;
+	res = GT_OK;
 
 cleanup:
 
@@ -222,7 +222,7 @@ static size_t trim_line(char *line, size_t len) {
 }
 
 static int read_line(FILE *f, struct desc_st *map) {
-	int res = KSI_UNKNOWN_ERROR;
+	int res = GT_UNKNOWN_ERROR;
 	char key[256];
 	char type[16];
 	char val[1024];
@@ -242,10 +242,10 @@ static int read_line(FILE *f, struct desc_st *map) {
 #else
 			res = store_line(map, key, type, strdup(val));
 #endif
-			if (res != KSI_OK) goto cleanup;
+			if (res != GT_OK) goto cleanup;
 		}
 	}
-	res = KSI_OK;
+	res = GT_OK;
 
 cleanup:
 
@@ -253,12 +253,12 @@ cleanup:
 }
 
 int desc_add_file(struct desc_st *desc, const char *descFile) {
-	int res = KSI_UNKNOWN_ERROR;
+	int res = GT_UNKNOWN_ERROR;
 	FILE *f = NULL;
 	size_t ln = 0;
 
 	if (descFile == NULL || desc == NULL) {
-		res = KSI_INVALID_ARGUMENT;
+		res = GT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
@@ -271,8 +271,8 @@ int desc_add_file(struct desc_st *desc, const char *descFile) {
 	while (!feof(f)) {
 		++ln;
 		res = read_line(f, desc);
-		if (res != KSI_OK) {
-			if (res == KSI_INVALID_FORMAT) {
+		if (res != GT_OK) {
+			if (res == GT_INVALID_FORMAT) {
 				fprintf(stderr, "%s:%u - invalid format\n", descFile, ln);
 			} else {
 				goto cleanup;
@@ -280,7 +280,7 @@ int desc_add_file(struct desc_st *desc, const char *descFile) {
 		}
 	}
 
-	res = KSI_OK;
+	res = GT_OK;
 
 cleanup:
 

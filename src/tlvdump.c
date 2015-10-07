@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <time.h>
 #include <ctype.h>
-#include "tlvdump.h"
 #include "fast_tlv.h"
 #include "desc.h"
 #include "common.h"
@@ -114,7 +113,7 @@ static void print_raw_data(unsigned char *buf, size_t len, size_t prefix_len, st
 }
 
 static int get_payload_type(unsigned char *buf, size_t buf_len, struct conf_st *conf, struct desc_st *desc) {
-	int res = KSI_UNKNOWN_ERROR;
+	int res = GT_UNKNOWN_ERROR;
 	int type = TLV_RAW;
 	size_t len = buf_len;
 	unsigned char *ptr = buf;
@@ -124,16 +123,16 @@ static int get_payload_type(unsigned char *buf, size_t buf_len, struct conf_st *
 		goto cleanup;
 	}
 
-	res = KSI_FTLV_memReadN(ptr, len, NULL, 0, NULL);
-	if (res != KSI_OK) goto cleanup;
+	res = GT_FTLV_memReadN(ptr, len, NULL, 0, NULL);
+	if (res != GT_OK) goto cleanup;
 
 	if (conf->type_strict) {
 		while (len > 0) {
-			KSI_FTLV n;
+			GT_FTLV n;
 			struct desc_st *d = NULL;
 
-			res = KSI_FTLV_memRead(ptr, len, &n);
-			if (res != KSI_OK) goto cleanup;
+			res = GT_FTLV_memRead(ptr, len, &n);
+			if (res != GT_OK) goto cleanup;
 
 			/* Try to find sub type. */
 			if (desc != NULL) {
@@ -233,7 +232,7 @@ static void print_time(unsigned char *buf, size_t len, size_t prefix_len, int ty
 }
 
 
-static void printTlv(unsigned char *buf, size_t buf_len, KSI_FTLV *t, int level, struct conf_st *conf, struct desc_st *desc) {
+static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, struct conf_st *conf, struct desc_st *desc) {
 	unsigned char *ptr = buf + t->hdr_len;
 	size_t len = t->dat_len;
 	size_t prefix_len = 0;
@@ -281,12 +280,12 @@ static void printTlv(unsigned char *buf, size_t buf_len, KSI_FTLV *t, int level,
 
 	if (type == TLV_COMPOSITE && !limited) {
 		size_t off = t->off + t->hdr_len;
-		KSI_FTLV n;
+		GT_FTLV n;
 
 		putchar('\n');
 		while (len > 0) {
 			size_t consumed;
-			KSI_FTLV_memRead(ptr, len, &n);
+			GT_FTLV_memRead(ptr, len, &n);
 			n.off = off;
 
 			desc_find(desc, n.tag, &sub);
@@ -325,7 +324,7 @@ static void printTlv(unsigned char *buf, size_t buf_len, KSI_FTLV *t, int level,
 static int read_from(FILE *f, struct conf_st *conf) {
 	int res;
 	char *header = NULL;
-	KSI_FTLV t;
+	GT_FTLV t;
 	unsigned char buf[0xffff + 4];
 	size_t len;
 	size_t off = 0;
@@ -333,11 +332,11 @@ static int read_from(FILE *f, struct conf_st *conf) {
 	if (conf->hdr_len > 0) {
 		header = calloc(conf->hdr_len, 1);
 		if (header == NULL) {
-			res = KSI_OUT_OF_MEMORY;
+			res = GT_OUT_OF_MEMORY;
 			goto cleanup;
 		}
 		if (fread(header, conf->hdr_len, 1, f) != 1) {
-			res = KSI_INVALID_FORMAT;
+			res = GT_INVALID_FORMAT;
 			goto cleanup;
 		}
 
@@ -348,8 +347,8 @@ static int read_from(FILE *f, struct conf_st *conf) {
 	}
 
 	while (1) {
-		res = KSI_FTLV_fileRead(f, buf, sizeof(buf), &len, &t);
-		if (res != KSI_OK) {
+		res = GT_FTLV_fileRead(f, buf, sizeof(buf), &len, &t);
+		if (res != GT_OK) {
 			if (len == 0) break;
 			fprintf(stderr, "%s: Failed to parse %llu bytes\n", conf->file_name, (unsigned long long) len);
 			break;
@@ -361,7 +360,7 @@ static int read_from(FILE *f, struct conf_st *conf) {
 		off += len;
 	}
 
-	res = KSI_OK;
+	res = GT_OK;
 
 cleanup:
 
@@ -371,7 +370,7 @@ cleanup:
 }
 
 static int read_desc_dir(struct desc_st *desc, const char *dir_name) {
-	int res = KSI_UNKNOWN_ERROR;
+	int res = GT_UNKNOWN_ERROR;
 	DIRECTORY *dir = NULL;
 	ENTITY *ent;
 
@@ -379,7 +378,7 @@ static int read_desc_dir(struct desc_st *desc, const char *dir_name) {
 
 	if (DIRECTORY_open(dir_name, &dir) != DIR_OK) {
 		fprintf(stderr, "%s:Unable to access description directory.\n", dir_name);
-		res = KSI_OK;
+		res = GT_OK;
 		goto cleanup;
 	}
 
@@ -397,7 +396,7 @@ static int read_desc_dir(struct desc_st *desc, const char *dir_name) {
 			snprintf(buf, sizeof(buf), "%s/%s", getDescriptionFileDir(), name);
 
 			res = desc_add_file(desc, buf);
-			if (res != KSI_OK) {
+			if (res != GT_OK) {
 				fprintf(stderr, "%s/%s: Unable to read description file\n", dir_name, name);
 			}
 		}
@@ -450,7 +449,7 @@ int main(int argc, char **argv) {
 						"    -p       Pretty print values.\n"
 						"    -P       Pretty print keys.\n"
 				);
-				res = KSI_OK;
+				res = GT_OK;
 				goto cleanup;
 			case 'd':
 				conf.max_depth = atoi(optarg);
@@ -487,7 +486,7 @@ int main(int argc, char **argv) {
 
 	/* Initialize the description structure. */
 	res = read_desc_dir(&conf.desc, getDescriptionFileDir());
-	if (res != KSI_OK) {
+	if (res != GT_OK) {
 		fprintf(stderr, "Unable to read description directory '%s'.\n", getDescriptionFileDir());
 	} else {
 		desc_free = true;
@@ -496,7 +495,7 @@ int main(int argc, char **argv) {
 	/* If there are no input files, read from the standard in. */
 	if (optind >= argc) {
 		res = read_from(stdin, &conf);
-		if (res != KSI_OK) goto cleanup;
+		if (res != GT_OK) goto cleanup;
 	} else {
 		size_t i;
 
@@ -513,7 +512,7 @@ int main(int argc, char **argv) {
 			res = read_from(input, &conf);
 			fclose(input);
 			input = NULL;
-			if (res != KSI_OK) goto cleanup;
+			if (res != GT_OK) goto cleanup;
 		}
 	}
 
