@@ -115,7 +115,7 @@
 0806.14			RAW			Signed attributes suffix
 0806.15			INT			Signed attributed hash algorithm
 
-0200			*			Aggregation PD
+0200			*			Aggregation PDU
 0200.01			*			PDU header
 0200.01.01		STR			Login id
 0200.01.02		INT			Instance id
@@ -149,7 +149,7 @@
 0203.04			INT			Status
 0203.05			STR			Error message
 
-0300			*			Extension PD
+0300			*			Extension PDU
 0300.01         *			PDU header
 0300.01.01      STR			Login id
 0300.01.02      INT			Instance id
