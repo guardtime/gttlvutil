@@ -32,35 +32,6 @@ static char *hash_alg[] = {
 	"sha-1", "sha2-256", "ripemd-160", "sha2-224", "sha2-384", "sha2-512", "ripemd-256", "sha3-224", "sha3-256", "sha3-512", "sm3"
 };
 
-
-
-static const char *path_removeFile(const char *origPath, char *buf, size_t buf_len) {
-	char *beginingOfFile = NULL;
-	size_t path_len;
-	char *ret = NULL;
-
-#ifdef _WIN32
-	beginingOfFile = strrchr(origPath, '\\');
-	if (beginingOfFile == NULL) {
-		beginingOfFile = strrchr(origPath, '/');
-	}
-#else
-	beginingOfFile = strrchr(origPath, '/');
-#endif
-
-	if (beginingOfFile ==  NULL) {
-		buf[0] = '\0';
-		return buf;
-	}
-
-	path_len = beginingOfFile - origPath;
-	if (path_len + 1 > buf_len) return NULL;
-
-	ret = strncpy(buf, origPath, path_len + 1);
-	buf[path_len + 1] = 0;
-	return  ret;
-}
-
 static char descriptionDir[2048];
 
 static const char *getDescriptionFileDir(void) {
@@ -420,8 +391,9 @@ int main(int argc, char **argv) {
 	setDescriptionFileDir(DATA_DIR);
 #else
 	char buf[1024];
-	if (path_removeFile(argv[0], buf, sizeof(buf)) == NULL) {
-		fprintf(stderr, "Unable to set description file dir.\n");
+
+	if(DIRECTORY_getMyPath(buf, sizeof(buf)) != GT_OK) {
+		fprintf(stderr, "Unable to get path to gttlvdump.\n");
 	}
 
 	setDescriptionFileDir(buf);

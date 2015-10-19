@@ -33,6 +33,7 @@ void DIRECTORY_close(DIRECTORY *dir);
 int DIRECTORY_getNextEntity(DIRECTORY *dir, ENTITY **next);
 const char *ENTITY_getName(ENTITY *entity);
 int ENTITY_getType(ENTITY *entity);
+int DIRECTORY_getMyPath(char *path, size_t path_len);
 
 #ifdef	__cplusplus
 }
