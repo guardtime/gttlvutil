@@ -221,6 +221,7 @@ static void print_time(unsigned char *buf, size_t len, size_t prefix_len, int ty
 		size_t len;
 
 		fract[0] = '\0';
+		tmp[0] = '\0';
 
 		switch (type) {
 			case TLV_MTIME:
@@ -237,14 +238,17 @@ static void print_time(unsigned char *buf, size_t len, size_t prefix_len, int ty
 				break;
 		}
 
-		tm_info = gmtime(&seconds);
-		len = strftime(tmp, sizeof(tmp), "%Y-%m-%d %H:%M:%S", tm_info);
-		if (fract[0] != '\0') {
-			len += snprintf(tmp + len, sizeof(tmp) - len, ".%s", fract);
+		if (seconds >= 0xffffffff) {
+			fprintf(stderr, "Invalid time value.\n");
+		} else {
+			tm_info = gmtime(&seconds);
+			len = strftime(tmp, sizeof(tmp), "%Y-%m-%d %H:%M:%S", tm_info);
+			if (fract[0] != '\0') {
+				len += snprintf(tmp + len, sizeof(tmp) - len, ".%s", fract);
+			}
+
+			strftime(tmp + len, sizeof(tmp) - len, " %Z", tm_info);
 		}
-
-		strftime(tmp + len, sizeof(tmp) - len, " %Z", tm_info);
-
 		printf("(%llu) %s\n", t, tmp);
 	}
 }
