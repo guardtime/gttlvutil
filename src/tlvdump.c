@@ -13,6 +13,8 @@
 
 #define INDENT_LEN 2
 
+enum out_enc_en { ENCODE_HEX, ENCODE_BASE64 };
+
 struct conf_st {
 	const char *file_name;
 	size_t hdr_len;
@@ -26,6 +28,7 @@ struct conf_st {
 	bool pretty_val;
 	bool pretty_key;
 	struct desc_st desc;
+	enum out_enc_en out_enc;
 };
 
 static char *hash_alg[] = {
@@ -94,15 +97,46 @@ static uint64_t get_uint64(unsigned char *buf, size_t len) {
 	return val;
 }
 
-
-static void print_raw_data(unsigned char *buf, size_t len, size_t prefix_len, struct conf_st *conf) {
+#define wrap_line(p) if (conf->wrap && line_len > 0 && line_len % 64 == 0 ) { printf("\n%*s", prefix_len, ""); len = 0; } line_len += p
+static void print_hex(unsigned char *buf, size_t len, size_t prefix_len, struct conf_st *conf) {
 	size_t i;
+	size_t line_len = 0;
 
 	for (i = 0; i < len; i++) {
-		if (conf->wrap &&  i > 0 && i % 64 == 0 ) {
-			printf("\n%*s", prefix_len, "");
+		wrap_line(printf("%02x", buf[i]));
+	}
+
+	if (conf->convert && len <= 8) {
+		size_t val = 0;
+		printf(" (dec = %llu)", (unsigned long long) get_uint64(buf, len));
+	}
+	putchar('\n');
+}
+
+static void print_base64(unsigned char *buf, size_t len, size_t prefix_len, struct conf_st *conf) {
+	size_t i;
+	size_t line_len = 0;
+	static char tab[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+	for (i = 0; i < len; i += 3) {
+		unsigned char a = buf[i] >> 2;
+
+		wrap_line(printf("%c", tab[a]));
+		if (i + 1 < len) {
+			unsigned char b = ((buf[i] & 0x03) << 4) | (buf[i + 1] >> 4);
+
+			wrap_line(printf("%c", tab[b]));
+			if (i + 2 < len) {
+				unsigned char c = ((buf[i + 1] & 0x0f) << 2) | (buf[i + 2] >> 6);
+				unsigned char d = buf[i + 2] & 0x3f;
+				wrap_line(printf("%c", tab[c]));
+				wrap_line(printf("%c", tab[d]));
+			} else {
+				wrap_line(printf("="));
+			}
+		} else {
+			wrap_line(printf("=="));
 		}
-		printf("%02x", buf[i]);
 	}
 
 	if (conf->convert && len <= 8) {
@@ -110,6 +144,19 @@ static void print_raw_data(unsigned char *buf, size_t len, size_t prefix_len, st
 		printf(" (dec = %llu)", (unsigned long long)get_uint64(buf, len));
 	}
 	putchar('\n');
+}
+
+
+
+static void print_raw_data(unsigned char *buf, size_t len, size_t prefix_len, struct conf_st *conf) {
+	switch (conf->out_enc) {
+		case ENCODE_BASE64:
+			print_base64(buf, len, prefix_len, conf);
+			break;
+		case ENCODE_HEX:
+		default:
+			print_hex(buf, len, prefix_len, conf);
+	}
 }
 
 static int get_payload_type(unsigned char *buf, size_t buf_len, struct conf_st *conf, struct desc_st *desc) {
@@ -429,7 +476,7 @@ int main(int argc, char **argv) {
 
 	memset(&conf, 0, sizeof(conf));
 
-	while ((c = getopt(argc, argv, "hH:d:xwyzaspP")) != -1) {
+	while ((c = getopt(argc, argv, "hH:d:xwyzaspPe:")) != -1) {
 		switch(c) {
 			case 'H':
 				conf.hdr_len = atoi(optarg);
@@ -448,6 +495,7 @@ int main(int argc, char **argv) {
 						"    -s       Strict types - do not parse TLV's with unknown types.\n"
 						"    -p       Pretty print values.\n"
 						"    -P       Pretty print keys.\n"
+						"    -e enc   Encoding of binary payload. Available encodings: 'hex' (default), 'base64'\n"
 				);
 				res = GT_OK;
 				goto cleanup;
@@ -478,6 +526,32 @@ int main(int argc, char **argv) {
 			case 'P':
 				conf.pretty_key = true;
 				break;
+			case 'e': {
+				struct { 
+					const char *alias;
+					enum out_enc_en enc;
+				} enc_map[] = {
+					{"hex", ENCODE_HEX },
+					{"base16", ENCODE_HEX },
+					{"16", ENCODE_HEX },
+					{"base64", ENCODE_BASE64 },
+					{"64", ENCODE_BASE64 },
+					{ NULL, 0 }
+				};
+				size_t i = 0;
+				while (enc_map[i].alias != NULL) {
+					if (!strcmp(enc_map[i].alias, optarg)) {
+						conf.out_enc = enc_map[i].enc;
+						break;
+					}
+					++i;
+				}
+				if (enc_map[i].alias == NULL) {
+					fprintf(stderr, "Unknown encoding '%s', defaulting to 'hex'\n", optarg);
+					conf.out_enc = ENCODE_HEX;
+				}
+				break;
+			}
 			default:
 				fprintf(stderr, "Unknown parameter, try -h.");
 				goto cleanup;
