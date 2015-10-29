@@ -3,7 +3,6 @@
 #include <stdlib.h>
 
 #include "common.h"
-#include "tlvdump.h"
 
 int encode(unsigned int type, int lenient, int forward, FILE *in, FILE *out) {
 	int res = GT_UNKNOWN_ERROR;
@@ -22,7 +21,7 @@ int encode(unsigned int type, int lenient, int forward, FILE *in, FILE *out) {
 		count++;
 
 		if (len >> 8 > UCHAR_MAX) {
-			res = KSI_INVALID_ARGUMENT;
+			res = GT_INVALID_ARGUMENT;
 			fprintf(stderr, "Len is too great: '%d'\n", len);
 			goto cleanup;
 		}

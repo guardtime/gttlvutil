@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "common.h"
 #include "dir.h"
 #ifdef _WIN32
@@ -18,6 +19,7 @@ struct DIRECTORY_st {
 
 #else
 #include <dirent.h>
+#include <unistd.h>
 
 struct ENTITY_st {
 	struct dirent *entity;
@@ -116,6 +118,91 @@ void DIRECTORY_close(DIRECTORY *dir) {
 
 
 	free(dir);
+}
+
+static const char *path_removeFile(const char *origPath, char *buf, size_t buf_len) {
+	char *beginingOfFile = NULL;
+	size_t path_len;
+	char *ret = NULL;
+
+#ifdef _WIN32
+	beginingOfFile = strrchr(origPath, '\\');
+	if (beginingOfFile == NULL) {
+		beginingOfFile = strrchr(origPath, '/');
+	}
+#else
+	beginingOfFile = strrchr(origPath, '/');
+#endif
+
+	if (beginingOfFile ==  NULL) {
+		buf[0] = '\0';
+		return buf;
+	}
+
+	path_len = beginingOfFile - origPath;
+	if (path_len + 1 > buf_len) return NULL;
+
+	ret = strncpy(buf, origPath, path_len + 1);
+	buf[path_len + 1] = 0;
+	return  ret;
+}
+
+#ifdef _WIN32
+static char *directory_getMyFullPath(char *buf, size_t buf_len) {
+	TCHAR tmp[MAX_PATH];
+	DWORD count;
+	count = GetModuleFileName(NULL, tmp, MAX_PATH);
+	if (count == 0) return NULL;
+
+	strncpy(buf, tmp, buf_len);
+	buf[buf_len - 1] = '\0';
+
+	return buf;
+}
+#else
+static char *directory_getMyFullPath(char *buf, size_t buf_len) {
+	char tmp[2048];
+
+	if (getcwd (tmp, sizeof(tmp)) != tmp) {
+		return NULL;
+	}
+
+	strncpy(buf, tmp, buf_len);
+	buf[buf_len - 1] = '\0';
+
+	return buf;
+
+}
+#endif
+
+int DIRECTORY_getMyPath(char *path, size_t path_len) {
+	int res = GT_UNKNOWN_ERROR;
+	char buf[2048];
+	char tmp[2048];
+
+	if (path == NULL || path_len == 0) {
+		res = GT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	if (directory_getMyFullPath(buf, sizeof(buf)) == NULL) {
+		fprintf(stderr, "Unable to retrieve gttlvdump full path.\n");
+		res = GT_INVALID_FORMAT;
+		goto cleanup;
+	}
+
+	if (path_removeFile(buf, tmp, sizeof(tmp)) == NULL) {
+		fprintf(stderr, "Unable to remove file name from path '%s'.\n", buf);
+		res = GT_INVALID_FORMAT;
+	}
+
+	strncpy(path, tmp, path_len);
+	path[path_len - 1] = '\0';
+	res = GT_OK;
+
+cleanup:
+
+return res;
 }
 
 int DIRECTORY_getNextEntity(DIRECTORY *dir, ENTITY **next) {
