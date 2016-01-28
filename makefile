@@ -74,7 +74,8 @@ default: $(BIN_DIR)\$(TOOL_NAME).exe $(BIN_DIR)\tlvcreate.exe
 
 
 $(BIN_DIR)\$(TOOL_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(TOOL_OBJ)
-	link $(LDFLAGS) /OUT:$@ $(TOOL_OBJ) 
+	link $(LDFLAGS) /OUT:$@ $(TOOL_OBJ)
+	for %I in ($(SRC_DIR)\ksi.desc $(SRC_DIR)\logsig.desc) do copy %I $(BIN_DIR)\ /Y
 
 $(BIN_DIR)\tlvcreate.exe: $(BIN_DIR) $(OBJ_DIR) $(TLV_CREATE_OBJ)
 	link $(LDFLAGS) /OUT:$@ $(TLV_CREATE_OBJ) 
