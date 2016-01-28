@@ -1,1 +1,6 @@
 SUBDIRS = src 
+
+EXTRA_DIST = VERSION redhat/gttlvutil.spec
+
+redhat/gttlvutil.spec: redhat/gttlvutil.spec.in
+	sed 's/@VERSION\@/${VERSION}/g' $< > $@
