@@ -19,8 +19,8 @@
 
 Summary: Guardtime TLV Utils 
 Name: gttlvutil
-Version: 0.2.2
-Release: STABLE 
+Version: 0.3.0
+Release: 1 
 License: ASL 2.0
 Source: http://download.guardtime.com/%{name}-%{version}.tar.gz
 URL: http://www.guardtime.com
@@ -44,6 +44,7 @@ make install DESTDIR=%{buildroot}
 %files
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_bindir}/gttlvdump
+%attr(755,root,root) %{_bindir}/gttlvgrep
 %dir %{_datadir}/%{name}
 %{_datadir}/%{name}/ksi.desc
 %{_datadir}/%{name}/logsig.desc
