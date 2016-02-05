@@ -1,0 +1,9 @@
+Version 0.3
+ 
+2016-02-05 0.3.64
+
+* FEATURE: Added gttlvgrep.
+* IMPROVEMENT: Added option to display payload raw values as base64.
+* IMPROVEMENT: Versioning changes.
+* BUGFIX: Added safeguard for time printing.
+* BUGFIX: Windows build copies .desc files from src to bin dir.
