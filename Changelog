@@ -1,5 +1,7 @@
 Version 0.3
- 
+
+* BUGFIX: Added parse verification to known composite tags.
+
 2016-02-05 0.3.64
 
 * FEATURE: Added gttlvgrep.

@@ -137,6 +137,14 @@ static int get_payload_type(unsigned char *buf, size_t buf_len, struct conf_st *
 	unsigned char *ptr = buf;
 
 	if (desc != NULL) {
+		if (desc->type == TLV_COMPOSITE) {
+			/* Make sure the content is actually parsable. */
+			res = GT_FTLV_memReadN(ptr, len, NULL, 0, NULL);
+			if (res != GT_OK) {
+				type = TLV_NO_COMPOSITE;
+				goto cleanup;
+			}
+		}
 		type = desc->type;
 		goto cleanup;
 	}
@@ -307,6 +315,7 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 		putchar('\n');
 		while (len > 0) {
 			size_t consumed;
+			int res;
 			GT_FTLV_memRead(ptr, len, &n);
 			n.off = off;
 
@@ -321,7 +330,7 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 			ptr += consumed;
 			len -= consumed;
 		}
-	} else if (type != TLV_RAW && conf->pretty_val && !limited) {
+	} else if (type != TLV_RAW && type != TLV_NO_COMPOSITE && conf->pretty_val && !limited) {
 		switch (type) {
 			case TLV_INT:
 				print_int(ptr, len, prefix_len, conf);
@@ -339,6 +348,9 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 				break;
 		}
 	} else {
+		if (!limited && type == TLV_NO_COMPOSITE) {
+			printf(" <-- NOT A COMPOSITE VALUE --> ");
+		}
 		print_raw_data(ptr, len, prefix_len, conf);
 	}
 }

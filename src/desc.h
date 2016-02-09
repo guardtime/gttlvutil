@@ -17,7 +17,9 @@ enum {
 	/** Time in micro seconds. */
 	TLV_UTIME,
 	/** Imprint value. */
-	TLV_IMPRINT	
+	TLV_IMPRINT,
+	/** Composite value, that is not parsable. */
+	TLV_NO_COMPOSITE,	
 };
 
 /**
