@@ -1,11 +1,10 @@
 gttlvdumpdir=$(pkgdatadir)
 AM_CFLAGS=-g -O0 -DDATA_DIR="\"$(gttlvdumpdir)\""
 
-bin_PROGRAMS=gttlvdump gttlvgrep
-check_PROGRAMS=gttlvcreate
+bin_PROGRAMS=gttlvdump gttlvgrep gttlvwrap
 
 dist_gttlvdump_DATA=logsig.desc ksi.desc
 gttlvdump_SOURCES=common.h tlvdump.c fast_tlv.h fast_tlv.c desc.h desc.c dir.c dir.h
-gttlvcreate_SOURCES=common.h tlvcreate.c
+gttlvwrap_SOURCES=common.h tlvwrap.c
 gttlvgrep_SOURCES=tlvgrep.c fast_tlv.h fast_tlv.c common.h
 
