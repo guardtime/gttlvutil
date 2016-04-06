@@ -61,6 +61,12 @@ static int parseHdr(const unsigned char *hdr, size_t hdrLen, struct fast_tlv_s *
 	t->is_nc = (hdr[0] & GT_TLV_MASK_LENIENT) != 0;
 	t->is_fwd = (hdr[0] & GT_TLV_MASK_FORWARD) != 0;
 
+	/* Set the force flag to indicate TLV that could be TLV8,
+     * but for some reason are encoded as TLV16. */
+	if (t->tag <= 0x1f && t->hdr_len <= 0xff) {
+		t->force16 = (hdr[0] & GT_TLV_MASK_TLV16) != 0;
+	}
+
 	res = GT_OK;
 
 cleanup:

@@ -48,6 +48,9 @@ extern "C" {
 
 		/* Flag - is forward. */
 		int is_fwd;
+
+		/* Flag to force TLV16. */
+		int force16;
 	};
 
 	/**
