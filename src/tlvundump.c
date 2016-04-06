@@ -16,6 +16,7 @@ char *fileName = "<stdin>";
 
 enum {
 	ST_BEGIN,
+	ST_COMMENT,
 	ST_INDENT,
 	ST_TLV_T,
 	ST_TLV_L,
@@ -86,9 +87,20 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 					state = ST_INDENT;
 					continue;
 				}
+				break;
+			case ST_COMMENT:
+				if (c == '\n') {
+					state = ST_BEGIN;
+				} if (c == EOF) {
+					state = ST_BEGIN;
+					continue;
+				}
+				break;
 			case ST_INDENT:
 				if (c == ' ' || c == '\t') {
 					tlv->indent[tlv->indent_len++] = c;
+				} else if (c == '#') {
+					state = ST_COMMENT;
 				} else {
 					state = ST_TLV_T;
 					continue;
