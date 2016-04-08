@@ -1,5 +1,6 @@
 Version 0.3
 
+* FEATURE: Added gttlvundump
 * FEATURE: Included gttlvwrap into main build.
 * IMPROVEMENT: Added help to gttlvwrap.
 * BUGFIX: Added parse verification to known composite tags.
