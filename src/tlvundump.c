@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <getopt.h>
 
 #include "common.h"
 
@@ -17,6 +18,9 @@ char *fileName = "<stdin>";
 enum {
 	ST_BEGIN,
 	ST_COMMENT,
+	ST_FORCE,
+	ST_FORCE_16,
+	ST_RAW_CONTENT,
 	ST_INDENT,
 	ST_TLV_T,
 	ST_TLV_L,
@@ -52,10 +56,15 @@ typedef struct {
 	unsigned tag;
 	int isFw;
 	int isNc;
-	int isNested;
+
+	int force;
+
+	size_t lineNr;
+	int headless;
 } TlvLine;
 
-#define error(s) fprintf(stderr, "%s:%d:%d - %s\n", fileName, lineNr,pos, s); exit(2)
+#define line_error(s, lineNr) fprintf(stderr, "%s:%d - %s\n", fileName, (lineNr), (s)); exit(2)
+#define error(s) line_error((s), lineNr)
 #define IS_SPACE(c) ((c) == ' ' || (c) == '\t')
 #define IS_DIGIT(c) ((c) >= '0' && (c) <= '9')
 #define IS_HEX(c) (IS_DIGIT(c) || (toupper(c) >= 'A' && toupper(c) <= 'F'))
@@ -73,6 +82,10 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 	while (1) {
 		switch(state) {
 			case ST_BEGIN:
+				if (IS_HEX(c)) {
+					state = ST_RAW_CONTENT;
+					continue;
+				}
 				if (c == '\n') {
 					/* Count newlines. */
 					pos = 0;
@@ -106,6 +119,10 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 					continue;
 				}
 				break;
+			case ST_RAW_CONTENT:
+				tlv->headless = 1;
+				state = ST_DATA_HEX_1;	
+				continue;
 			case ST_TLV_T:
 				if (c != 'T') {
 					error("Expected 'T'");
@@ -122,6 +139,24 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 				if (c != 'V') {
 					error("Expected 'V'");
 				}
+				state = ST_FORCE;
+				break;
+			case ST_FORCE:
+				state = ST_BRACKET_BEGIN;
+				if (c == '1') {
+					state = ST_FORCE_16;
+					break;
+				} else if (c == '8') {
+					tlv->force = 8;
+				} else {
+					continue;
+				} 
+				break;
+			case ST_FORCE_16:
+				if (c != '6') {
+					error("Expected '6'");
+				}
+				tlv->force = 16;
 				state = ST_BRACKET_BEGIN;
 				break;
 			case ST_BRACKET_BEGIN:
@@ -285,6 +320,7 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 			case ST_END:
 				if (IS_SPACE(c)) break;
 				if (c == '\n' || c == EOF) {
+					tlv->lineNr = lineNr;
 					return 1; /* Indicate success. */
 				} else {
 					error("Unexpected character.");
@@ -323,16 +359,23 @@ static size_t serializeStack(TlvLine *stack, size_t stack_len, char *buf, size_t
 	/* Serialize payload. */
 	if (stack[0].dat_len > 0) {
 		if (subLen != 0) {
-			error("Length sould be 0 when not a composite.");
+			line_error("Length sould be 0 when not a composite.", stack[0].lineNr);
 		}
 		memcpy(buf + buf_len - len - stack[0].dat_len, stack[0].dat, stack[0].dat_len);
 		len += subLen = stack[0].dat_len;
 	}
 
-	if (stack[0].tag > 0x1f || subLen > 0xff) {
+	/* Skip the header, if the TLV is headless. */
+	if (stack[0].headless) goto cleanup;
+
+	if (stack[0].tag > 0x1f || subLen > 0xff || stack[0].force == 16) {
 		/* TLV16 */
 		if (buf_len - len < 4) {
-			error("TLV16 buffer overflow.");
+			line_error("TLV16 buffer overflow.", stack[0].lineNr);
+		}
+
+		if (stack[0].force == 8) {
+			line_error("Unable to fit data into TLV8", stack[0].lineNr);
 		}
 		buf[buf_len - len - 1] = subLen & 0xff;
 		buf[buf_len - len - 2] = (subLen >> 8) & 0xff;
@@ -344,7 +387,7 @@ static size_t serializeStack(TlvLine *stack, size_t stack_len, char *buf, size_t
 
 	} else {
 		if (buf_len - len < 2) {
-			error("TLV8 buffer overflow");
+			line_error("TLV8 buffer overflow", stack[0].lineNr);
 		}
 		buf[buf_len - len - 1] = subLen & 0xff;
 		buf[buf_len - len - 2] = stack[0].tag & 0x1f;
@@ -354,12 +397,12 @@ static size_t serializeStack(TlvLine *stack, size_t stack_len, char *buf, size_t
 	if (stack[0].isNc) buf[buf_len - len] |= 0x40;
 	if (stack[0].isFw) buf[buf_len - len] |= 0x20;
 
+cleanup:
+
 	return len;
 }
 
-
-int main(int argc, char **argv) {
-	FILE *f = NULL;
+static int convertStream(FILE *f) {
 	TlvLine *stack = NULL;
 	size_t stack_size = 100;
 	size_t stack_len = 0;
@@ -371,12 +414,10 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
-	f = fopen(argv[1], "r");
-
 	while (parseTlv(f, &stack[stack_len])) {
 		/* The variable stack_len is the index of the last element and is incremented
 		 * in the end of this loop. */
-		if (stack_len == 0) {
+		if (stack_len == 0 || stack[stack_len].indent_len == 0) {
 			stack[stack_len].level = 0;
 		} else {
 			if (stack[stack_len].indent_len < stack[stack_len - 1].indent_len) {
@@ -411,7 +452,6 @@ int main(int argc, char **argv) {
 						error("A TLV with explicit data may not have nested elements.");
 					}
 					stack[stack_len].level++;
-					stack[stack_len - 1].isNested = 1;
 				} 
 
 			}
@@ -422,10 +462,11 @@ int main(int argc, char **argv) {
 			unsigned char buf[0xffff + 4];
 			size_t buf_len = 0;
 
-			buf_len = serializeStack(stack, stack_len + 1, buf, sizeof(buf));
-			printf("Serialized tlv length = %llu\n", buf_len);			
+			buf_len = serializeStack(stack, stack_len, buf, sizeof(buf));
+			fwrite(buf + sizeof(buf) - buf_len, 1, buf_len, stdout);
 
-			stack_len = 0;
+			stack[0] = stack[stack_len];
+			stack_len = 1;
 
 		} else {
 			stack_len++;
@@ -453,7 +494,49 @@ int main(int argc, char **argv) {
 		fwrite(buf + sizeof(buf) - buf_len, 1, buf_len, stdout);
 	}
 	
-	fclose(f);
-
 	if (stack != NULL) free(stack);
+}
+
+int main(int argc, char **argv) {
+	FILE *f = NULL;
+	int c;
+
+	while ((c = getopt(argc, argv, "h")) != -1) {
+		switch(c) {
+			case 'h':
+				printf("Usage:\n"
+						"  gttlvundump [-h] tlvfile\n"
+						"    -h       This help message\n"
+				);
+				exit(0);
+			break;
+			default:
+				fprintf(stderr, "Unknown parameter, try -h.");
+				exit(1);
+		}
+	}
+
+	/* If there are no input files, read from the standard in. */
+	if (optind >= argc) {
+		convertStream(stdin);
+	} else {
+		size_t i;
+
+		/* Loop over all the inputfiles. */
+		for (i = 0; optind + i < argc; i++) {
+			fileName = argv[optind + i];
+
+			f = fopen(fileName, "rb");
+			if (f == NULL) {
+				fprintf(stderr, "%s: Unable to open file.\n", fileName);
+				continue;
+			}
+
+			convertStream(f);
+			fclose(f);
+			f = NULL;
+		}
+	}
+
+	if (f != NULL && f != stdin) fclose(f);
 }
