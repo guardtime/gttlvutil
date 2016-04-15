@@ -33,16 +33,28 @@ OBJ_DIR = obj
 BIN_DIR = bin
 
 TOOL_NAME = gttlvdump
+WRAP_NAME = gttlvwrap
+GREP_NAME = gttlvgrep
+UNDUMP_NAME = gttlvundump
 
-TOOL_OBJ = \
+DUMP_OBJ = \
 	$(OBJ_DIR)\tlvdump.obj \
 	$(OBJ_DIR)\getopt.obj \
 	$(OBJ_DIR)\fast_tlv.obj \
 	$(OBJ_DIR)\desc.obj \
 	$(OBJ_DIR)\dir.obj
 	
-TLV_CREATE_OBJ = \
-	$(OBJ_DIR)\tlvcreate.obj \
+WRAP_OBJ = \
+	$(OBJ_DIR)\tlvwrap.obj \
+	$(OBJ_DIR)\getopt.obj
+	
+GREP_OBJ = \
+	$(OBJ_DIR)\tlvgrep.obj \
+	$(OBJ_DIR)\fast_tlv.obj \
+	$(OBJ_DIR)\getopt.obj
+	
+UNDUMP_OBJ = \
+	$(OBJ_DIR)\tlvundump.obj \
 	$(OBJ_DIR)\getopt.obj
 	
 #Compiler and linker configuration
@@ -69,16 +81,22 @@ CCFLAGS = $(CCFLAGS) /DDATA_DIR=\"$(DESC_DIR)\"
 #Making
  
 
-default: $(BIN_DIR)\$(TOOL_NAME).exe $(BIN_DIR)\tlvcreate.exe
+default: $(BIN_DIR)\$(TOOL_NAME).exe $(BIN_DIR)\$(WRAP_NAME).exe $(BIN_DIR)\$(GREP_NAME).exe $(BIN_DIR)\$(UNDUMP_NAME).exe
 
 
 
-$(BIN_DIR)\$(TOOL_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(TOOL_OBJ)
-	link $(LDFLAGS) /OUT:$@ $(TOOL_OBJ)
+$(BIN_DIR)\$(TOOL_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(DUMP_OBJ)
+	link $(LDFLAGS) /OUT:$@ $(DUMP_OBJ)
 	for %I in ($(SRC_DIR)\ksi.desc $(SRC_DIR)\logsig.desc) do copy %I $(BIN_DIR)\ /Y
 
-$(BIN_DIR)\tlvcreate.exe: $(BIN_DIR) $(OBJ_DIR) $(TLV_CREATE_OBJ)
-	link $(LDFLAGS) /OUT:$@ $(TLV_CREATE_OBJ) 
+$(BIN_DIR)\$(WRAP_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(WRAP_OBJ)
+	link $(LDFLAGS) /OUT:$@ $(WRAP_OBJ)
+
+$(BIN_DIR)\$(GREP_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(GREP_OBJ)
+	link $(LDFLAGS) /OUT:$@ $(GREP_OBJ)
+
+$(BIN_DIR)\$(UNDUMP_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(UNDUMP_OBJ)
+	link $(LDFLAGS) /OUT:$@ $(UNDUMP_OBJ)
 
 {$(SRC_DIR)\}.c{$(OBJ_DIR)\}.obj:
 	cl /c /$(RTL) $(CCFLAGS) /Fo$@ $<
