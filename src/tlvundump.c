@@ -205,7 +205,7 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 					case 'F': 
 						tlv->isFw = 1;
 						break;
-					case 'L':
+					case 'N':
 						tlv->isNc = 1;
 						break;
 					default:
