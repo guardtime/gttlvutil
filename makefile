@@ -32,7 +32,8 @@ SRC_DIR = src
 OBJ_DIR = obj
 BIN_DIR = bin
 
-TOOL_NAME = gttlvdump
+TOOL_NAME = gttlvutil
+DUMP_NAME = gttlvdump
 WRAP_NAME = gttlvwrap
 GREP_NAME = gttlvgrep
 UNDUMP_NAME = gttlvundump
@@ -81,11 +82,11 @@ CCFLAGS = $(CCFLAGS) /DDATA_DIR=\"$(DESC_DIR)\"
 #Making
  
 
-default: $(BIN_DIR)\$(TOOL_NAME).exe $(BIN_DIR)\$(WRAP_NAME).exe $(BIN_DIR)\$(GREP_NAME).exe $(BIN_DIR)\$(UNDUMP_NAME).exe
+default: $(BIN_DIR)\$(DUMP_NAME).exe $(BIN_DIR)\$(WRAP_NAME).exe $(BIN_DIR)\$(GREP_NAME).exe $(BIN_DIR)\$(UNDUMP_NAME).exe
 
 
 
-$(BIN_DIR)\$(TOOL_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(DUMP_OBJ)
+$(BIN_DIR)\$(DUMP_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(DUMP_OBJ)
 	link $(LDFLAGS) /OUT:$@ $(DUMP_OBJ)
 	for %I in ($(SRC_DIR)\ksi.desc $(SRC_DIR)\logsig.desc) do copy %I $(BIN_DIR)\ /Y
 
@@ -110,12 +111,19 @@ $(OBJ_DIR) $(BIN_DIR):
 	@if not exist $@ mkdir $@
 
 
-installer:$(BIN_DIR) $(OBJ_DIR) $(BIN_DIR)\$(TOOL_NAME).exe
+installer:$(BIN_DIR) $(OBJ_DIR) $(BIN_DIR)\$(DUMP_NAME).exe $(BIN_DIR)\$(WRAP_NAME).exe $(BIN_DIR)\$(GREP_NAME).exe $(BIN_DIR)\$(UNDUMP_NAME).exe
 !IF [candle.exe > nul] != 0
 !MESSAGE Please install WiX to build installer.
 !ELSE
 	cd windows
-	candle.exe $(TOOL_NAME).wxs -o ..\$(OBJ_DIR)\$(TOOL_NAME).wixobj -dVersion="1.0.0" -dName=$(TOOL_NAME) -dtoolName=$(BIN_DIR)\$(TOOL_NAME).exe -darch=$(INSTALL_MACHINE)
+	candle.exe $(TOOL_NAME).wxs -o ..\$(OBJ_DIR)\$(TOOL_NAME).wixobj \
+	-dVersion="1.0.0" \
+	-dName=$(TOOL_NAME) \
+	-ddumpName=$(BIN_DIR)\$(DUMP_NAME).exe \
+	-dwrapName=$(BIN_DIR)\$(WRAP_NAME).exe \
+	-dgrepName=$(BIN_DIR)\$(GREP_NAME).exe \
+	-dundumpName=$(BIN_DIR)\$(UNDUMP_NAME).exe \
+	-darch=$(INSTALL_MACHINE)
 	light.exe ..\$(OBJ_DIR)\$(TOOL_NAME).wixobj -o ..\$(BIN_DIR)\$(TOOL_NAME) -pdbout ..\$(BIN_DIR)\$(TOOL_NAME).wixpdb -cultures:en-us -ext WixUIExtension
 	cd ..
 !ENDIF
