@@ -27,7 +27,22 @@
                         <Component Id="ApplicationFiles" Guid="2a64757f-3a8f-4d81-9da8-59fc5600e65c" Win64="$(var.isWin64)">
                             <File 
                                 Id="ApplicationFile1"
-                                Source="..\$(var.toolName)"
+                                Source="..\$(var.dumpName)"
+                                ProcessorArchitecture="$(var.platform)">
+                            </File>
+                            <File 
+                                Id="ApplicationFile2"
+                                Source="..\$(var.wrapName)"
+                                ProcessorArchitecture="$(var.platform)">
+                            </File>
+                            <File 
+                                Id="ApplicationFile3"
+                                Source="..\$(var.grepName)"
+                                ProcessorArchitecture="$(var.platform)">
+                            </File>
+                            <File 
+                                Id="ApplicationFile4"
+                                Source="..\$(var.undumpName)"
                                 ProcessorArchitecture="$(var.platform)">
                             </File>
                             <File 
@@ -38,8 +53,8 @@
                                 Id="logsig_desc"
                                 Source="..\src\logsig.desc">
                             </File>
-                            <Environment Id="TLVDUMP_PATH" Name="TLVDUMP_PATH" Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" System="no" />
-                            <Environment Id="Path" Name="Path" Value=";%TLVDUMP_PATH%" Permanent="no" Part="last" Action="set" System="no" />
+                            <Environment Id="TLVUTIL_PATH" Name="TLVUTIL_PATH" Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" System="no" />
+                            <Environment Id="Path" Name="Path" Value=";%TLVUTIL_PATH%" Permanent="no" Part="last" Action="set" System="no" />
                         </Component>
                     </Directory>
                 </Directory>
