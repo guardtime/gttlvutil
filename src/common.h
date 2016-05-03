@@ -17,7 +17,7 @@ extern "C" {
 
 #define GT_TLV_MASK_TLV8_TYPE 0x1fu
 
-#define TLV_UTIL_VERSION_STRING ("tlvutil " VERSION)
+#define TLV_UTIL_VERSION_STRING (PACKAGE_NAME" "VERSION)
 
 typedef enum {
 	false = 0, true = !false
