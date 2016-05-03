@@ -462,7 +462,7 @@ int main(int argc, char **argv) {
 
 	memset(&conf, 0, sizeof(conf));
 
-	while ((c = getopt(argc, argv, "hH:d:xwyzaspPe:")) != -1) {
+	while ((c = getopt(argc, argv, "hH:d:xwyzaspPe:v")) != -1) {
 		switch(c) {
 			case 'H':
 				conf.hdr_len = atoi(optarg);
@@ -482,6 +482,7 @@ int main(int argc, char **argv) {
 						"    -p       Pretty print values.\n"
 						"    -P       Pretty print keys.\n"
 						"    -e enc   Encoding of binary payload. Available encodings: 'hex' (default), 'base64'\n"
+						"    -v       TLV utility package version.\n"
 				);
 				res = GT_OK;
 				goto cleanup;
@@ -513,7 +514,7 @@ int main(int argc, char **argv) {
 				conf.pretty_key = true;
 				break;
 			case 'e': {
-				struct { 
+				struct {
 					const char *alias;
 					enum out_enc_en enc;
 				} enc_map[] = {
@@ -538,6 +539,11 @@ int main(int argc, char **argv) {
 				}
 				break;
 			}
+			case 'v':
+				printf("%s\n", TLV_UTIL_VERSION_STRING);
+				res = GT_OK;
+				goto cleanup;
+				break;
 			default:
 				fprintf(stderr, "Unknown parameter, try -h.");
 				goto cleanup;

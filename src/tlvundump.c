@@ -122,7 +122,7 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 				break;
 			case ST_RAW_CONTENT:
 				tlv->headless = 1;
-				state = ST_DATA_HEX_1;	
+				state = ST_DATA_HEX_1;
 				continue;
 			case ST_TLV_T:
 				if (c != 'T') {
@@ -151,7 +151,7 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 					tlv->force = 8;
 				} else {
 					continue;
-				} 
+				}
 				break;
 			case ST_FORCE_16:
 				if (c != '6') {
@@ -203,7 +203,7 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 			case ST_FLAG:
 				if (IS_SPACE(c)) break;
 				switch(toupper(c)) {
-					case 'F': 
+					case 'F':
 						tlv->isFw = 1;
 						break;
 					case 'N':
@@ -351,8 +351,8 @@ static size_t serializeStack(TlvLine *stack, size_t stack_len, unsigned char *bu
 		}
 	}
 
-	/* Serialize only the next level elements of this branch. Note, the function is 
- 	* recursive, so we need to serialize only the first one. */
+	/* Serialize only the next level elements of this branch. Note, the function is
+	* recursive, so we need to serialize only the first one. */
 	if (stack_len > 1 && stack[0].level < stack[1].level) {
 		len += subLen = serializeStack(stack + 1, stack_len - 1, buf, buf_len - len);
 	}
@@ -453,7 +453,7 @@ static void convertStream(FILE *f) {
 						error("A TLV with explicit data may not have nested elements.");
 					}
 					stack[stack_len].level++;
-				} 
+				}
 
 			}
 		}
@@ -494,7 +494,7 @@ static void convertStream(FILE *f) {
 
 		fwrite(buf + sizeof(buf) - buf_len, 1, buf_len, stdout);
 	}
-	
+
 	if (stack != NULL) free(stack);
 }
 
@@ -502,15 +502,18 @@ int main(int argc, char **argv) {
 	FILE *f = NULL;
 	int c;
 
-	while ((c = getopt(argc, argv, "h")) != -1) {
+	while ((c = getopt(argc, argv, "hv")) != -1) {
 		switch(c) {
 			case 'h':
 				printf("Usage:\n"
 						"  gttlvundump [-h] tlvfile\n"
 						"    -h       This help message\n"
+						"    -v       TLV utility package version.\n"
 				);
 				exit(0);
-			break;
+			case 'v':
+				printf("%s\n", TLV_UTIL_VERSION_STRING);
+				exit(0);
 			default:
 				fprintf(stderr, "Unknown parameter, try -h.");
 				exit(1);
@@ -542,3 +545,4 @@ int main(int argc, char **argv) {
 	if (f != NULL && f != stdin) fclose(f);
 	exit(0);
 }
+
