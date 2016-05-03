@@ -11,7 +11,7 @@
 struct conf_st {
 	const char *file_name;
 	char *pattern;
-	size_t magic_len;
+	int magic_len;
 	bool print_tlv_hdr;
 	bool print_raw;
 	bool print_path;
@@ -247,7 +247,7 @@ int main(int argc, char **argv) {
 			if (conf.magic_len) {
 				if( fseek(f, conf.magic_len, SEEK_SET)) {
 					fprintf(stderr, "%s: Unable to skip header.\n", conf.file_name);
-					goto cleanup;
+					exit(1);
 				}
 			}
 			
@@ -258,8 +258,11 @@ int main(int argc, char **argv) {
 		}
 	}
 
-cleanup:
-
 	if (f != NULL) fclose(f);
+<<<<<<< Updated upstream
 	
+=======
+
+	exit(0);
+>>>>>>> Stashed changes
 }

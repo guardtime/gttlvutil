@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#include <ctype.h>
 
 #include "common.h"
 
@@ -63,7 +64,7 @@ typedef struct {
 	int headless;
 } TlvLine;
 
-#define line_error(s, lineNr) fprintf(stderr, "%s:%d - %s\n", fileName, (lineNr), (s)); exit(2)
+#define line_error(s, lineNr) fprintf(stderr, "%s:%zu - %s\n", fileName, (lineNr), (s)); exit(2)
 #define error(s) line_error((s), lineNr)
 #define IS_SPACE(c) ((c) == ' ' || (c) == '\t')
 #define IS_DIGIT(c) ((c) >= '0' && (c) <= '9')
@@ -336,7 +337,7 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 	error("Unknown format error.");
 }
 
-static size_t serializeStack(TlvLine *stack, size_t stack_len, char *buf, size_t buf_len) {
+static size_t serializeStack(TlvLine *stack, size_t stack_len, unsigned char *buf, size_t buf_len) {
 	size_t i;
 	size_t len = 0;
 	size_t subLen = 0;
@@ -402,7 +403,7 @@ cleanup:
 	return len;
 }
 
-static int convertStream(FILE *f) {
+static void convertStream(FILE *f) {
 	TlvLine *stack = NULL;
 	size_t stack_size = 100;
 	size_t stack_len = 0;
@@ -539,4 +540,5 @@ int main(int argc, char **argv) {
 	}
 
 	if (f != NULL && f != stdin) fclose(f);
+	exit(0);
 }

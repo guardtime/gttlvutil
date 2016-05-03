@@ -69,7 +69,7 @@ static uint64_t get_uint64(unsigned char *buf, size_t len) {
 }
 
 #define wrap_line(p) if (conf->wrap && line_len > 0 && line_len % 64 == 0 ) { printf("\n%*s", prefix_len, ""); len = 0; } line_len += p
-static void print_hex(unsigned char *buf, size_t len, size_t prefix_len, struct conf_st *conf) {
+static void print_hex(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
 	size_t i;
 	size_t line_len = 0;
 
@@ -78,13 +78,12 @@ static void print_hex(unsigned char *buf, size_t len, size_t prefix_len, struct 
 	}
 
 	if (conf->convert && len <= 8) {
-		size_t val = 0;
 		printf(" (dec = %llu)", (unsigned long long) get_uint64(buf, len));
 	}
 	putchar('\n');
 }
 
-static void print_base64(unsigned char *buf, size_t len, size_t prefix_len, struct conf_st *conf) {
+static void print_base64(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
 	size_t i;
 	size_t line_len = 0;
 	static char tab[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -111,7 +110,6 @@ static void print_base64(unsigned char *buf, size_t len, size_t prefix_len, stru
 	}
 
 	if (conf->convert && len <= 8) {
-		size_t val = 0;
 		printf(" (dec = %llu)", (unsigned long long)get_uint64(buf, len));
 	}
 	putchar('\n');
@@ -119,7 +117,7 @@ static void print_base64(unsigned char *buf, size_t len, size_t prefix_len, stru
 
 
 
-static void print_raw_data(unsigned char *buf, size_t len, size_t prefix_len, struct conf_st *conf) {
+static void print_raw_data(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
 	switch (conf->out_enc) {
 		case ENCODE_BASE64:
 			print_base64(buf, len, prefix_len, conf);
@@ -185,13 +183,13 @@ cleanup:
 	return type;
 }
 
-static void print_int(unsigned char *buf, size_t len, size_t prefix_len, struct conf_st *conf) {
+static void print_int(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
 
 	if (len > 8) {
 		printf("0x");
 		print_raw_data(buf, len, prefix_len, conf);
 	} else {
-		printf("%llu\n", get_uint64(buf, len));
+		printf("%llu\n", (unsigned long long)get_uint64(buf, len));
 	}
 }
 
@@ -206,7 +204,7 @@ static void print_str(unsigned char *buf, size_t len, size_t prefix_len, struct 
 	putchar('\n');
 }
 
-static void print_imprint(unsigned char *buf, size_t len, size_t prefix_len, struct conf_st *conf) {
+static void print_imprint(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
 	if (len > 0) {
 		if (buf[0] < sizeof(hash_alg) / sizeof(char *)) {
 			printf("%s:", hash_alg[buf[0]]);
@@ -217,7 +215,7 @@ static void print_imprint(unsigned char *buf, size_t len, size_t prefix_len, str
 	}
 }
 
-static void print_time(unsigned char *buf, size_t len, size_t prefix_len, int type, struct conf_st *conf) {
+static void print_time(unsigned char *buf, size_t len, int prefix_len, int type, struct conf_st *conf) {
 	if (len > 8) {
 		print_raw_data(buf, len, prefix_len, conf);
 	} else {
@@ -234,11 +232,11 @@ static void print_time(unsigned char *buf, size_t len, size_t prefix_len, int ty
 		switch (type) {
 			case TLV_MTIME:
 				seconds = (time_t) t / 1000;
-				snprintf(fract, sizeof(fract), "%03u", t % 1000);
+				snprintf(fract, sizeof(fract), "%03llu", (unsigned long long)(t % 1000));
 				break;
 			case TLV_UTIME:
 				seconds = (time_t) t / 1000 / 1000;
-				snprintf(fract, sizeof(fract), "%06u", t % (1000 * 1000));
+				snprintf(fract, sizeof(fract), "%06llu", (unsigned long long)(t % (1000 * 1000)));
 				break;
 			case TLV_TIME:
 			default:
@@ -257,7 +255,7 @@ static void print_time(unsigned char *buf, size_t len, size_t prefix_len, int ty
 
 			strftime(tmp + len, sizeof(tmp) - len, " %Z", tm_info);
 		}
-		printf("(%llu) %s\n", t, tmp);
+		printf("(%llu) %s\n", (unsigned long long)t, tmp);
 	}
 }
 
@@ -265,7 +263,7 @@ static void print_time(unsigned char *buf, size_t len, size_t prefix_len, int ty
 static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, struct conf_st *conf, struct desc_st *desc) {
 	unsigned char *ptr = buf + t->hdr_len;
 	size_t len = t->dat_len;
-	size_t prefix_len = 0;
+	int prefix_len = 0;
 	struct desc_st *sub = NULL;
 	int type;
 	bool limited = false;
@@ -315,7 +313,7 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 		putchar('\n');
 		while (len > 0) {
 			size_t consumed;
-			int res;
+
 			GT_FTLV_memRead(ptr, len, &n);
 			n.off = off;
 

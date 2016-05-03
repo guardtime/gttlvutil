@@ -23,7 +23,7 @@ int encode(unsigned int type, int lenient, int forward, FILE *in, FILE *out) {
 
 		if (len >> 8 > UCHAR_MAX) {
 			res = GT_INVALID_ARGUMENT;
-			fprintf(stderr, "Len is too great: '%d'\n", len);
+			fprintf(stderr, "Len is too great: '%zu'\n", len);
 			goto cleanup;
 		}
 
@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
 	int forward = 0;
 	FILE *in = NULL;
 	FILE *out = NULL;
-	unsigned int type;
+	unsigned int type = 0;
 	char *tail = NULL;
 
 	while ((c = getopt(argc, argv, "LFt:i:o:")) != -1) {
