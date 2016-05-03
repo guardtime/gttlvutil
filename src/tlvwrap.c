@@ -58,8 +58,9 @@ void printHelp(FILE *f) {
 		"  -F         Set the TLV forward flag.\n"
 		"  -t <tag>   Set the TLV tag.\n"
 		"  -i <fn>    Input file.\n"
-		"  -o <fn>    Output file.\n"	
+		"  -o <fn>    Output file.\n"
 		"  -h         Print this help.\n"
+		"  -v         TLV utility package version.\n"
 		"\n");
 }
 
@@ -73,7 +74,7 @@ int main(int argc, char **argv) {
 	unsigned int type;
 	char *tail = NULL;
 
-	while ((c = getopt(argc, argv, "LFt:i:o:")) != -1) {
+	while ((c = getopt(argc, argv, "LFt:i:o:hv")) != -1) {
 		switch (c) {
 			case 'L':
 				lenient = 1;
@@ -108,6 +109,9 @@ int main(int argc, char **argv) {
 				break;
 			case 'h':
 				printHelp(stdout);
+				exit(0);
+			case 'v':
+				printf("%s\n", TLV_UTIL_VERSION_STRING);
 				exit(0);
 			default:
 				printHelp(stderr);

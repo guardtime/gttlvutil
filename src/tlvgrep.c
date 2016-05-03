@@ -70,9 +70,9 @@ void grepTlv(struct conf_st *conf, char *pattern, char *prefix, int *map, unsign
 
 	if (match && (idx < 0 || map[t->tag] == idx + 1)) {
 		char pre[1024];
-		snprintf(pre, sizeof(pre), "%s%s%02x", 
-				(prefix ? prefix: ""), 
-				((prefix && *prefix)?".":""), 
+		snprintf(pre, sizeof(pre), "%s%s%02x",
+				(prefix ? prefix: ""),
+				((prefix && *prefix)?".":""),
 				t->tag
 		);
 
@@ -92,7 +92,7 @@ void grepTlv(struct conf_st *conf, char *pattern, char *prefix, int *map, unsign
 				ptr = buf + t->hdr_len;
 				len = t->dat_len;
 			}
-	
+
 			if (conf->print_path && !conf->print_raw) {
 				printf("%s: ", pre);
 			}
@@ -127,9 +127,9 @@ void grepTlv(struct conf_st *conf, char *pattern, char *prefix, int *map, unsign
 			}
 		}
 	}
-	
-	
-	
+
+
+
 }
 
 void grepFile(struct conf_st *conf, FILE *f) {
@@ -165,14 +165,17 @@ void printHelp(FILE *f) {
 			"  is sepparated by a dot '.'. Each layer may contain one or multiple\n"
 			"  TLV tag value(s). Multiple values are sepparater by a comma ','.\n"
 			"  Each TLV tag may be followed by a decimal index value enclosed in\n"
-			"  square brackets '[' and ']'.\n\n"
+			"  square brackets '[' and ']'.\n"
+			"\n"
 			"Options:\n"
 			" -h       Print this help message.\n"
 			" -H num   Skip num first bytes.\n"
 			" -e       Print TLV header.\n"
 			" -n       Print TLV path. Has no effect with -r.\n"
 			" -r       Print raw TLV (will override -n and -i).\n"
-			" -i       Print TLV indexes in path.\n\n"
+			" -i       Print TLV indexes in path.\n"
+			" -v       TLV utility package version.\n"
+			"\n"
 			"Examples:\n"
 			"  The following example will print out all the hash chain links in\n"
 			"  the second aggregation chain\n\n"
@@ -199,7 +202,7 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
-	while ((c = getopt(argc, argv, "hH:enri")) != -1) {
+	while ((c = getopt(argc, argv, "hH:enriv")) != -1) {
 		switch(c) {
 			case 'h':
 				printHelp(stdout);
@@ -220,6 +223,9 @@ int main(int argc, char **argv) {
 			case 'i':
 				conf.print_path_index = true;
 				break;
+			case 'v':
+				printf("%s\n", TLV_UTIL_VERSION_STRING);
+				exit(0);
 			default:
 				fprintf(stderr, "Invalid option '%c'\n", c);
 		}
@@ -250,7 +256,7 @@ int main(int argc, char **argv) {
 					goto cleanup;
 				}
 			}
-			
+
 			grepFile(&conf, f);
 
 			fclose(f);
@@ -261,5 +267,5 @@ int main(int argc, char **argv) {
 cleanup:
 
 	if (f != NULL) fclose(f);
-	
+
 }

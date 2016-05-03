@@ -44,6 +44,7 @@ make install DESTDIR=%{buildroot}
 %files
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_bindir}/gttlvdump
+%attr(755,root,root) %{_bindir}/gttlvundump
 %attr(755,root,root) %{_bindir}/gttlvgrep
 %attr(755,root,root) %{_bindir}/gttlvwrap
 %dir %{_datadir}/%{name}
