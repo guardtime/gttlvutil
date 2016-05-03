@@ -70,9 +70,9 @@ void grepTlv(struct conf_st *conf, char *pattern, char *prefix, int *map, unsign
 
 	if (match && (idx < 0 || map[t->tag] == idx + 1)) {
 		char pre[1024];
-		snprintf(pre, sizeof(pre), "%s%s%02x", 
-				(prefix ? prefix: ""), 
-				((prefix && *prefix)?".":""), 
+		snprintf(pre, sizeof(pre), "%s%s%02x",
+				(prefix ? prefix: ""),
+				((prefix && *prefix)?".":""),
 				t->tag
 		);
 
@@ -92,7 +92,7 @@ void grepTlv(struct conf_st *conf, char *pattern, char *prefix, int *map, unsign
 				ptr = buf + t->hdr_len;
 				len = t->dat_len;
 			}
-	
+
 			if (conf->print_path && !conf->print_raw) {
 				printf("%s: ", pre);
 			}
@@ -127,9 +127,9 @@ void grepTlv(struct conf_st *conf, char *pattern, char *prefix, int *map, unsign
 			}
 		}
 	}
-	
-	
-	
+
+
+
 }
 
 void grepFile(struct conf_st *conf, FILE *f) {
@@ -250,7 +250,7 @@ int main(int argc, char **argv) {
 					exit(1);
 				}
 			}
-			
+
 			grepFile(&conf, f);
 
 			fclose(f);
@@ -259,10 +259,6 @@ int main(int argc, char **argv) {
 	}
 
 	if (f != NULL) fclose(f);
-<<<<<<< Updated upstream
-	
-=======
 
 	exit(0);
->>>>>>> Stashed changes
 }
