@@ -9,13 +9,15 @@ extern "C" {
 #	ifndef snprintf
 #		define snprintf _snprintf
 #	endif
-#endif	
+#endif
 
 #define GT_TLV_MASK_TLV16 0x80u
 #define GT_TLV_MASK_LENIENT 0x40u
 #define GT_TLV_MASK_FORWARD 0x20u
 
 #define GT_TLV_MASK_TLV8_TYPE 0x1fu
+
+#define TLV_UTIL_VERSION_STRING ("tlvutil " VERSION)
 
 typedef enum {
 	false = 0, true = !false

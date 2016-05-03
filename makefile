@@ -38,6 +38,8 @@ WRAP_NAME = gttlvwrap
 GREP_NAME = gttlvgrep
 UNDUMP_NAME = gttlvundump
 
+VERSION_FILE = VERSION
+
 DUMP_OBJ = \
 	$(OBJ_DIR)\tlvdump.obj \
 	$(OBJ_DIR)\getopt.obj \
@@ -78,6 +80,14 @@ LDFLAGS = $(LDFLAGS) /DEBUG
 !IFDEF DESC_DIR
 CCFLAGS = $(CCFLAGS) /DDATA_DIR=\"$(DESC_DIR)\"
 !ENDIF
+
+VER = \
+!INCLUDE <$(VERSION_FILE)>
+
+!IF "$(VER)" != ""
+CCFLAGS = $(CCFLAGS) /DVERSION=\"$(VER)\"
+!ENDIF
+
 
 #Making
  

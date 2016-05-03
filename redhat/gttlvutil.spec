@@ -19,7 +19,7 @@
 
 Summary: Guardtime TLV Utils 
 Name: gttlvutil
-Version: @VERSION@
+Version: 0.3.67
 Release: 1 
 License: ASL 2.0
 Source: http://download.guardtime.com/%{name}-%{version}.tar.gz
