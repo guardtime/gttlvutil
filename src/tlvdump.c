@@ -197,10 +197,17 @@ static void print_int(unsigned char *buf, size_t len, size_t prefix_len, struct 
 
 static void print_str(unsigned char *buf, size_t len, size_t prefix_len, struct conf_st *conf) {
 	size_t i;
+	char special[] = "\\\"";
 	putchar('"');
 	for (i = 0; i < len; i++) {
-		if (isprint(buf[i])) putchar(buf[i]);
-		else printf("\\%u", buf[i]);
+		if (isprint(buf[i])) {
+			if (strchr(special, buf[i])) {
+				putchar('\\');
+			}
+			putchar(buf[i]);
+		} else {
+			printf("\\%u", buf[i]);
+		}
 	}
 	putchar('"');
 	putchar('\n');

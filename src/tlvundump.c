@@ -274,6 +274,7 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 					error("Unexpected end of file.");
 				}
 				tlv->dat[tlv->dat_len++] = c;
+				state = ST_DATA_STRING;
 				break;
 			case ST_DATA_STRING_DEC_1:
 				tlv->dat[tlv->dat_len] = (c - '0');
