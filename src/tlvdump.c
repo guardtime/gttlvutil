@@ -348,7 +348,7 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 				break;
 		}
 	} else {
-		if (!limited && type == TLV_NO_COMPOSITE) {
+		if (!limited && type == TLV_NO_COMPOSITE && len != 0) {
 			printf(" <-- NOT A COMPOSITE VALUE --> ");
 		}
 		print_raw_data(ptr, len, prefix_len, conf);
