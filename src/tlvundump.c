@@ -114,6 +114,7 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 					tlv->indent[tlv->indent_len++] = c;
 				} else if (c == '#') {
 					state = ST_COMMENT;
+					tlv->indent_len = 0;
 				} else {
 					state = ST_TLV_T;
 					continue;
