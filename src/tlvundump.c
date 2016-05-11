@@ -36,9 +36,9 @@ enum {
 	ST_DATA,
 	ST_DATA_STRING,
 	ST_DATA_STRING_ESC,
-	ST_DATA_STRING_OCT_1,
-	ST_DATA_STRING_OCT_2,
-	ST_DATA_STRING_OCT_3,
+	ST_DATA_STRING_DEC_1,
+	ST_DATA_STRING_DEC_2,
+	ST_DATA_STRING_DEC_3,
 	ST_DATA_HEX_1,
 	ST_DATA_HEX_2,
 	ST_END,
@@ -268,33 +268,36 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 				break;
 			case ST_DATA_STRING_ESC:
 				if (IS_DIGIT(c)) {
-					state = ST_DATA_STRING_OCT_1;
+					state = ST_DATA_STRING_DEC_1;
 					continue;
 				} else if (c == EOF) {
 					error("Unexpected end of file.");
 				}
 				tlv->dat[tlv->dat_len++] = c;
 				break;
-			case ST_DATA_STRING_OCT_1:
+			case ST_DATA_STRING_DEC_1:
 				tlv->dat[tlv->dat_len] = (c - '0');
-				state = ST_DATA_STRING_OCT_2;
+				state = ST_DATA_STRING_DEC_2;
 				break;
-			case ST_DATA_STRING_OCT_2:
+			case ST_DATA_STRING_DEC_2:
 				if (IS_DIGIT(c)) {
 					tlv->dat[tlv->dat_len] = tlv->dat[tlv->dat_len] * 10 + (c - '0');
-					state = ST_DATA_STRING_OCT_3;
+					state = ST_DATA_STRING_DEC_3;
 				} else {
 					tlv->dat_len++;
 					state = ST_DATA_STRING;
 					continue;
 				}
 				break;
-			case ST_DATA_STRING_OCT_3:
+			case ST_DATA_STRING_DEC_3:
 				if (IS_DIGIT(c)) {
 					tlv->dat[tlv->dat_len] = tlv->dat[tlv->dat_len] * 10 + (c - '0');
 				}
 				tlv->dat_len++;
 				state = ST_DATA_STRING;
+				if (!IS_DIGIT(c)) {
+					continue;
+				}
 				break;
 			case ST_DATA_HEX_1:
 				if (IS_SPACE(c)) break;
