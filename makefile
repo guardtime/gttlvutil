@@ -32,17 +32,32 @@ SRC_DIR = src
 OBJ_DIR = obj
 BIN_DIR = bin
 
-TOOL_NAME = gttlvdump
+TOOL_NAME = gttlvutil
+DUMP_NAME = gttlvdump
+WRAP_NAME = gttlvwrap
+GREP_NAME = gttlvgrep
+UNDUMP_NAME = gttlvundump
 
-TOOL_OBJ = \
+VERSION_FILE = VERSION
+
+DUMP_OBJ = \
 	$(OBJ_DIR)\tlvdump.obj \
 	$(OBJ_DIR)\getopt.obj \
 	$(OBJ_DIR)\fast_tlv.obj \
 	$(OBJ_DIR)\desc.obj \
 	$(OBJ_DIR)\dir.obj
 	
-TLV_CREATE_OBJ = \
-	$(OBJ_DIR)\tlvcreate.obj \
+WRAP_OBJ = \
+	$(OBJ_DIR)\tlvwrap.obj \
+	$(OBJ_DIR)\getopt.obj
+	
+GREP_OBJ = \
+	$(OBJ_DIR)\tlvgrep.obj \
+	$(OBJ_DIR)\fast_tlv.obj \
+	$(OBJ_DIR)\getopt.obj
+	
+UNDUMP_OBJ = \
+	$(OBJ_DIR)\tlvundump.obj \
 	$(OBJ_DIR)\getopt.obj
 	
 #Compiler and linker configuration
@@ -66,19 +81,33 @@ LDFLAGS = $(LDFLAGS) /DEBUG
 CCFLAGS = $(CCFLAGS) /DDATA_DIR=\"$(DESC_DIR)\"
 !ENDIF
 
+VER = \
+!INCLUDE <$(VERSION_FILE)>
+
+!IF "$(VER)" != ""
+CCFLAGS = $(CCFLAGS) /DVERSION=\"$(VER)\" /DPACKAGE_NAME=\"$(TOOL_NAME)\"
+!ENDIF
+
+
 #Making
  
 
-default: $(BIN_DIR)\$(TOOL_NAME).exe $(BIN_DIR)\tlvcreate.exe
+default: $(BIN_DIR)\$(DUMP_NAME).exe $(BIN_DIR)\$(WRAP_NAME).exe $(BIN_DIR)\$(GREP_NAME).exe $(BIN_DIR)\$(UNDUMP_NAME).exe
 
 
 
-$(BIN_DIR)\$(TOOL_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(TOOL_OBJ)
-	link $(LDFLAGS) /OUT:$@ $(TOOL_OBJ)
+$(BIN_DIR)\$(DUMP_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(DUMP_OBJ)
+	link $(LDFLAGS) /OUT:$@ $(DUMP_OBJ)
 	for %I in ($(SRC_DIR)\ksi.desc $(SRC_DIR)\logsig.desc) do copy %I $(BIN_DIR)\ /Y
 
-$(BIN_DIR)\tlvcreate.exe: $(BIN_DIR) $(OBJ_DIR) $(TLV_CREATE_OBJ)
-	link $(LDFLAGS) /OUT:$@ $(TLV_CREATE_OBJ) 
+$(BIN_DIR)\$(WRAP_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(WRAP_OBJ)
+	link $(LDFLAGS) /OUT:$@ $(WRAP_OBJ)
+
+$(BIN_DIR)\$(GREP_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(GREP_OBJ)
+	link $(LDFLAGS) /OUT:$@ $(GREP_OBJ)
+
+$(BIN_DIR)\$(UNDUMP_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(UNDUMP_OBJ)
+	link $(LDFLAGS) /OUT:$@ $(UNDUMP_OBJ)
 
 {$(SRC_DIR)\}.c{$(OBJ_DIR)\}.obj:
 	cl /c /$(RTL) $(CCFLAGS) /Fo$@ $<
@@ -92,12 +121,19 @@ $(OBJ_DIR) $(BIN_DIR):
 	@if not exist $@ mkdir $@
 
 
-installer:$(BIN_DIR) $(OBJ_DIR) $(BIN_DIR)\$(TOOL_NAME).exe
+installer:$(BIN_DIR) $(OBJ_DIR) $(BIN_DIR)\$(DUMP_NAME).exe $(BIN_DIR)\$(WRAP_NAME).exe $(BIN_DIR)\$(GREP_NAME).exe $(BIN_DIR)\$(UNDUMP_NAME).exe
 !IF [candle.exe > nul] != 0
 !MESSAGE Please install WiX to build installer.
 !ELSE
 	cd windows
-	candle.exe $(TOOL_NAME).wxs -o ..\$(OBJ_DIR)\$(TOOL_NAME).wixobj -dVersion="1.0.0" -dName=$(TOOL_NAME) -dtoolName=$(BIN_DIR)\$(TOOL_NAME).exe -darch=$(INSTALL_MACHINE)
+	candle.exe $(TOOL_NAME).wxs -o ..\$(OBJ_DIR)\$(TOOL_NAME).wixobj \
+	-dVersion="1.0.0" \
+	-dName=$(TOOL_NAME) \
+	-ddumpName=$(BIN_DIR)\$(DUMP_NAME).exe \
+	-dwrapName=$(BIN_DIR)\$(WRAP_NAME).exe \
+	-dgrepName=$(BIN_DIR)\$(GREP_NAME).exe \
+	-dundumpName=$(BIN_DIR)\$(UNDUMP_NAME).exe \
+	-darch=$(INSTALL_MACHINE)
 	light.exe ..\$(OBJ_DIR)\$(TOOL_NAME).wixobj -o ..\$(BIN_DIR)\$(TOOL_NAME) -pdbout ..\$(BIN_DIR)\$(TOOL_NAME).wixpdb -cultures:en-us -ext WixUIExtension
 	cd ..
 !ENDIF

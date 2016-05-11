@@ -43,6 +43,7 @@
 0801.07.04.02	STR			Machine id
 0801.07.04.03	INT			Sequence nr
 0801.07.04.04	UTIME		Request time
+0801.07.04.1E	STR			Padding
 
 0801.08			*			Right link
 0801.08.01		INT			Level correction
@@ -53,6 +54,7 @@
 0801.08.04.02	STR			Machine id
 0801.08.04.03	INT			Sequence nr
 0801.08.04.04	UTIME		Request time
+0801.07.04.1E	STR			Padding
 
 0802			*			Calendar chain
 0802.01			TIME		Publication time
