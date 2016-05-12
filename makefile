@@ -60,6 +60,11 @@ UNDUMP_OBJ = \
 	$(OBJ_DIR)\tlvundump.obj \
 	$(OBJ_DIR)\getopt.obj
 	
+DESC_FILES = \
+	$(SRC_DIR)\ksi.desc \
+	$(SRC_DIR)\ksie.desc \
+	$(SRC_DIR)\logsig.desc
+
 #Compiler and linker configuration
 
 
@@ -98,7 +103,7 @@ default: $(BIN_DIR)\$(DUMP_NAME).exe $(BIN_DIR)\$(WRAP_NAME).exe $(BIN_DIR)\$(GR
 
 $(BIN_DIR)\$(DUMP_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(DUMP_OBJ)
 	link $(LDFLAGS) /OUT:$@ $(DUMP_OBJ)
-	for %I in ($(SRC_DIR)\ksi.desc $(SRC_DIR)\logsig.desc) do copy %I $(BIN_DIR)\ /Y
+	for %I in ($(DESC_FILES)) do copy %I $(BIN_DIR)\ /Y
 
 $(BIN_DIR)\$(WRAP_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(WRAP_OBJ)
 	link $(LDFLAGS) /OUT:$@ $(WRAP_OBJ)
