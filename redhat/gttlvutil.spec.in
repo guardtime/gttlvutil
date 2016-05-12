@@ -49,4 +49,5 @@ make install DESTDIR=%{buildroot}
 %attr(755,root,root) %{_bindir}/gttlvwrap
 %dir %{_datadir}/%{name}
 %{_datadir}/%{name}/ksi.desc
+%{_datadir}/%{name}/ksie.desc
 %{_datadir}/%{name}/logsig.desc
