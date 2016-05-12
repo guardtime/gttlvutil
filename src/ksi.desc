@@ -172,32 +172,3 @@
 0303			*			Extension error
 0303.04			INT			Status
 0303.05			STR			Error message
-
-0b01			*			Manifest file
-0b01.01			STR			File URI
-0b01.02			IMPRINT		File hash
-0b01.03			STR			Mime type
-
-0b02			*			Annotation reference
-0b02.01			STR			File URI
-0b02.02			IMPRINT		File hash
-0b02.03			STR			Mime type
-
-0b03			*			Data Manifest File
-0b03.01			STR			File URI
-0b03.02			IMPRINT		File hash
-0b03.03			STR			Mime type
-
-0b04			*			Annotation Manifest File
-0b04.01			STR			File URI
-0b04.02			IMPRINT		File hash
-0b04.03			STR			Mime type
-
-0b05			*			Annotation File
-0b05.01			STR			File URI
-0b05.02			IMPRINT		File hash
-0b05.03			STR			Annotation domain
-
-0b06			*			Signature reference
-0b06.01			STR			Signature URI
-0b06.03			STR			Signature mime type
