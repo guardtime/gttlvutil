@@ -195,10 +195,17 @@ static void print_int(unsigned char *buf, size_t len, int prefix_len, struct con
 
 static void print_str(unsigned char *buf, size_t len, size_t prefix_len, struct conf_st *conf) {
 	size_t i;
+	char special[] = "\\\"";
 	putchar('"');
 	for (i = 0; i < len; i++) {
-		if (isprint(buf[i])) putchar(buf[i]);
-		else printf("\\%u", buf[i]);
+		if (isprint(buf[i])) {
+			if (strchr(special, buf[i])) {
+				putchar('\\');
+			}
+			putchar(buf[i]);
+		} else {
+			printf("\\%u", buf[i]);
+		}
 	}
 	putchar('"');
 	putchar('\n');
@@ -285,6 +292,13 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 		prefix_len += printf("%4llu:", (unsigned long long)t->off);
 	}
 
+	limited = conf->max_depth != 0 && level + 1 >= conf->max_depth;
+	type = get_payload_type(ptr, len, conf, desc);
+	if (!limited && type == TLV_NO_COMPOSITE && len != 0) {
+		printf("%*s### NOT A COMPOSITE TLV ###\n", level * INDENT_LEN, "");
+	}
+
+
 	/* Print only the indent. */
 	prefix_len += printf("%*s", level * INDENT_LEN, "");
 
@@ -301,10 +315,6 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 	if (conf->pretty_key && desc != NULL && desc->val != NULL && *desc->val) {
 		prefix_len += printf("%s: ", desc->val);
 	}
-
-	limited = conf->max_depth != 0 && level + 1 >= conf->max_depth;
-
-	type = get_payload_type(ptr, len, conf, desc);
 
 	if (type == TLV_COMPOSITE && !limited) {
 		size_t off = t->off + t->hdr_len;
@@ -346,9 +356,6 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 				break;
 		}
 	} else {
-		if (!limited && type == TLV_NO_COMPOSITE) {
-			printf(" <-- NOT A COMPOSITE VALUE --> ");
-		}
 		print_raw_data(ptr, len, prefix_len, conf);
 	}
 }
