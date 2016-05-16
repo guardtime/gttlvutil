@@ -11,6 +11,10 @@ extern "C" {
 #	endif
 #endif
 
+#ifndef _SIZE_T_DEFINED
+#	define size_t unsigned long long
+#endif
+
 #define GT_TLV_MASK_TLV16 0x80u
 #define GT_TLV_MASK_LENIENT 0x40u
 #define GT_TLV_MASK_FORWARD 0x20u
@@ -31,6 +35,8 @@ enum StatusCodes {
 	GT_INVALID_ARGUMENT,
 	GT_INVALID_FORMAT,
 	GT_BUFFER_OVERFLOW,
+	GT_PARSER_ERROR,
+	GT_END_OF_STREAM,
 	GT_UNKNOWN_ERROR = 0xffff
 };
 

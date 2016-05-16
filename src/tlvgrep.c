@@ -18,8 +18,8 @@ struct conf_st {
 	bool print_path_index;
 };
 
-void grepTlv(struct conf_st *conf, char *pattern, char *prefix, int *map, unsigned char *buf, GT_FTLV *t) {
-	int res;
+static int  grepTlv(struct conf_st *conf, char *pattern, char *prefix, int *map, unsigned char *buf, GT_FTLV *t) {
+	int res = GT_UNKNOWN_ERROR;
 	unsigned tag;
 	char *p = pattern;
 	int roll = 1;
@@ -33,14 +33,14 @@ void grepTlv(struct conf_st *conf, char *pattern, char *prefix, int *map, unsign
 
 		if (p == mod) {
 			fprintf(stderr, "Invalid pattern: '%s'\n", p);
-			exit(1);
+			return GT_INVALID_FORMAT;
 		}
 
 		if (*mod == '[') {
 			idx = strtol(mod + 1, &mod, 10);
 			if (*mod != ']') {
 				fprintf(stderr, "Invalid index in pattertn: '%s'\n", p);
-				exit(1);
+				return GT_INVALID_FORMAT;
 			}
 			mod++;
 		}
@@ -59,7 +59,7 @@ void grepTlv(struct conf_st *conf, char *pattern, char *prefix, int *map, unsign
 				break;
 			default:
 				fprintf(stderr, "Invalid pattern: '%s'\n", p);
-				exit(1);
+				return GT_INVALID_FORMAT;
 		}
 
 		if (t->tag == tag) {
@@ -120,20 +120,19 @@ void grepTlv(struct conf_st *conf, char *pattern, char *prefix, int *map, unsign
 				res = GT_FTLV_memRead(ptr, len, &n);
 				if (res != GT_OK) break;
 
-				grepTlv(conf, p, pre, i, ptr, &n);
+				res = grepTlv(conf, p, pre, i, ptr, &n);
+				if (res != GT_OK) return res;
 
 				ptr += n.hdr_len + n.dat_len;
 				len -= n.hdr_len + n.dat_len;
 			}
 		}
 	}
-
-
-
+	return GT_OK;
 }
 
-void grepFile(struct conf_st *conf, FILE *f) {
-	int res;
+static int grepFile(struct conf_st *conf, FILE *f) {
+	int res = GT_OK;
 	GT_FTLV t;
 	size_t len;
 	unsigned char buf[0xffff + 4];
@@ -147,11 +146,12 @@ void grepFile(struct conf_st *conf, FILE *f) {
 
 		if (res != GT_OK) {
 			fprintf(stderr, "%s: Failed to parse TLV.\n", conf->file_name);
-			exit(1);
+			return GT_FORMAT_ERROR;
 		}
 
-		grepTlv(conf, conf->pattern, NULL, idx, buf, &t);
+		res = grepTlv(conf, conf->pattern, NULL, idx, buf, &t);
 	}
+	return res;
 }
 
 
@@ -231,7 +231,7 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	if ( optind >= argc) {
+	if (optind >= argc) {
 		fprintf(stderr, "Error: no pattern provided!\n");
 		exit(1);
 	}
@@ -241,30 +241,34 @@ int main(int argc, char **argv) {
 	if (optind >= argc) {
 		f = stdin;
 		conf.file_name = "<stdin>";
-		grepFile(&conf, f);
+		if (grepFile(&conf, f) != GT_OK) goto cleanup;
 	} else {
 		for (; optind < argc; optind++) {
 			conf.file_name = argv[optind];
 			f = fopen(conf.file_name, "rb");
 			if (!f) {
 				fprintf(stderr, "%s: Unable to open file.\n", conf.file_name);
+				continue;
 			}
 
 			if (conf.magic_len) {
-				if( fseek(f, conf.magic_len, SEEK_SET)) {
+				if (fseek(f, conf.magic_len, SEEK_SET)) {
 					fprintf(stderr, "%s: Unable to skip header.\n", conf.file_name);
-					exit(1);
+					goto cleanup;
 				}
 			}
 
-			grepFile(&conf, f);
+			if (grepFile(&conf, f) != GT_OK) {
+				goto cleanup;
+			}
 
 			fclose(f);
 			f = NULL;
 		}
 	}
 
-	if (f != NULL) fclose(f);
+cleanup:
+	if (f != NULL && f != stdin) fclose(f);
 
-	exit(0);
+	return 0;
 }

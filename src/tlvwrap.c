@@ -23,7 +23,7 @@ int encode(unsigned int type, int lenient, int forward, FILE *in, FILE *out) {
 
 		if (len >> 8 > UCHAR_MAX) {
 			res = GT_INVALID_ARGUMENT;
-			fprintf(stderr, "Len is too great: '%zu'\n", len);
+			fprintf(stderr, "Len is too great: '%llu'\n", (unsigned long long)len);
 			goto cleanup;
 		}
 
@@ -33,14 +33,20 @@ int encode(unsigned int type, int lenient, int forward, FILE *in, FILE *out) {
 			*(hdr + 1) = type & 0xff;
 			*(hdr + 2) = (unsigned char)(len >> 8);
 			*(hdr + 3) = len & 0xff;
-			fwrite(hdr, 1, 4, out);
+			if (fwrite(hdr, 1, 4, out) != 4) {
+				fprintf(stderr, "Failed to write to stream.");
+			}
 		} else {
 			*hdr = 0x00 | (lenient * 0x40) | (forward * 0x20) | (type);
 			*(hdr + 1) = len & 0xff;
-			fwrite(hdr, 1, 2, out);
+			if (fwrite(hdr, 1, 2, out) != 2) {
+				fprintf(stderr, "Failed to write to stream.");
+			}
 		}
 
-		fwrite(buf, 1, len, out);
+		if (fwrite(buf, 1, len, out) != len) {
+			fprintf(stderr, "Failed to write to stream.");
+		}
 	}
 
 	res = GT_OK;

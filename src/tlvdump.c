@@ -292,7 +292,7 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 		prefix_len += printf("%4llu:", (unsigned long long)t->off);
 	}
 
-	limited = conf->max_depth != 0 && level + 1 >= conf->max_depth;
+	limited = conf->max_depth != 0 && level + 1 >= (int)conf->max_depth;
 	type = get_payload_type(ptr, len, conf, desc);
 	if (!limited && type == TLV_NO_COMPOSITE && len != 0) {
 		printf("%*s### NOT A COMPOSITE TLV ###\n", level * INDENT_LEN, "");
@@ -570,7 +570,7 @@ int main(int argc, char **argv) {
 		res = read_from(stdin, &conf);
 		if (res != GT_OK) goto cleanup;
 	} else {
-		size_t i;
+		int i;
 
 		/* Loop over all the inputfiles. */
 		for (i = 0; optind + i < argc; i++) {
