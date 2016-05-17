@@ -21,10 +21,13 @@
 RTL = MT
 !MESSAGE Setting C Runtime Lib to MT
 !ELSE IF "$(RTL)" != "MT" && "$(RTL)" != "MTd" && "$(RTL)" != "MD" && "$(RTL)" != "MDd"
-!ERROR RTL can only have one of the following values "MT", "MTd", "MD" or "MDd", but it is "$(RTL)". Default valu is "MT".
+!ERROR RTL can only have one of the following values "MT", "MTd", "MD" or "MDd", but it is "$(RTL)". Default value is "MT".
 !ENDIF
 
-!IF "$(INSTALL_MACHINE)" != "32" && "$(INSTALL_MACHINE)" != "64"
+!IFNDEF INSTALL_MACHINE
+!MESSAGE Setting INSTALL_MACHINE to default
+INSTALL_MACHINE=64
+!ELSE IF "$(INSTALL_MACHINE)" != "32" && "$(INSTALL_MACHINE)" != "64"
 !ERROR set INSTALL_MACHINE=32 or INSTALL_MACHINE=64
 !ENDIF
 
@@ -46,20 +49,20 @@ DUMP_OBJ = \
 	$(OBJ_DIR)\fast_tlv.obj \
 	$(OBJ_DIR)\desc.obj \
 	$(OBJ_DIR)\dir.obj
-	
+
 WRAP_OBJ = \
 	$(OBJ_DIR)\tlvwrap.obj \
 	$(OBJ_DIR)\getopt.obj
-	
+
 GREP_OBJ = \
 	$(OBJ_DIR)\tlvgrep.obj \
 	$(OBJ_DIR)\fast_tlv.obj \
 	$(OBJ_DIR)\getopt.obj
-	
+
 UNDUMP_OBJ = \
 	$(OBJ_DIR)\tlvundump.obj \
 	$(OBJ_DIR)\getopt.obj
-	
+
 DESC_FILES = \
 	$(SRC_DIR)\ksi.desc \
 	$(SRC_DIR)\ksie.desc \
@@ -69,9 +72,9 @@ DESC_FILES = \
 
 
 EXT_LIB = user32.lib gdi32.lib
-	
-	
-CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE /I$(SRC_DIR) 
+
+
+CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE /I$(SRC_DIR)
 LDFLAGS = /NOLOGO
 
 !IF "$(RTL)" == "MT" || "$(RTL)" == "MD"
@@ -95,7 +98,7 @@ CCFLAGS = $(CCFLAGS) /DVERSION=\"$(VER)\" /DPACKAGE_NAME=\"$(TOOL_NAME)\"
 
 
 #Making
- 
+
 
 default: $(BIN_DIR)\$(DUMP_NAME).exe $(BIN_DIR)\$(WRAP_NAME).exe $(BIN_DIR)\$(GREP_NAME).exe $(BIN_DIR)\$(UNDUMP_NAME).exe
 
@@ -120,8 +123,8 @@ $(BIN_DIR)\$(UNDUMP_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(UNDUMP_OBJ)
 
 
 
-#Folder factory	
-	
+#Folder factory
+
 $(OBJ_DIR) $(BIN_DIR):
 	@if not exist $@ mkdir $@
 
@@ -145,4 +148,4 @@ installer:$(BIN_DIR) $(OBJ_DIR) $(BIN_DIR)\$(DUMP_NAME).exe $(BIN_DIR)\$(WRAP_NA
 
 clean:
 	@for %i in ($(OBJ_DIR) $(BIN_DIR)) do @if exist .\%i rmdir /s /q .\%i
-	
+

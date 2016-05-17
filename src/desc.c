@@ -30,7 +30,7 @@ static int desc_get(struct desc_st *in, unsigned tag, bool create, struct desc_s
 	size_t arr_len;
 
 	/* If in is NULL, do not shout at the caller, this probably means
-     * the last query failed. */
+	 * the last query failed. */
 	if (in == NULL) {
 		*out = NULL;
 		res = GT_OK;
@@ -273,7 +273,7 @@ int desc_add_file(struct desc_st *desc, const char *descFile) {
 		res = read_line(f, desc);
 		if (res != GT_OK) {
 			if (res == GT_INVALID_FORMAT) {
-				fprintf(stderr, "%s:%u - invalid format\n", descFile, ln);
+				fprintf(stderr, "%s:%llu - invalid format\n", descFile, (unsigned long long)ln);
 			} else {
 				goto cleanup;
 			}
