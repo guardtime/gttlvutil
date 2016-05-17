@@ -409,7 +409,7 @@ static int serializeStack(TlvLine *stack, size_t stack_len, unsigned char *buf, 
 	if (stack[0].isNc) buf[buf_len - len] |= 0x40;
 	if (stack[0].isFw) buf[buf_len - len] |= 0x20;
 
-	*total_len = len;
+	if (total_len) *total_len = len;
 	res = GT_OK;
 cleanup:
 
