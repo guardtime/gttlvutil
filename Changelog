@@ -1,5 +1,6 @@
 Version 0.3
 
+* IMPROVEMENT: The gttlvwrap accepts only hex as tag values.
 * BUGFIX: An empty composite element is no longer reported as not a composite element.
 * FEATURE: Added gttlvundump
 * FEATURE: Included gttlvwrap into main build.

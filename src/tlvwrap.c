@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
 	int forward = 0;
 	FILE *in = NULL;
 	FILE *out = NULL;
-	unsigned int type;
+	int type = 0;
 	char *tail = NULL;
 
 	while ((c = getopt(argc, argv, "LFt:i:o:hv")) != -1) {
@@ -83,13 +83,13 @@ int main(int argc, char **argv) {
 				forward = 1;
 				break;
 			case 't':
-				type = strtol(optarg, &tail, 0);
+				type = strtol(optarg, &tail, 16);
 				if (*tail != 0) {
-					fprintf(stderr, "Bad numeric type: '%s'", optarg);
+					fprintf(stderr, "Bad tag value: '%s'", optarg);
 					goto cleanup;
 				}
-				if (type > 0x1fff) {
-					fprintf(stderr, "Type value too great (> 0x1fff)");
+				if (type < 0 || type > 0x1fff) {
+					fprintf(stderr, "Tag value out of range.");
 					goto cleanup;
 				}
 				break;
@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	res = encode(type, lenient, forward, in, out);
+	res = encode((unsigned)type, lenient, forward, in, out);
 
 cleanup:
 
