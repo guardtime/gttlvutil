@@ -378,7 +378,10 @@ static int serializeStack(TlvLine *stack, size_t stack_len, unsigned char *buf, 
 	}
 
 	/* Skip the header, if the TLV is headless. */
-	if (stack[0].headless)	goto cleanup;
+	if (stack[0].headless) {
+		res = GT_OK;
+		goto cleanup;
+	}
 
 	if (stack[0].tag > 0x1f || subLen > 0xff || stack[0].force == 16) {
 		/* TLV16 */
@@ -409,9 +412,9 @@ static int serializeStack(TlvLine *stack, size_t stack_len, unsigned char *buf, 
 	if (stack[0].isNc) buf[buf_len - len] |= 0x40;
 	if (stack[0].isFw) buf[buf_len - len] |= 0x20;
 
-	if (total_len) *total_len = len;
 	res = GT_OK;
 cleanup:
+	if (total_len) *total_len = len;
 
 	return res;
 }
