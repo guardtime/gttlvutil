@@ -2,9 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#include <ctype.h>
 
 #include "common.h"
 
+#ifdef _WIN32
+#	include <io.h>
+#	include <fcntl.h>
+#endif
 
 typedef struct {
 	char buf[0xffff + 4];
@@ -63,8 +68,8 @@ typedef struct {
 	int headless;
 } TlvLine;
 
-#define line_error(s, lineNr) fprintf(stderr, "%s:%d - %s\n", fileName, (lineNr), (s)); exit(2)
-#define error(s) line_error((s), lineNr)
+#define line_error(err, s, lineNr) fprintf(stderr, "%s:%llu - %s\n", fileName, (unsigned long long)(lineNr), (s)); return err
+#define error(err, s) line_error(err, (s), lineNr)
 #define IS_SPACE(c) ((c) == ' ' || (c) == '\t')
 #define IS_DIGIT(c) ((c) >= '0' && (c) <= '9')
 #define IS_HEX(c) (IS_DIGIT(c) || (toupper(c) >= 'A' && toupper(c) <= 'F'))
@@ -95,7 +100,7 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 					/* If not carriage return, proceed to parse the indent. */
 					break;
 				} else if (c == EOF) {
-					return 0; /* Indicate end of input. */
+					return GT_END_OF_STREAM; /* Indicate end of input. */
 				} else {
 					state = ST_INDENT;
 					continue;
@@ -104,7 +109,7 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 			case ST_COMMENT:
 				if (c == '\n') {
 					state = ST_BEGIN;
-				} if (c == EOF) {
+				} else if (c == EOF) {
 					state = ST_BEGIN;
 					continue;
 				}
@@ -126,19 +131,19 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 				continue;
 			case ST_TLV_T:
 				if (c != 'T') {
-					error("Expected 'T'");
+					error(GT_PARSER_ERROR, "Expected 'T'");
 				}
 				state = ST_TLV_L;
 				break;
 			case ST_TLV_L:
 				if (c != 'L') {
-					error("Expected 'L'");
+					error(GT_PARSER_ERROR, "Expected 'L'");
 				}
 				state = ST_TLV_V;
 				break;
 			case ST_TLV_V:
 				if (c != 'V') {
-					error("Expected 'V'");
+					error(GT_PARSER_ERROR, "Expected 'V'");
 				}
 				state = ST_FORCE;
 				break;
@@ -155,7 +160,7 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 				break;
 			case ST_FORCE_16:
 				if (c != '6') {
-					error("Expected '6'");
+					error(GT_PARSER_ERROR, "Expected '6'");
 				}
 				tlv->force = 16;
 				state = ST_BRACKET_BEGIN;
@@ -163,7 +168,7 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 			case ST_BRACKET_BEGIN:
 				if (IS_SPACE(c)) break;
 				if (c != '[') {
-					error("Expected '['");
+					error(GT_PARSER_ERROR, "Expected '['");
 				}
 				state = ST_TAG_BEGIN;
 				break;
@@ -173,7 +178,7 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 					state = ST_TAG;
 					continue;
 				} else {
-					error("Expected hex tag value.");
+					error(GT_PARSER_ERROR, "Expected hex tag value.");
 				}
 				break;
 			case ST_TAG:
@@ -188,7 +193,7 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 
 				/* Make sure the tag value does not overflow. */
 				if (tlv->tag > 0x1fff) {
-					error("TLV tag value may not exceed 0x1fff");
+					error(GT_PARSER_ERROR, "TLV tag value may not exceed 0x1fff");
 				}
 				break;
 			case ST_FLAG_START:
@@ -210,7 +215,7 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 						tlv->isNc = 1;
 						break;
 					default:
-						error("Unexpected flag.");
+						error(GT_PARSER_ERROR, "Unexpected flag.");
 						break;
 				}
 
@@ -229,14 +234,14 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 			case ST_BRACKET_END:
 				if (IS_SPACE(c)) break;
 				if (c != ']') {
-					error("Expected ']'");
+					error(GT_PARSER_ERROR, "Expected ']'");
 				}
 				state = ST_COLON;
 				break;
 			case ST_COLON:
 				if (IS_SPACE(c)) break;
 				if (c != ':') {
-					error("Expected ':'");
+					error(GT_PARSER_ERROR, "Expected ':'");
 				}
 
 				state = ST_DATA;
@@ -262,7 +267,7 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 					break;
 				} else {
 					if (tlv->dat_len >= sizeof(tlv->dat)) {
-						error("String value too lagre.");
+						error(GT_PARSER_ERROR, "String value too lagre.");
 					}
 					tlv->dat[tlv->dat_len++] = c;
 				}
@@ -272,7 +277,7 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 					state = ST_DATA_STRING_DEC_1;
 					continue;
 				} else if (c == EOF) {
-					error("Unexpected end of file.");
+					error(GT_PARSER_ERROR, "Unexpected end of file.");
 				}
 				tlv->dat[tlv->dat_len++] = c;
 				state = ST_DATA_STRING;
@@ -326,22 +331,23 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 				if (IS_SPACE(c)) break;
 				if (c == '\n' || c == EOF) {
 					tlv->lineNr = lineNr;
-					return 1; /* Indicate success. */
+					return GT_OK; /* Indicate success. */
 				} else {
-					error("Unexpected character.");
+					error(GT_PARSER_ERROR, "Unexpected character.");
 				}
 				break;
 			default:
-				error("Unknown error.");
+				error(GT_PARSER_ERROR, "Unknown error.");
 		}
-		c = getc(f);
+		c = fgetc(f);
 		pos++;
 	}
 
-	error("Unknown format error.");
+	error(GT_PARSER_ERROR, "Unknown format error.");
 }
 
-static size_t serializeStack(TlvLine *stack, size_t stack_len, char *buf, size_t buf_len) {
+static int serializeStack(TlvLine *stack, size_t stack_len, unsigned char *buf, size_t buf_len, size_t *total_len) {
+	int res = GT_UNKNOWN_ERROR;
 	size_t i;
 	size_t len = 0;
 	size_t subLen = 0;
@@ -350,7 +356,7 @@ static size_t serializeStack(TlvLine *stack, size_t stack_len, char *buf, size_t
 	for (i = 1; i < stack_len; i++) {
 		if (stack[0].level > stack[i].level) break;
 		if (stack[0].level == stack[i].level) {
-			len = serializeStack(stack + i, stack_len - i, buf, buf_len);
+			res = serializeStack(stack + i, stack_len - i, buf, buf_len, &len);
 			break;
 		}
 	}
@@ -358,29 +364,33 @@ static size_t serializeStack(TlvLine *stack, size_t stack_len, char *buf, size_t
 	/* Serialize only the next level elements of this branch. Note, the function is
 	* recursive, so we need to serialize only the first one. */
 	if (stack_len > 1 && stack[0].level < stack[1].level) {
-		len += subLen = serializeStack(stack + 1, stack_len - 1, buf, buf_len - len);
+		res = serializeStack(stack + 1, stack_len - 1, buf, buf_len - len, &subLen);
+		len += subLen;
 	}
 
 	/* Serialize payload. */
 	if (stack[0].dat_len > 0) {
 		if (subLen != 0) {
-			line_error("Length sould be 0 when not a composite.", stack[0].lineNr);
+			line_error(GT_INVALID_FORMAT, "Length sould be 0 when not a composite.", stack[0].lineNr);
 		}
 		memcpy(buf + buf_len - len - stack[0].dat_len, stack[0].dat, stack[0].dat_len);
 		len += subLen = stack[0].dat_len;
 	}
 
 	/* Skip the header, if the TLV is headless. */
-	if (stack[0].headless) goto cleanup;
+	if (stack[0].headless) {
+		res = GT_OK;
+		goto cleanup;
+	}
 
 	if (stack[0].tag > 0x1f || subLen > 0xff || stack[0].force == 16) {
 		/* TLV16 */
 		if (buf_len - len < 4) {
-			line_error("TLV16 buffer overflow.", stack[0].lineNr);
+			line_error(GT_BUFFER_OVERFLOW, "TLV16 buffer overflow.", stack[0].lineNr);
 		}
 
 		if (stack[0].force == 8) {
-			line_error("Unable to fit data into TLV8", stack[0].lineNr);
+			line_error(GT_INVALID_FORMAT, "Unable to fit data into TLV8", stack[0].lineNr);
 		}
 		buf[buf_len - len - 1] = subLen & 0xff;
 		buf[buf_len - len - 2] = (subLen >> 8) & 0xff;
@@ -392,7 +402,7 @@ static size_t serializeStack(TlvLine *stack, size_t stack_len, char *buf, size_t
 
 	} else {
 		if (buf_len - len < 2) {
-			line_error("TLV8 buffer overflow", stack[0].lineNr);
+			line_error(GT_BUFFER_OVERFLOW, "TLV8 buffer overflow", stack[0].lineNr);
 		}
 		buf[buf_len - len - 1] = subLen & 0xff;
 		buf[buf_len - len - 2] = stack[0].tag & 0x1f;
@@ -402,12 +412,29 @@ static size_t serializeStack(TlvLine *stack, size_t stack_len, char *buf, size_t
 	if (stack[0].isNc) buf[buf_len - len] |= 0x40;
 	if (stack[0].isFw) buf[buf_len - len] |= 0x20;
 
+	res = GT_OK;
 cleanup:
+	if (total_len) *total_len = len;
 
-	return len;
+	return res;
+}
+
+static int writeStream(const void *raw, size_t size, size_t count, FILE *f) {
+#ifdef _WIN32
+	if (f != NULL) {
+		_setmode(_fileno(f), _O_BINARY);
+	}
+#endif
+
+	if (fwrite(raw, size, count, f) != count) {
+		error(GT_IO_ERROR, "Failed to write to stream.");
+	}
+
+	return GT_OK;
 }
 
 static int convertStream(FILE *f) {
+	int res = GT_UNKNOWN_ERROR;
 	TlvLine *stack = NULL;
 	size_t stack_size = 100;
 	size_t stack_len = 0;
@@ -416,10 +443,14 @@ static int convertStream(FILE *f) {
 	stack = calloc(stack_size, sizeof(TlvLine));
 	if (stack == NULL) {
 		fprintf(stderr, "Out of memory!\n");
-		exit(1);
+		return GT_OUT_OF_MEMORY;
 	}
 
-	while (parseTlv(f, &stack[stack_len])) {
+	while (1) {
+		res = parseTlv(f, &stack[stack_len]);
+		if (res == GT_END_OF_STREAM) break;
+		else if (res != GT_OK) goto cleanup;
+
 		/* The variable stack_len is the index of the last element and is incremented
 		 * in the end of this loop. */
 		if (stack_len == 0 || stack[stack_len].indent_len == 0) {
@@ -430,10 +461,10 @@ static int convertStream(FILE *f) {
 
 				for (i = stack_len; i > 0; i--) {
 					if (stack[stack_len].indent_len > stack[i - 1].indent_len) {
-						error("Bad backwards indentation - no matching level.");
+						error(GT_INVALID_FORMAT, "Bad backwards indentation - no matching level.");
 					} else if (stack[stack_len].indent_len == stack[i - 1].indent_len) {
 						if (memcmp(stack[stack_len].indent, stack[i - 1].indent, stack[stack_len].indent_len)) {
-							error("Bad backwards indentation - whitespace mismatch.");
+							error(GT_INVALID_FORMAT, "Bad backwards indentation - whitespace mismatch.");
 						}
 						stack[stack_len].level = stack[i - 1].level;
 						break;
@@ -441,12 +472,12 @@ static int convertStream(FILE *f) {
 				}
 
 				if (stack[stack_len].level < 0) {
-					error("Bad backwards indentation - previous level not found.");
+					error(GT_INVALID_FORMAT, "Bad backwards indentation - previous level not found.");
 				}
 			} else {
 				/* Make sure the indentation matches. */
 				if (memcmp(stack[stack_len].indent, stack[stack_len - 1].indent, stack[stack_len - 1].indent_len)) {
-					error("Indentation not a subset.");
+					error(GT_INVALID_FORMAT, "Indentation not a subset.");
 				}
 
 				stack[stack_len].level = stack[stack_len - 1].level;
@@ -454,7 +485,7 @@ static int convertStream(FILE *f) {
 				if (stack[stack_len].indent_len > stack[stack_len - 1].indent_len) {
 					/* A subset of the previous. */
 					if (stack[stack_len - 1].dat_len > 0) {
-						error("A TLV with explicit data may not have nested elements.");
+						error(GT_INVALID_FORMAT, "A TLV with explicit data may not have nested elements.");
 					}
 					stack[stack_len].level++;
 				}
@@ -467,8 +498,11 @@ static int convertStream(FILE *f) {
 			unsigned char buf[0xffff + 4];
 			size_t buf_len = 0;
 
-			buf_len = serializeStack(stack, stack_len, buf, sizeof(buf));
-			fwrite(buf + sizeof(buf) - buf_len, 1, buf_len, stdout);
+			res = serializeStack(stack, stack_len, buf, sizeof(buf), &buf_len);
+			if (res != GT_OK) goto cleanup;
+
+			res = writeStream(buf + sizeof(buf) - buf_len, 1, buf_len, stdout);
+			if (res != GT_OK) goto cleanup;
 
 			stack[0] = stack[stack_len];
 			stack_len = 1;
@@ -484,7 +518,7 @@ static int convertStream(FILE *f) {
 
 			tmp = realloc(stack, stack_size * sizeof(TlvLine));
 			if (tmp == NULL) {
-				error("Unable to reallocate internal buffer.");
+				error(GT_OUT_OF_MEMORY, "Unable to reallocate internal buffer.");
 			}
 			stack = tmp;
 		}
@@ -494,15 +528,20 @@ static int convertStream(FILE *f) {
 		unsigned char buf[0xffff + 4];
 		size_t buf_len = 0;
 
-		buf_len = serializeStack(stack, stack_len, buf, sizeof(buf));
+		res = serializeStack(stack, stack_len, buf, sizeof(buf), &buf_len);
+		if (res != GT_OK) goto cleanup;
 
-		fwrite(buf + sizeof(buf) - buf_len, 1, buf_len, stdout);
+		res = writeStream(buf + sizeof(buf) - buf_len, 1, buf_len, stdout);
+		if (res != GT_OK) goto cleanup;
 	}
-
+	res = GT_OK;
+cleanup:
 	if (stack != NULL) free(stack);
+	return res;
 }
 
 int main(int argc, char **argv) {
+	int res = GT_UNKNOWN_ERROR;
 	FILE *f = NULL;
 	int c;
 
@@ -526,9 +565,10 @@ int main(int argc, char **argv) {
 
 	/* If there are no input files, read from the standard in. */
 	if (optind >= argc) {
-		convertStream(stdin);
+		res = convertStream(stdin);
+		if (res != GT_OK) goto cleanup;
 	} else {
-		size_t i;
+		int i;
 
 		/* Loop over all the inputfiles. */
 		for (i = 0; optind + i < argc; i++) {
@@ -540,12 +580,17 @@ int main(int argc, char **argv) {
 				continue;
 			}
 
-			convertStream(f);
+			res = convertStream(f);
+			if (res != GT_OK) goto cleanup;
+
 			fclose(f);
 			f = NULL;
 		}
 	}
 
+cleanup:
 	if (f != NULL && f != stdin) fclose(f);
+
+	return 0;
 }
 

@@ -30,7 +30,7 @@ static int desc_get(struct desc_st *in, unsigned tag, bool create, struct desc_s
 	size_t arr_len;
 
 	/* If in is NULL, do not shout at the caller, this probably means
-     * the last query failed. */
+	 * the last query failed. */
 	if (in == NULL) {
 		*out = NULL;
 		res = GT_OK;
@@ -227,11 +227,10 @@ static int read_line(FILE *f, struct desc_st *map) {
 	char type[16];
 	char val[1024];
 	char line[2048];
-	size_t len;
 	int rd;
 
 	/* Read the whole line and drop any character that does not fit the buffer. */
-	len = consume_line(f, line, sizeof(line));
+	consume_line(f, line, sizeof(line));
 
 	if (!ignore_line(line)) {
 		rd = sscanf(line, " %256s %16s %1024[^\n]\n", key, type, val);
@@ -273,7 +272,7 @@ int desc_add_file(struct desc_st *desc, const char *descFile) {
 		res = read_line(f, desc);
 		if (res != GT_OK) {
 			if (res == GT_INVALID_FORMAT) {
-				fprintf(stderr, "%s:%u - invalid format\n", descFile, ln);
+				fprintf(stderr, "%s:%llu - invalid format\n", descFile, (unsigned long long)ln);
 			} else {
 				goto cleanup;
 			}

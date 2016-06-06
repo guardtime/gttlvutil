@@ -3,7 +3,7 @@ AM_CFLAGS=-g -O0 -DDATA_DIR="\"$(gttlvdumpdir)\""
 
 bin_PROGRAMS=gttlvdump gttlvgrep gttlvwrap gttlvundump
 
-dist_gttlvdump_DATA=logsig.desc ksi.desc
+dist_gttlvdump_DATA=logsig.desc ksi.desc ksie.desc
 gttlvdump_SOURCES=common.h tlvdump.c fast_tlv.h fast_tlv.c desc.h desc.c dir.c dir.h
 gttlvwrap_SOURCES=common.h tlvwrap.c
 gttlvgrep_SOURCES=tlvgrep.c fast_tlv.h fast_tlv.c common.h
