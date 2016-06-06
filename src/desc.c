@@ -227,11 +227,10 @@ static int read_line(FILE *f, struct desc_st *map) {
 	char type[16];
 	char val[1024];
 	char line[2048];
-	size_t len;
 	int rd;
 
 	/* Read the whole line and drop any character that does not fit the buffer. */
-	len = consume_line(f, line, sizeof(line));
+	consume_line(f, line, sizeof(line));
 
 	if (!ignore_line(line)) {
 		rd = sscanf(line, " %256s %16s %1024[^\n]\n", key, type, val);

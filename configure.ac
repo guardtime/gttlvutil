@@ -18,6 +18,9 @@ AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT8_T
 
+# Add more compile time warnings
+CFLAGS+=" -Wall"
+
 AC_CONFIG_FILES([GNUmakefile src/GNUmakefile])
 AC_OUTPUT
 
