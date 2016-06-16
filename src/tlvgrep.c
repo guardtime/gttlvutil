@@ -16,6 +16,8 @@ struct conf_st {
 	bool print_raw;
 	bool print_path;
 	bool print_path_index;
+	unsigned tlv_tag;
+	size_t lenght;
 };
 
 static int  grepTlv(struct conf_st *conf, char *pattern, char *prefix, int *map, unsigned char *buf, GT_FTLV *t) {
@@ -84,18 +86,20 @@ static int  grepTlv(struct conf_st *conf, char *pattern, char *prefix, int *map,
 			size_t i;
 			unsigned char *ptr = NULL;
 			size_t len;
+			size_t dat_len = (conf->tlv_tag == t->tag && conf->lenght < t->dat_len) ? conf->lenght : t->dat_len;
 
 			if (conf->print_tlv_hdr) {
 				ptr = buf;
-				len = t->dat_len + t->hdr_len;
+				len = dat_len + t->hdr_len;
 			} else {
 				ptr = buf + t->hdr_len;
-				len = t->dat_len;
+				len = dat_len;
 			}
 
 			if (conf->print_path && !conf->print_raw) {
 				printf("%s: ", pre);
 			}
+
 
 			for (i = 0; i < len; i++) {
 				if (conf->print_raw) {
@@ -174,6 +178,8 @@ void printHelp(FILE *f) {
 			" -n       Print TLV path. Has no effect with -r.\n"
 			" -r       Print raw TLV (will override -n and -i).\n"
 			" -i       Print TLV indexes in path.\n"
+			" -T tag   TLV tag hex value representation, which data will be truncated to the lenght defined by -L"
+			" -L num   Set lenght of data bytes to be printed (valid with -T).\n"
 			" -v       TLV utility package version.\n"
 			"\n"
 			"Examples:\n"
@@ -202,7 +208,7 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
-	while ((c = getopt(argc, argv, "hH:enriv")) != -1) {
+	while ((c = getopt(argc, argv, "hH:enriT:L:v")) != -1) {
 		switch(c) {
 			case 'h':
 				printHelp(stdout);
@@ -222,6 +228,12 @@ int main(int argc, char **argv) {
 				break;
 			case 'i':
 				conf.print_path_index = true;
+				break;
+			case 'T':
+				conf.tlv_tag = strtol(optarg, NULL, 16);
+				break;
+			case 'L':
+				conf.lenght = atoi(optarg);
 				break;
 			case 'v':
 				printf("%s\n", TLV_UTIL_VERSION_STRING);
