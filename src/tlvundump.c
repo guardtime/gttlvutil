@@ -26,11 +26,12 @@
 
 /* Supported function scripts. */
 #define HMAC_CALC_FUNC "HMAC"
+#define HMAC_NEW_CALC_FUNC "HMAC_N"
 
 #define HMAC_TOKEN_BUF 64
 #define FUNC_SCRIPT_BUF 1024
 #define HMAC_CALC_OPENSSL_CMD_F "openssl %s -hmac \"%s\" -binary"
-#define HMAC_CALC_TLVGREP_CMD_F "gttlvgrep %s -re -T 1f -L 1"
+#define HMAC_CALC_TLVGREP_CMD_F "gttlvgrep %s -re"
 #define HMAC_CALC_ARG_DEL "|"
 #define HMAC_CALC_CMD_BUF 2048
 #define HMAC_CALC_OUT_BUF 1024
@@ -106,13 +107,14 @@ struct HmacCalculationInfo {
 	char key[HMAC_TOKEN_BUF];
 	char pattern[HMAC_TOKEN_BUF];
 
+	unsigned char isNew;
 	size_t stack_pos;
 } hmacCalcInfo = { 0, {'\0'}, {'\0'}, {'\0'}, 0 };
 
 const struct GtHashAlgorithmInfo {
 	char *name;
 	unsigned char id;
-	unsigned int lenght;
+	size_t lenght;
 } hshAlgoInfo[] = {
 		{"sha1",   0x00, 160/8},
 		{"sha256", 0x01, 256/8},
@@ -126,19 +128,28 @@ static int serializeStack(TlvLine *stack, size_t stack_len, unsigned char *buf, 
 static int writeStream(const void *raw, size_t size, size_t count, FILE *f);
 
 
-static int getGtHashInfo(char *arg, unsigned char *id, unsigned int *sz) {
+static int getGtHashAlgorithm(char *arg, unsigned char *id) {
 	int i;
 	for (i = 0; i < sizeof(hshAlgoInfo) / sizeof(hshAlgoInfo[0]); i++) {
 		if (strstr(arg, hshAlgoInfo[i].name)) {
 			*id = hshAlgoInfo[i].id;
-			*sz = hshAlgoInfo[i].lenght;
 			return GT_OK;
 		}
 	}
 	return GT_FORMAT_ERROR;
 }
 
-static int hmacGetScriptTokens(char *args, size_t aLen, char *alg, char *key, char *desc) {
+static size_t getHashAlgorithmSize(const unsigned char id) {
+	int i;
+	for (i = 0; i < sizeof(hshAlgoInfo) / sizeof(hshAlgoInfo[0]); i++) {
+		if (id == hshAlgoInfo[i].id) {
+			return hshAlgoInfo[i].lenght;
+		}
+	}
+	return 0;
+}
+
+static int hmacGetScriptTokens(char *args, size_t aLen, char *alg, char *key, char *desc, unsigned char isNew) {
 	int res = GT_UNKNOWN_ERROR;
 	char *tmp = NULL;
 	char *token = NULL;
@@ -159,10 +170,12 @@ static int hmacGetScriptTokens(char *args, size_t aLen, char *alg, char *key, ch
 	if (token == NULL) goto cleanup;
 	strcpy(key, token);
 
-	/* Read TLV tags to include into calculation. */
-	token = strtok(NULL, HMAC_CALC_ARG_DEL);
-	if (token == NULL) goto cleanup;
-	strcpy(desc, token);
+	if (!isNew) {
+		/* Read TLV tags to include into calculation. */
+		token = strtok(NULL, HMAC_CALC_ARG_DEL);
+		if (token == NULL) goto cleanup;
+		strcpy(desc, token);
+	}
 
 	res = GT_OK;
 cleanup:
@@ -170,7 +183,7 @@ cleanup:
 	return res;
 }
 
-static int initHmacCalcInfo(char *script, size_t spos) {
+static int initHmacCalcInfo(char *script, size_t spos, unsigned char isNew) {
 	int res = GT_UNKNOWN_ERROR;
 	char *argBeg = strchr(script, '(') + 1;
 	char *argEnd = strchr(script, ')');
@@ -178,9 +191,10 @@ static int initHmacCalcInfo(char *script, size_t spos) {
 
 	hmacCalcInfo.isValid = 0;
 
-	res = hmacGetScriptTokens(argBeg, argStrLen, hmacCalcInfo.algId, hmacCalcInfo.key, hmacCalcInfo.pattern);
+	res = hmacGetScriptTokens(argBeg, argStrLen, hmacCalcInfo.algId, hmacCalcInfo.key, hmacCalcInfo.pattern, isNew);
 	if (res != GT_OK) goto cleanup;
 
+	hmacCalcInfo.isNew = isNew;
 	hmacCalcInfo.stack_pos = spos;
 	hmacCalcInfo.isValid = 1;
 
@@ -197,7 +211,9 @@ static int calculateHmac(unsigned char *hmac, size_t *hLen, TlvLine *stack, size
 	size_t outLen = 0;
 	unsigned char buf[0xffff + 4];
 	size_t buf_len = 0;
+	size_t wrt_len = 0;
 	FILE *f = NULL;
+	unsigned char gtAlgId = 0;
 
 	if (stack == NULL || stack_len == 0) {
 		res = GT_FORMAT_ERROR;
@@ -205,11 +221,12 @@ static int calculateHmac(unsigned char *hmac, size_t *hLen, TlvLine *stack, size
 	}
 
 	/* Compose cmd line command. */
-	/* Ex: "cat tmp.tlv | gttlvgrep 300.01,302,1f -re -T 1f -L 1 | openssl sha256 -hmac "anon" -binary; rm tmp.tlv -f --interactive=never" */
 	cmdLen += sprintf(cmdLine + cmdLen, "cat %s", HMAC_CALC_TMP_FILE);
 	cmdLen += sprintf(cmdLine + cmdLen, " | ");
-	cmdLen += sprintf(cmdLine + cmdLen, HMAC_CALC_TLVGREP_CMD_F, hmacCalcInfo.pattern);
-	cmdLen += sprintf(cmdLine + cmdLen, " | ");
+	if (!hmacCalcInfo.isNew) {
+		cmdLen += sprintf(cmdLine + cmdLen, HMAC_CALC_TLVGREP_CMD_F, hmacCalcInfo.pattern);
+		cmdLen += sprintf(cmdLine + cmdLen, " | ");
+	}
 	cmdLen += sprintf(cmdLine + cmdLen, HMAC_CALC_OPENSSL_CMD_F, hmacCalcInfo.algId, hmacCalcInfo.key);
 	cmdLen += sprintf(cmdLine + cmdLen, "; ");
 	cmdLen += sprintf(cmdLine + cmdLen, REMOVE_TMP_FILE_CMD, HMAC_CALC_TMP_FILE);
@@ -220,7 +237,7 @@ static int calculateHmac(unsigned char *hmac, size_t *hLen, TlvLine *stack, size
 		goto cleanup;
 	}
 
-	/* Serializxe current stack and write it to a temp file. */
+	/* Serialize current stack. */
 	res = serializeStack(stack, stack_len, buf, sizeof(buf), &buf_len);
 	if (res != GT_OK) goto cleanup;
 
@@ -229,7 +246,21 @@ static int calculateHmac(unsigned char *hmac, size_t *hLen, TlvLine *stack, size
 		res = GT_IO_ERROR;
 		goto cleanup;
 	}
-	res = writeStream(buf + sizeof(buf) - buf_len, 1, buf_len, f);
+
+	if (hmacCalcInfo.isNew) {
+		/*
+		 * For the new HMAC calculation truncate the output by the size of hash lenght.
+		 * As the calculation procedure includes all bytes except hash valie it self.
+		 */
+		res = getGtHashAlgorithm(hmacCalcInfo.algId, &gtAlgId);
+		if (res != GT_OK) goto cleanup;
+
+		wrt_len = buf_len - getHashAlgorithmSize(gtAlgId);
+	} else {
+		wrt_len = buf_len;
+	}
+	/* Write buffer to a temp file. */
+	res = writeStream(buf + sizeof(buf) - buf_len, 1, wrt_len, f);
 	if (res != GT_OK) goto cleanup;
 	fclose(f);
 	f = NULL;
@@ -528,16 +559,18 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 					/* Find handler. */
 					if (strstr(funcScript, HMAC_CALC_FUNC) == funcScript) {
 						unsigned char algId;
-						unsigned int algSize;
+						size_t algSize;
+						unsigned char isNew = (strstr(funcScript, HMAC_NEW_CALC_FUNC) == funcScript);
 
-						if (initHmacCalcInfo(funcScript, stackLen) != GT_OK) {
+						if (initHmacCalcInfo(funcScript, stackLen, isNew) != GT_OK) {
 							error(GT_PARSER_ERROR, "HMAC calculation failed.");
 						}
 
-						if (getGtHashInfo(hmacCalcInfo.algId, &algId, &algSize) != GT_OK) {
+						if (getGtHashAlgorithm(hmacCalcInfo.algId, &algId) != GT_OK) {
 							error(GT_PARSER_ERROR, "Unable to get hash algorithm id.");
 						}
 						tlv->dat[tlv->dat_len++] = algId;
+						algSize = getHashAlgorithmSize(algId);
 						memset(&tlv->dat[tlv->dat_len], 0, algSize);
 						tlv->dat_len += algSize;
 					} else {

@@ -13,11 +13,12 @@ struct conf_st {
 	char *pattern;
 	int magic_len;
 	bool print_tlv_hdr;
+	bool print_tlv_hdr_only;
 	bool print_raw;
 	bool print_path;
 	bool print_path_index;
-	unsigned tlv_tag;
-	size_t lenght;
+	unsigned trunc_tlv_tag;
+	size_t trunc_len;
 };
 
 static int  grepTlv(struct conf_st *conf, char *pattern, char *prefix, int *map, unsigned char *buf, GT_FTLV *t) {
@@ -86,14 +87,19 @@ static int  grepTlv(struct conf_st *conf, char *pattern, char *prefix, int *map,
 			size_t i;
 			unsigned char *ptr = NULL;
 			size_t len;
-			size_t dat_len = (conf->tlv_tag == t->tag && conf->lenght < t->dat_len) ? conf->lenght : t->dat_len;
+			size_t dat_len = (conf->trunc_tlv_tag == t->tag && conf->trunc_len < t->dat_len) ? conf->trunc_len : t->dat_len;
 
-			if (conf->print_tlv_hdr) {
+			if (conf->print_tlv_hdr_only) {
 				ptr = buf;
-				len = dat_len + t->hdr_len;
+				len = t->hdr_len;
 			} else {
-				ptr = buf + t->hdr_len;
-				len = dat_len;
+				if (conf->print_tlv_hdr) {
+					ptr = buf;
+					len = dat_len + t->hdr_len;
+				} else {
+					ptr = buf + t->hdr_len;
+					len = dat_len;
+				}
 			}
 
 			if (conf->print_path && !conf->print_raw) {
@@ -174,11 +180,12 @@ void printHelp(FILE *f) {
 			"Options:\n"
 			" -h       Print this help message.\n"
 			" -H num   Skip num first bytes.\n"
+			" -P       Print header.\n"
 			" -e       Print TLV header.\n"
 			" -n       Print TLV path. Has no effect with -r.\n"
 			" -r       Print raw TLV (will override -n and -i).\n"
 			" -i       Print TLV indexes in path.\n"
-			" -T tag   TLV tag hex value representation, which data will be truncated to the lenght defined by -L"
+			" -T tag   TLV tag hex value representation, which data will be truncated to the lenght defined by -L\n"
 			" -L num   Set lenght of data bytes to be printed (valid with -T).\n"
 			" -v       TLV utility package version.\n"
 			"\n"
@@ -202,19 +209,24 @@ int main(int argc, char **argv) {
 	conf.print_raw = false;
 	conf.print_path = true;
 	conf.print_tlv_hdr = false;
+	conf.trunc_tlv_tag = 0;
+	conf.print_tlv_hdr_only = false;
 
 	if (argc < 2) {
 		printHelp(stderr);
 		exit(1);
 	}
 
-	while ((c = getopt(argc, argv, "hH:enriT:L:v")) != -1) {
+	while ((c = getopt(argc, argv, "hH:oenriT:L:v")) != -1) {
 		switch(c) {
 			case 'h':
 				printHelp(stdout);
 				exit(0);
 			case 'H':
 				conf.magic_len = atoi(optarg);
+				break;
+			case 'o':
+				conf.print_tlv_hdr_only = true;
 				break;
 			case 'e':
 				conf.print_tlv_hdr = true;
@@ -230,10 +242,10 @@ int main(int argc, char **argv) {
 				conf.print_path_index = true;
 				break;
 			case 'T':
-				conf.tlv_tag = strtol(optarg, NULL, 16);
+				conf.trunc_tlv_tag = strtol(optarg, NULL, 16);
 				break;
 			case 'L':
-				conf.lenght = atoi(optarg);
+				conf.trunc_len = atoi(optarg);
 				break;
 			case 'v':
 				printf("%s\n", TLV_UTIL_VERSION_STRING);
