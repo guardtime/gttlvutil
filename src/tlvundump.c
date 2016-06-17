@@ -26,7 +26,6 @@
 
 /* Supported function scripts. */
 #define HMAC_CALC_FUNC "HMAC"
-#define HMAC_NEW_CALC_FUNC "HMAC_N"
 
 #define HMAC_TOKEN_BUF 64
 #define FUNC_SCRIPT_BUF 1024
@@ -107,9 +106,9 @@ struct HmacCalculationInfo {
 	char key[HMAC_TOKEN_BUF];
 	char pattern[HMAC_TOKEN_BUF];
 
-	unsigned char isNew;
+	unsigned char ver;
 	size_t stack_pos;
-} hmacCalcInfo = { 0, {'\0'}, {'\0'}, {'\0'}, 0 };
+} hmacCalcInfo = { 0, {'\0'}, {'\0'}, {'\0'}, 0, 0 };
 
 const struct GtHashAlgorithmInfo {
 	char *name;
@@ -149,8 +148,8 @@ static size_t getHashAlgorithmSize(const unsigned char id) {
 	return 0;
 }
 
-static int hmacGetScriptTokens(char *args, size_t aLen, char *alg, char *key, char *desc, unsigned char isNew) {
-	int res = GT_UNKNOWN_ERROR;
+static int hmacGetScriptTokens(char *args, size_t aLen, char *alg, char *key, char *pat, unsigned char *ver) {
+	int res = GT_INVALID_FORMAT;
 	char *tmp = NULL;
 	char *token = NULL;
 
@@ -160,8 +159,17 @@ static int hmacGetScriptTokens(char *args, size_t aLen, char *alg, char *key, ch
 	tmp[aLen] = '\0';
 
 	/* Break the arguments up into tokens. */
-	/* Read hash algorithm. */
+
+	/* Read calculation approach version. */
 	token = strtok(tmp, HMAC_CALC_ARG_DEL);
+	if (token == NULL) goto cleanup;
+	*ver = atoi(token + 1);
+	/* Verify for known version numbers. */
+	if (!(*ver == 1 || *ver == 2)) goto cleanup;
+
+
+	/* Read hash algorithm. */
+	token = strtok(NULL, HMAC_CALC_ARG_DEL);
 	if (token == NULL) goto cleanup;
 	strcpy(alg, token);
 
@@ -170,11 +178,11 @@ static int hmacGetScriptTokens(char *args, size_t aLen, char *alg, char *key, ch
 	if (token == NULL) goto cleanup;
 	strcpy(key, token);
 
-	if (!isNew) {
-		/* Read TLV tags to include into calculation. */
+	if (*ver == 1) {
+		/* Read TLV pattern to include into calculation. */
 		token = strtok(NULL, HMAC_CALC_ARG_DEL);
 		if (token == NULL) goto cleanup;
-		strcpy(desc, token);
+		strcpy(pat, token);
 	}
 
 	res = GT_OK;
@@ -183,7 +191,7 @@ cleanup:
 	return res;
 }
 
-static int initHmacCalcInfo(char *script, size_t spos, unsigned char isNew) {
+static int initHmacCalcInfo(char *script, size_t spos) {
 	int res = GT_UNKNOWN_ERROR;
 	char *argBeg = strchr(script, '(') + 1;
 	char *argEnd = strchr(script, ')');
@@ -191,10 +199,9 @@ static int initHmacCalcInfo(char *script, size_t spos, unsigned char isNew) {
 
 	hmacCalcInfo.isValid = 0;
 
-	res = hmacGetScriptTokens(argBeg, argStrLen, hmacCalcInfo.algId, hmacCalcInfo.key, hmacCalcInfo.pattern, isNew);
+	res = hmacGetScriptTokens(argBeg, argStrLen, hmacCalcInfo.algId, hmacCalcInfo.key, hmacCalcInfo.pattern, &hmacCalcInfo.ver);
 	if (res != GT_OK) goto cleanup;
 
-	hmacCalcInfo.isNew = isNew;
 	hmacCalcInfo.stack_pos = spos;
 	hmacCalcInfo.isValid = 1;
 
@@ -223,7 +230,7 @@ static int calculateHmac(unsigned char *hmac, size_t *hLen, TlvLine *stack, size
 	/* Compose cmd line command. */
 	cmdLen += sprintf(cmdLine + cmdLen, "cat %s", HMAC_CALC_TMP_FILE);
 	cmdLen += sprintf(cmdLine + cmdLen, " | ");
-	if (!hmacCalcInfo.isNew) {
+	if (hmacCalcInfo.ver == 1) {
 		cmdLen += sprintf(cmdLine + cmdLen, HMAC_CALC_TLVGREP_CMD_F, hmacCalcInfo.pattern);
 		cmdLen += sprintf(cmdLine + cmdLen, " | ");
 	}
@@ -247,10 +254,9 @@ static int calculateHmac(unsigned char *hmac, size_t *hLen, TlvLine *stack, size
 		goto cleanup;
 	}
 
-	if (hmacCalcInfo.isNew) {
-		/*
-		 * For the new HMAC calculation truncate the output by the size of hash lenght.
-		 * As the calculation procedure includes all bytes except hash valie it self.
+	if (hmacCalcInfo.ver == 2) {
+		/* For the v2 HMAC calculation truncate the output by the size of hash lenght.
+		 * As the calculation procedure includes all bytes except hash value it self.
 		 */
 		res = getGtHashAlgorithm(hmacCalcInfo.algId, &gtAlgId);
 		if (res != GT_OK) goto cleanup;
@@ -556,19 +562,20 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 					if (fgets(funcScript, sizeof(funcScript), f) != funcScript) {
 						error(GT_PARSER_ERROR, "Unable to read function script.");
 					}
+
 					/* Find handler. */
 					if (strstr(funcScript, HMAC_CALC_FUNC) == funcScript) {
 						unsigned char algId;
 						size_t algSize;
-						unsigned char isNew = (strstr(funcScript, HMAC_NEW_CALC_FUNC) == funcScript);
 
-						if (initHmacCalcInfo(funcScript, stackLen, isNew) != GT_OK) {
-							error(GT_PARSER_ERROR, "HMAC calculation failed.");
+						if (initHmacCalcInfo(funcScript, stackLen) != GT_OK) {
+							error(GT_PARSER_ERROR, "Failed to parse HMAC calculation script.");
 						}
 
 						if (getGtHashAlgorithm(hmacCalcInfo.algId, &algId) != GT_OK) {
 							error(GT_PARSER_ERROR, "Unable to get hash algorithm id.");
 						}
+						/* Add algorithm id and init hmac hash value to 0. */
 						tlv->dat[tlv->dat_len++] = algId;
 						algSize = getHashAlgorithmSize(algId);
 						memset(&tlv->dat[tlv->dat_len], 0, algSize);
@@ -687,7 +694,7 @@ static int writeStream(const void *raw, size_t size, size_t count, FILE *f) {
 }
 
 static int runPostponedTasks(TlvLine *stack, size_t stackLen) {
-	int res = GT_UNKNOWN_ERROR;
+	int res = GT_OK;
 
 	/* Check if HMAC calculation is on hold. */
 	if (hmacCalcInfo.isValid) {
@@ -696,13 +703,10 @@ static int runPostponedTasks(TlvLine *stack, size_t stackLen) {
 		TlvLine *tlv = &stack[hmacCalcInfo.stack_pos];
 
 		res = calculateHmac(hmacRaw, &hmacLen, stack, stackLen);
-		if (res != GT_OK) goto cleanup;
+		if (res != GT_OK) error(res, "Failed to calculate HMAC.");
 
 		memcpy(&tlv->dat[tlv->dat_len - hmacLen], hmacRaw, hmacLen);
 	}
-
-	res = GT_OK;
-cleanup:
 	return res;
 }
 
