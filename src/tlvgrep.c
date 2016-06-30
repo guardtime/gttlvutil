@@ -5,143 +5,10 @@
 
 #include "common.h"
 #include "fast_tlv.h"
-
-#define IDX_MAP_LEN 0x1ffff
-
-struct conf_st {
-	const char *file_name;
-	char *pattern;
-	int magic_len;
-	bool print_tlv_hdr;
-	bool print_tlv_hdr_only;
-	bool print_raw;
-	bool print_path;
-	bool print_path_index;
-	unsigned trunc_tlv_tag;
-	size_t trunc_len;
-};
-
-static int  grepTlv(struct conf_st *conf, char *pattern, char *prefix, int *map, unsigned char *buf, GT_FTLV *t) {
-	int res = GT_UNKNOWN_ERROR;
-	unsigned tag;
-	char *p = pattern;
-	int roll = 1;
-	int term = 0;
-	int match = 0;
-	int idx = -1;
-
-	while (roll) {
-		char *mod = NULL;
-		tag = strtol(p, &mod, 16);
-
-		if (p == mod) {
-			fprintf(stderr, "Invalid pattern: '%s'\n", p);
-			return GT_INVALID_FORMAT;
-		}
-
-		if (*mod == '[') {
-			idx = strtol(mod + 1, &mod, 10);
-			if (*mod != ']') {
-				fprintf(stderr, "Invalid index in pattertn: '%s'\n", p);
-				return GT_INVALID_FORMAT;
-			}
-			mod++;
-		}
-
-		switch (*mod) {
-			case 0:
-				term = 1;
-				roll = 0;
-				break;
-			case ',':
-				p = mod + 1;
-				break;
-			case '.':
-				p = mod + 1;
-				roll = 0;
-				break;
-			default:
-				fprintf(stderr, "Invalid pattern: '%s'\n", p);
-				return GT_INVALID_FORMAT;
-		}
-
-		if (t->tag == tag) {
-			match = 1;
-			map[tag]++;
-		}
-	}
-
-	if (match && (idx < 0 || map[t->tag] == idx + 1)) {
-		char pre[1024];
-		snprintf(pre, sizeof(pre), "%s%s%02x",
-				(prefix ? prefix: ""),
-				((prefix && *prefix)?".":""),
-				t->tag
-		);
-
-		if (conf->print_path_index) {
-			snprintf(pre + strlen(pre), sizeof(pre) - strlen(pre), "[%d]", map[t->tag] - 1);
-		}
-
-		if (term) {
-			size_t i;
-			unsigned char *ptr = NULL;
-			size_t len;
-			size_t dat_len = (conf->trunc_tlv_tag == t->tag && conf->trunc_len < t->dat_len) ? conf->trunc_len : t->dat_len;
-
-			if (conf->print_tlv_hdr_only) {
-				ptr = buf;
-				len = t->hdr_len;
-			} else {
-				if (conf->print_tlv_hdr) {
-					ptr = buf;
-					len = dat_len + t->hdr_len;
-				} else {
-					ptr = buf + t->hdr_len;
-					len = dat_len;
-				}
-			}
-
-			if (conf->print_path && !conf->print_raw) {
-				printf("%s: ", pre);
-			}
+#include "grep_tlv.h"
 
 
-			for (i = 0; i < len; i++) {
-				if (conf->print_raw) {
-					putc(ptr[i], stdout);
-				} else {
-					printf("%02x", ptr[i]);
-				}
-			}
-
-			if (!conf->print_raw) {
-				printf("\n");
-			}
-		} else {
-			unsigned char *ptr = buf + t->hdr_len;
-			size_t len = t->dat_len;
-			GT_FTLV n;
-			int i[IDX_MAP_LEN];
-			memset(i, 0, sizeof(i));
-
-			while (len > 0) {
-
-				res = GT_FTLV_memRead(ptr, len, &n);
-				if (res != GT_OK) break;
-
-				res = grepTlv(conf, p, pre, i, ptr, &n);
-				if (res != GT_OK) return res;
-
-				ptr += n.hdr_len + n.dat_len;
-				len -= n.hdr_len + n.dat_len;
-			}
-		}
-	}
-	return GT_OK;
-}
-
-static int grepFile(struct conf_st *conf, FILE *f) {
+static int grepFile(GT_GrepTlvConf *conf, FILE *f) {
 	int res = GT_OK;
 	GT_FTLV t;
 	size_t len;
@@ -159,7 +26,7 @@ static int grepFile(struct conf_st *conf, FILE *f) {
 			return GT_FORMAT_ERROR;
 		}
 
-		res = grepTlv(conf, conf->pattern, NULL, idx, buf, &t);
+		res = GT_grepTlv(conf, conf->pattern, NULL, idx, buf, &t, NULL, NULL);
 	}
 	return res;
 }
@@ -198,24 +65,18 @@ void printHelp(FILE *f) {
 
 int main(int argc, char **argv) {
 
-	struct conf_st conf;
+	GT_GrepTlvConf conf;
 
 	FILE *f = NULL;
 	int c;
-
-	memset(&conf, 0, sizeof(conf));
-
-	/* Default conf. */
-	conf.print_raw = false;
-	conf.print_path = true;
-	conf.print_tlv_hdr = false;
-	conf.trunc_tlv_tag = 0;
-	conf.print_tlv_hdr_only = false;
 
 	if (argc < 2) {
 		printHelp(stderr);
 		exit(1);
 	}
+
+	/* Default conf. */
+	GT_GrepTlv_initConf(&conf);
 
 	while ((c = getopt(argc, argv, "hH:oenriT:L:v")) != -1) {
 		switch(c) {

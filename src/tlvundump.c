@@ -6,6 +6,9 @@
 
 #include "common.h"
 #include "fast_tlv.h"
+#include "hash.h"
+#include "hmac.h"
+#include "grep_tlv.h"
 
 #ifdef _WIN32
 #	include <io.h>
@@ -29,20 +32,10 @@
 
 #define HMAC_TOKEN_BUF 64
 #define FUNC_SCRIPT_BUF 1024
-#define HMAC_CALC_OPENSSL_CMD_F "openssl %s -hmac \"%s\" -binary"
-#define HMAC_CALC_TLVGREP_CMD_F "gttlvgrep %s -re"
 #define HMAC_CALC_ARG_DEL "|"
-#define HMAC_CALC_CMD_BUF 2048
-#define HMAC_CALC_OUT_BUF 1024
-#define HMAC_CALC_TMP_FILE "tmp.tlv"
-#ifdef _WIN32
-#	define REMOVE_TMP_FILE_CMD "del %s /F /Q"
-#else
-#	define REMOVE_TMP_FILE_CMD "rm %s -f --interactive=never"
-#endif
 
 typedef struct {
-	char buf[0xffff + 4];
+	unsigned char buf[0xffff + 4];
 	size_t len;
 } Buffer;
 
@@ -108,45 +101,10 @@ struct HmacCalculationInfo {
 
 	unsigned char ver;
 	size_t stack_pos;
-} hmacCalcInfo = { 0, {'\0'}, {'\0'}, {'\0'}, 0, 0 };
-
-const struct GtHashAlgorithmInfo {
-	char *name;
-	unsigned char id;
-	size_t lenght;
-} hshAlgoInfo[] = {
-		{"sha1",   0x00, 160/8},
-		{"sha256", 0x01, 256/8},
-		{"rmd160", 0x02, 160/8},
-		{"sha384", 0x04, 384/8},
-		{"sha512", 0x05, 512/8}
-};
-
+} hmacCalcInfo = {0};
 
 static int serializeStack(TlvLine *stack, size_t stack_len, unsigned char *buf, size_t buf_len, size_t *total_len);
 static int writeStream(const void *raw, size_t size, size_t count, FILE *f);
-
-
-static int getGtHashAlgorithm(char *arg, unsigned char *id) {
-	int i;
-	for (i = 0; i < sizeof(hshAlgoInfo) / sizeof(hshAlgoInfo[0]); i++) {
-		if (strstr(arg, hshAlgoInfo[i].name)) {
-			*id = hshAlgoInfo[i].id;
-			return GT_OK;
-		}
-	}
-	return GT_FORMAT_ERROR;
-}
-
-static size_t getHashAlgorithmSize(const unsigned char id) {
-	int i;
-	for (i = 0; i < sizeof(hshAlgoInfo) / sizeof(hshAlgoInfo[0]); i++) {
-		if (id == hshAlgoInfo[i].id) {
-			return hshAlgoInfo[i].lenght;
-		}
-	}
-	return 0;
-}
 
 static int hmacGetScriptTokens(char *args, size_t aLen, char *alg, char *key, char *pat, unsigned char *ver) {
 	int res = GT_INVALID_FORMAT;
@@ -209,92 +167,79 @@ cleanup:
 	return res;
 }
 
-static int calculateHmac(unsigned char *hmac, size_t *hLen, TlvLine *stack, size_t stack_len) {
+static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size_t stack_len) {
 	int res = GT_UNKNOWN_ERROR;
-	char cmdLine[HMAC_CALC_CMD_BUF] = {'\0'};
-	size_t cmdLen = 0;
-	FILE *pipe = NULL;
-	unsigned char out[HMAC_CALC_OUT_BUF];
-	size_t outLen = 0;
-	unsigned char buf[0xffff + 4];
-	size_t buf_len = 0;
-	size_t wrt_len = 0;
-	FILE *f = NULL;
-	unsigned char gtAlgId = 0;
+	Buffer raw;
+	size_t calc_len = 0;
+	unsigned char tmp[HASH_MAX_LEN];
+	unsigned int tmp_len;
+	GT_Hash_AlgorithmId algId;
 
 	if (stack == NULL || stack_len == 0) {
 		res = GT_FORMAT_ERROR;
 		goto cleanup;
 	}
 
-	/* Compose cmd line command. */
-	cmdLen += sprintf(cmdLine + cmdLen, "cat %s", HMAC_CALC_TMP_FILE);
-	cmdLen += sprintf(cmdLine + cmdLen, " | ");
-	if (hmacCalcInfo.ver == 1) {
-		cmdLen += sprintf(cmdLine + cmdLen, HMAC_CALC_TLVGREP_CMD_F, hmacCalcInfo.pattern);
-		cmdLen += sprintf(cmdLine + cmdLen, " | ");
-	}
-	cmdLen += sprintf(cmdLine + cmdLen, HMAC_CALC_OPENSSL_CMD_F, hmacCalcInfo.algId, hmacCalcInfo.key);
-	cmdLen += sprintf(cmdLine + cmdLen, "; ");
-	cmdLen += sprintf(cmdLine + cmdLen, REMOVE_TMP_FILE_CMD, HMAC_CALC_TMP_FILE);
-
-	/* Check for buffer overflow. */
-	if (cmdLen > HMAC_CALC_CMD_BUF) {
-		res = GT_BUFFER_OVERFLOW;
-		goto cleanup;
-	}
-
 	/* Serialize current stack. */
-	res = serializeStack(stack, stack_len, buf, sizeof(buf), &buf_len);
+	res = serializeStack(stack, stack_len, raw.buf, sizeof(raw.buf), &raw.len);
 	if (res != GT_OK) goto cleanup;
 
-	f = fopen(HMAC_CALC_TMP_FILE, "wb");
-	if (f == NULL) {
-		res = GT_IO_ERROR;
-		goto cleanup;
-	}
 
-	if (hmacCalcInfo.ver == 2) {
-		/* For the v2 HMAC calculation truncate the output by the size of hash lenght.
-		 * As the calculation procedure includes all bytes except hash value it self.
-		 */
-		res = getGtHashAlgorithm(hmacCalcInfo.algId, &gtAlgId);
-		if (res != GT_OK) goto cleanup;
-
-		wrt_len = buf_len - getHashAlgorithmSize(gtAlgId);
-	} else {
-		wrt_len = buf_len;
-	}
-	/* Write buffer to a temp file. */
-	res = writeStream(buf + sizeof(buf) - buf_len, 1, wrt_len, f);
+	res = GT_Hash_getAlgorithmId(hmacCalcInfo.algId, &algId);
 	if (res != GT_OK) goto cleanup;
-	fclose(f);
-	f = NULL;
 
-	/* Execute the composed cmd line and read result. */
-	pipe = popen(cmdLine, "r");
-	if (pipe == NULL) {
-		res = GT_IO_ERROR;
-		goto cleanup;
+	switch (hmacCalcInfo.ver) {
+		case 2:
+			{
+				calc_len = raw.len - GT_Hash_getAlgorithmLenght(algId);
+
+//{{{{{{{{{{{{
+//int i;
+//printf("\n>>>>> raw[%d]: \n", calc_len );
+//for (i = 0; i < calc_len ; i++) {
+//	printf("%02x", (raw.buf + sizeof(raw.buf) - raw.len)[i]);
+//	if (!((i+1) % 0x10)) printf("\n");
+//}
+//printf("\n");
+//}}}}}}}}}}}}
+				res = GT_Hmac_Calculate(algId, hmacCalcInfo.key, strlen(hmacCalcInfo.key), raw.buf + sizeof(raw.buf) - raw.len, calc_len, tmp, &tmp_len);
+				if (res != GT_OK) goto cleanup;
+			}
+			break;
+
+		case 1:
+		default:
+			{
+				GT_GrepTlvConf conf;
+				int idx[IDX_MAP_LEN];
+				GT_FTLV t;
+				unsigned char buf[0xffff + 4];
+				unsigned char *raw_buf_ptr = raw.buf + sizeof(raw.buf) - raw.len;
+
+				memset(idx, 0, sizeof(idx));
+
+				GT_GrepTlv_initConf(&conf);
+				conf.print_raw = true;
+				conf.print_path = false;
+				conf.print_tlv_hdr = true;
+
+				res = GT_FTLV_memRead(raw_buf_ptr, raw.len, &t);
+				if (res != GT_OK) goto cleanup;
+
+				res = GT_grepTlv(&conf, hmacCalcInfo.pattern, NULL, idx, raw_buf_ptr, &t, buf, &calc_len);
+				if (res != GT_OK) goto cleanup;
+
+				res = GT_Hmac_Calculate(algId, hmacCalcInfo.key, strlen(hmacCalcInfo.key), buf, calc_len, tmp, &tmp_len);
+				if (res != GT_OK) goto cleanup;
+			}
+			break;
 	}
-	/* Read output of the command line. */
-	outLen = fread(out, sizeof(unsigned char), sizeof(out), pipe);
-	if (outLen > HMAC_CALC_OUT_BUF) {
-		res = GT_BUFFER_OVERFLOW;
-		goto cleanup;
-	}
-	if (outLen == 0) {
-		res = GT_PARSER_ERROR;
-		goto cleanup;
-	}
-	memcpy(hmac, out, outLen);
-	*hLen = outLen;
+
+	memcpy(hmac, tmp, tmp_len);
+	*hlen = tmp_len;
 
 	res = GT_OK;
-
 cleanup:
-	if (f) fclose(f);
-	if (pipe) pclose(pipe);
 
 	return res;
 }
@@ -565,19 +510,19 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 
 					/* Find handler. */
 					if (strstr(funcScript, HMAC_CALC_FUNC) == funcScript) {
-						unsigned char algId;
+						GT_Hash_AlgorithmId algId;
 						size_t algSize;
 
 						if (initHmacCalcInfo(funcScript, stackLen) != GT_OK) {
 							error(GT_PARSER_ERROR, "Failed to parse HMAC calculation script.");
 						}
 
-						if (getGtHashAlgorithm(hmacCalcInfo.algId, &algId) != GT_OK) {
+						if (GT_Hash_getAlgorithmId(hmacCalcInfo.algId, &algId) != GT_OK) {
 							error(GT_PARSER_ERROR, "Unable to get hash algorithm id.");
 						}
 						/* Add algorithm id and init hmac hash value to 0. */
 						tlv->dat[tlv->dat_len++] = algId;
-						algSize = getHashAlgorithmSize(algId);
+						algSize = GT_Hash_getAlgorithmLenght(algId);
 						memset(&tlv->dat[tlv->dat_len], 0, algSize);
 						tlv->dat_len += algSize;
 					} else {

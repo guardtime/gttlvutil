@@ -17,6 +17,10 @@
 # Guardtime Inc.
 #
 
+!IF "$(LIB)" != "lib" && "$(LIB)" != "dll"
+LIB = lib
+!ENDIF
+
 !IFNDEF RTL
 RTL = MT
 !MESSAGE Setting C Runtime Lib to MT
@@ -30,6 +34,7 @@ INSTALL_MACHINE=64
 !ELSE IF "$(INSTALL_MACHINE)" != "32" && "$(INSTALL_MACHINE)" != "64"
 !ERROR set INSTALL_MACHINE=32 or INSTALL_MACHINE=64
 !ENDIF
+
 
 SRC_DIR = src
 OBJ_DIR = obj
@@ -61,7 +66,19 @@ GREP_OBJ = \
 
 UNDUMP_OBJ = \
 	$(OBJ_DIR)\tlvundump.obj \
-	$(OBJ_DIR)\getopt.obj
+	$(OBJ_DIR)\getopt.obj \
+	$(OBJ_DIR)\fast_tlv.obj \
+	$(OBJ_DIR)\hash.obj \
+	$(OBJ_DIR)\grep_tlv.obj
+
+#Selecting hash provider
+!IF "$(HASH_PROVIDER)" == "OPENSSL"
+CCFLAGS = $(CCFLAGS) /DHASH_PROVIDER=HASH_OPENSSL
+UNDUMP_OBJ = $(UNDUMP_OBJ) $(OBJ_DIR)\hash_openssl.obj
+!ELSE IF "$(HASH_PROVIDER)" == "CRYPTOAPI"
+CCFLAGS = $(CCFLAGS) /DHASH_PROVIDER=HASH_CRYPTOAPI
+UNDUMP_OBJ = $(UNDUMP_OBJ) $(OBJ_DIR)\hash_cryptoapi.obj
+!ENDIF
 
 DESC_FILES = \
 	$(SRC_DIR)\ksi.desc \
@@ -76,6 +93,17 @@ EXT_LIB = user32.lib gdi32.lib
 
 CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE /I$(SRC_DIR)
 LDFLAGS = /NOLOGO
+
+!IF "$(HASH_PROVIDER)" == "OPENSSL"
+#LDFLAGS = $(LDFLAGS) /LIBPATH:"$(OPENSSL_DIR)\$(LIB)"
+CCFLAGS = $(CCFLAGS) /I"$(OPENSSL_DIR)\include"
+#EXT_LIB = $(EXT_LIB) libeay32$(RTL).lib advapi32.lib
+!ENDIF
+
+!IF "$(HASH_PROVIDER)" == "CRYPTOAPI"
+EXT_LIB = $(EXT_LIB) Crypt32.lib advapi32.lib
+!ENDIF
+
 
 !IF "$(RTL)" == "MT" || "$(RTL)" == "MD"
 CCFLAGS = $(CCFLAGS) /DNDEBUG /O2

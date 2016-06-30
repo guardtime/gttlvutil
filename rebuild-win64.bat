@@ -24,7 +24,9 @@ CALL "%ProgramW6432%\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64
 
 ECHO ************ Rebuilding project (Win64) ************
 
+SET OPENSSL_DIR=C:\Work\openssl
+
 nmake clean
-nmake INSTALL_MACHINE=64
+nmake INSTALL_MACHINE=64 HASH_PROVIDER=HASH_OPENSSL
 
 pause
