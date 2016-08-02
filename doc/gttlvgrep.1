@@ -1,0 +1,89 @@
+.TH GTTLVGREP 1
+.\"
+.\"
+.\"
+.SH NAME
+\fBgttlvgrep \fR- A tool for dumping TLV's matching the given pattern.
+.\"
+.\"
+.SH SYNOPSIS
+.\"
+.HP 4
+\fBgttlvgrep \fR[\fB-h\fR] \fR[\fB-v\fR] [\fIoptions\fR] [\fItlvfile\fR]...
+.LP
+.\"
+.\"
+.SH DESCRIPTION
+.\"
+gttlvgrep searches TLV's matching the given pattern and formats the output to \fIstdout\fR. By default only TLV payload (value) is dumped in hex format. See options \fB-n\fR and \fB-i\fR to make the output more human-redable or use parameter \fB-r\fR instead to dump the TLV's in binary. Use flag \fB-e\fR to dump consistent TLV structure with header and payload.
+.LP
+The pattern describes the hirarchy of the element or elements that the user is looking for. The path describes the TLV values in layers of the TLV tree, starting from the outermost. Each level is sepparated by a dot '\fB.\fR'. Each layer may contain one or multiple TLV tag value(s). Multiple values are sepparater by a comma '\fB,\fR'. Each TLV tag may be followed by a decimal index value enclosed in square brackets '\fB[\fR' and '\fB]\fR'.
+.\"
+.\"
+.SH OPTIONS
+.\"
+.TP
+\fB-h\fR
+Prints help text to \fIstdout\fR.
+.\"
+.TP
+\fB-H \fInum\fR
+Skip specified amount of first bytes.
+.\"
+.TP
+\fB-e\fR
+Include TLV header to extracted payload.
+.\"
+.TP
+\fB-r\fR
+Print raw TLV (binary). Will annulate options \fB-n\fR and \fB-i\fR.
+.\"
+.TP
+\fB-n\fR
+Print TLV path in human-readable format. Has no effect with option \fB-r\fR.
+.\"
+.TP
+\fB-i\fR
+Print TLV indexes in path in human-redable format. Has no effect without option \fB-n\fR.
+.\"
+.TP
+\fB-v\fR
+TLV utility package version.
+.\"
+.SH EXAMPLES
+.\"
+.TP 2
+\fB1
+\fRTo extract KSI publications file \fIpubfile\fR first KSI signature verification certificate in binary a constant header "KSIPUBLF" must be ignored from the beginning of the file. Only binary payload without the TLV tag is extracted:
+.LP
+.RS 4
+.HP 4
+\fBgttlvgrep -H \fI8 \fB-r \fI702[0].02 pubfile \fR> \fItest/ksi-verify.crt\fR
+.RE
+.\"
+.TP 2
+\fB2
+\fRTo dump TLV from \fIfile.tlv\fR and verify the result correctness with gttlvdump the TLV header must be included to the payload:
+.LP
+.RS 4
+.HP 4
+\fBgttlvgrep -re \fI1000[0] file.tlv\fR | gttlvdump -pP
+.RE
+\"
+.TP 2
+\fB3
+\fRDump all the hash chain links (left 07 and right 08) in the second aggregation chain from KSI signature \fItest.ksig\fR in human readable format:
+.LP
+.RS 4
+.HP 4
+\fBgttlvgrep -ni \fI800.801[1].07,08 test.ksig\fR
+.RE
+.LP
+.\"
+.SH AUTHOR
+.LP
+Guardtime AS, http://www.guardtime.com/
+.LP
+.SH SEE ALSO
+.LP
+\fBgttlvdump\fR(1), \fBgttlvundump\fR(1), \fBgttlvwrap\fR(1), \fBtlv\fR(5), \fBtlv-desc\fR(5)
