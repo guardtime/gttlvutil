@@ -1,3 +1,6 @@
+* IMPROVEMENT: Help format changed.
+* BUGFIX: Typos fixed.
+
 Version 0.3
 
 * IMPROVEMENT: The gttlvwrap accepts only hex as tag values.
