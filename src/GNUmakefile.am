@@ -1,6 +1,16 @@
 gttlvdumpdir=$(pkgdatadir)
 AM_CFLAGS=-g -O0 -DDATA_DIR="\"$(gttlvdumpdir)\""
 
+man_MANS = \
+../doc/gttlvdump.1\
+../doc/gttlvgrep.1\
+../doc/gttlvundump.1\
+../doc/gttlvwrap.1\
+../doc/tlv-desc.5\
+../doc/tlv.5
+
+dist_doc_DATA = ../Changelog
+EXTRA_DIST = $(man_MANS) $(dist_doc_DATA)
 bin_PROGRAMS=gttlvdump gttlvgrep gttlvwrap gttlvundump
 
 dist_gttlvdump_DATA=logsig.desc ksi.desc ksie.desc
