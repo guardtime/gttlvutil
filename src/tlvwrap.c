@@ -23,7 +23,7 @@ int encode(unsigned int type, int lenient, int forward, FILE *in, FILE *out) {
 
 		if (len >> 8 > UCHAR_MAX) {
 			res = GT_INVALID_ARGUMENT;
-			fprintf(stderr, "Len is too great: '%llu'\n", (unsigned long long)len);
+			fprintf(stderr, "Len is too great: '%llu'.\n", (unsigned long long)len);
 			goto cleanup;
 		}
 
@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
 			case 't':
 				type = strtol(optarg, &tail, 16);
 				if (*tail != 0) {
-					fprintf(stderr, "Bad tag value: '%s'", optarg);
+					fprintf(stderr, "Bad tag value: '%s'.", optarg);
 					goto cleanup;
 				}
 				if (type < 0 || type > 0x1fff) {
@@ -102,14 +102,14 @@ int main(int argc, char **argv) {
 			case 'i':
 				in = fopen(optarg, "rb");
 				if (in == NULL) {
-					fprintf(stderr, "Unable to open input file '%s'\n", optarg);
+					fprintf(stderr, "Unable to open input file '%s'.\n", optarg);
 					goto cleanup;
 				}
 				break;
 			case 'o':
 				out = fopen(optarg, "wb");
 				if (in == NULL) {
-					fprintf(stderr, "Unable to open output file '%s'\n", optarg);
+					fprintf(stderr, "Unable to open output file '%s'.\n", optarg);
 					goto cleanup;
 				}
 				break;
@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
 				exit(0);
 			default:
 				printHelp(stderr);
-				fprintf(stderr, "Error: Unknown option -%c\n", c);
+				fprintf(stderr, "Error: Unknown option -%c.\n", c);
 				exit(1);
 		}
 	}

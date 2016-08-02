@@ -393,7 +393,7 @@ static int read_from(FILE *f, struct conf_st *conf) {
 		res = GT_FTLV_fileRead(f, buf, sizeof(buf), &len, &t);
 		if (res != GT_OK) {
 			if (len == 0) break;
-			fprintf(stderr, "%s: Failed to parse %llu bytes\n", conf->file_name, (unsigned long long) len);
+			fprintf(stderr, "%s: Failed to parse %llu bytes.\n", conf->file_name, (unsigned long long) len);
 			break;
 		}
 
@@ -440,7 +440,7 @@ static int read_desc_dir(struct desc_st *desc, const char *dir_name) {
 
 			res = desc_add_file(desc, buf);
 			if (res != GT_OK) {
-				fprintf(stderr, "%s/%s: Unable to read description file\n", dir_name, name);
+				fprintf(stderr, "%s/%s: Unable to read description file.\n", dir_name, name);
 			}
 		}
 	}
@@ -481,10 +481,10 @@ int main(int argc, char **argv) {
 			case 'h':
 				printf("Usage:\n"
 						"  gttlvdump [-h] [options] tlvfile\n"
-						"    -h       This help message\n"
-						"    -H num   Constant header lenght.\n"
-						"    -d num   Max depth of nested elements\n"
-						"    -x       Display file offset for every TLV\n"
+						"    -h       This help message.\n"
+						"    -H num   Constant header length.\n"
+						"    -d num   Max depth of nested elements.\n"
+						"    -x       Display file offset for every TLV.\n"
 						"    -w       Wrap the output.\n"
 						"    -y       Show content length.\n"
 						"    -z       Convert payload with length les than 8 bytes to decimal.\n"
@@ -492,7 +492,8 @@ int main(int argc, char **argv) {
 						"    -s       Strict types - do not parse TLV's with unknown types.\n"
 						"    -p       Pretty print values.\n"
 						"    -P       Pretty print keys.\n"
-						"    -e enc   Encoding of binary payload. Available encodings: 'hex' (default), 'base64'\n"
+						"    -e enc   Encoding of binary payload. Available encodings: 'hex' (default),\n"
+						"             'base64'.\n"
 						"    -v       TLV utility package version.\n"
 				);
 				res = GT_OK;
@@ -545,7 +546,7 @@ int main(int argc, char **argv) {
 					++i;
 				}
 				if (enc_map[i].alias == NULL) {
-					fprintf(stderr, "Unknown encoding '%s', defaulting to 'hex'\n", optarg);
+					fprintf(stderr, "Unknown encoding '%s', defaulting to 'hex'.\n", optarg);
 					conf.out_enc = ENCODE_HEX;
 				}
 				break;
