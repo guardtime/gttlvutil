@@ -169,7 +169,7 @@ void printHelp(FILE *f) {
 			"\n"
 			"Options:\n"
 			" -h       Print this help message.\n"
-			" -H num   Skip num first bytes.\n"
+			" -H <num> Skip num first bytes.\n"
 			" -e       Print TLV header.\n"
 			" -n       Print TLV path. Has no effect with -r.\n"
 			" -r       Print raw TLV (will override -n and -i).\n"
