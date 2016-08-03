@@ -22,7 +22,7 @@
 0b05			*			Annotation File
 0b05.01			STR			File URI
 0b05.02			IMPRINT		File hash
-0b05.03			STR			Annotayion domain
+0b05.03			STR			Annotation domain
 
 0b06			*			Signature reference
 0b06.01			STR			Signature URI
