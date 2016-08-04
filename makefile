@@ -17,8 +17,8 @@
 # Guardtime Inc.
 #
 
-!IF "$(LIB)" != "lib" && "$(LIB)" != "dll"
-LIB = lib
+!IF "$(LIB_TYPE)" != "lib" && "$(LIB_TYPE)" != "dll"
+LIB_TYPE = lib
 !ENDIF
 
 !IFNDEF RTL
@@ -61,6 +61,7 @@ WRAP_OBJ = \
 
 GREP_OBJ = \
 	$(OBJ_DIR)\tlvgrep.obj \
+	$(OBJ_DIR)\grep_tlv.obj \
 	$(OBJ_DIR)\fast_tlv.obj \
 	$(OBJ_DIR)\getopt.obj
 
@@ -69,15 +70,16 @@ UNDUMP_OBJ = \
 	$(OBJ_DIR)\getopt.obj \
 	$(OBJ_DIR)\fast_tlv.obj \
 	$(OBJ_DIR)\hash.obj \
+	$(OBJ_DIR)\hmac.obj \
 	$(OBJ_DIR)\grep_tlv.obj
 
 #Selecting hash provider
 !IF "$(HASH_PROVIDER)" == "OPENSSL"
 CCFLAGS = $(CCFLAGS) /DHASH_PROVIDER=HASH_OPENSSL
-UNDUMP_OBJ = $(UNDUMP_OBJ) $(OBJ_DIR)\hash_openssl.obj
+UNDUMP_OBJ = $(UNDUMP_OBJ) $(OBJ_DIR)\hmac_openssl.obj
 !ELSE IF "$(HASH_PROVIDER)" == "CRYPTOAPI"
 CCFLAGS = $(CCFLAGS) /DHASH_PROVIDER=HASH_CRYPTOAPI
-UNDUMP_OBJ = $(UNDUMP_OBJ) $(OBJ_DIR)\hash_cryptoapi.obj
+UNDUMP_OBJ = $(UNDUMP_OBJ) $(OBJ_DIR)\hmac_cryptoapi.obj
 !ENDIF
 
 DESC_FILES = \
@@ -88,20 +90,21 @@ DESC_FILES = \
 #Compiler and linker configuration
 
 
-EXT_LIB = user32.lib gdi32.lib
+#external libraries used for linking.
+EXT_LIB = user32.lib gdi32.lib advapi32.lib
 
 
 CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE /I$(SRC_DIR)
 LDFLAGS = /NOLOGO
 
 !IF "$(HASH_PROVIDER)" == "OPENSSL"
-#LDFLAGS = $(LDFLAGS) /LIBPATH:"$(OPENSSL_DIR)\$(LIB)"
+LDFLAGS = $(LDFLAGS) /LIBPATH:"$(OPENSSL_DIR)\$(LIB_TYPE)"
 CCFLAGS = $(CCFLAGS) /I"$(OPENSSL_DIR)\include"
-#EXT_LIB = $(EXT_LIB) libeay32$(RTL).lib advapi32.lib
+EXT_LIB = $(EXT_LIB) libeay32$(RTL).lib
 !ENDIF
 
 !IF "$(HASH_PROVIDER)" == "CRYPTOAPI"
-EXT_LIB = $(EXT_LIB) Crypt32.lib advapi32.lib
+EXT_LIB = $(EXT_LIB) Crypt32.lib
 !ENDIF
 
 
@@ -133,17 +136,17 @@ default: $(BIN_DIR)\$(DUMP_NAME).exe $(BIN_DIR)\$(WRAP_NAME).exe $(BIN_DIR)\$(GR
 
 
 $(BIN_DIR)\$(DUMP_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(DUMP_OBJ)
-	link $(LDFLAGS) /OUT:$@ $(DUMP_OBJ)
+	link $(LDFLAGS) /OUT:$@ $(DUMP_OBJ) $(EXT_LIB)
 	for %I in ($(DESC_FILES)) do copy %I $(BIN_DIR)\ /Y
 
 $(BIN_DIR)\$(WRAP_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(WRAP_OBJ)
-	link $(LDFLAGS) /OUT:$@ $(WRAP_OBJ)
+	link $(LDFLAGS) /OUT:$@ $(WRAP_OBJ) $(EXT_LIB)
 
 $(BIN_DIR)\$(GREP_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(GREP_OBJ)
-	link $(LDFLAGS) /OUT:$@ $(GREP_OBJ)
+	link $(LDFLAGS) /OUT:$@ $(GREP_OBJ) $(EXT_LIB)
 
 $(BIN_DIR)\$(UNDUMP_NAME).exe: $(BIN_DIR) $(OBJ_DIR) $(UNDUMP_OBJ)
-	link $(LDFLAGS) /OUT:$@ $(UNDUMP_OBJ)
+	link $(LDFLAGS) /OUT:$@ $(UNDUMP_OBJ) $(EXT_LIB)
 
 {$(SRC_DIR)\}.c{$(OBJ_DIR)\}.obj:
 	cl /c /$(RTL) $(CCFLAGS) /Fo$@ $<
