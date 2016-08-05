@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
 				break;
 			case 'o':
 				out = fopen(optarg, "wb");
-				if (in == NULL) {
+				if (out == NULL) {
 					fprintf(stderr, "Unable to open output file '%s'.\n", optarg);
 					goto cleanup;
 				}
