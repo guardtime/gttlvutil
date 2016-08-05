@@ -194,7 +194,7 @@ int main(int argc, char **argv) {
 
 	/* Default conf. */
 	conf.print_raw = false;
-	conf.print_path = true;
+	conf.print_path = false;
 	conf.print_tlv_hdr = false;
 
 	if (argc < 2) {
