@@ -24,17 +24,17 @@
 
 ## Dependencies
 
-There are non 3rd Party dependencies for gttlvutil.
+There are no 3rd party dependencies for gttlvutil.
 
 
 ## Compatibility
 
 ```
-OS / PLatform                       Compatibility
+OS / Platform                       Compatibility
 
 RHEL 6 and 7, x86_64 architecture   Fully compatible and tested.
-CentOS 6 and 7, x86_64 architecture Fully Compatible and tested.
-Debian                              Compatible but not tested on regular basis.
-OS X                                Compatible but not tested on regular basis.
-Windows 7, 8, 10                    Compatible but not tested on regular basis.
+CentOS 6 and 7, x86_64 architecture Fully compatible and tested.
+Debian                              Compatible but not tested on a regular basis.
+OS X                                Compatible but not tested on a regular basis.
+Windows 7, 8, 10                    Compatible but not tested on a regular basis.
 ```
