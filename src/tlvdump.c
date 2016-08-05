@@ -366,7 +366,7 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 
 static int read_from(FILE *f, struct conf_st *conf) {
 	int res;
-	char *header = NULL;
+	unsigned char *header = NULL;
 	GT_FTLV t;
 	unsigned char buf[0xffff + 4];
 	size_t len;
