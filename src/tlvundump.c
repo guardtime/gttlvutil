@@ -171,7 +171,7 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 	int res = GT_UNKNOWN_ERROR;
 	Buffer raw;
 	size_t calc_len = 0;
-	unsigned char tmp[HASH_MAX_LEN];
+	unsigned char tmp[GT_HASH_MAX_LEN];
 	unsigned int tmp_len;
 	GT_Hash_AlgorithmId algId;
 
@@ -193,15 +193,6 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 			{
 				calc_len = raw.len - GT_Hash_getAlgorithmLenght(algId);
 
-//{{{{{{{{{{{{
-//int i;
-//printf("\n>>>>> raw[%d]: \n", calc_len );
-//for (i = 0; i < calc_len ; i++) {
-//	printf("%02x", (raw.buf + sizeof(raw.buf) - raw.len)[i]);
-//	if (!((i+1) % 0x10)) printf("\n");
-//}
-//printf("\n");
-//}}}}}}}}}}}}
 				res = GT_Hmac_Calculate(algId, hmacCalcInfo.key, strlen(hmacCalcInfo.key), raw.buf + sizeof(raw.buf) - raw.len, calc_len, tmp, &tmp_len);
 				if (res != GT_OK) goto cleanup;
 			}

@@ -35,6 +35,12 @@ INSTALL_MACHINE=64
 !ERROR set INSTALL_MACHINE=32 or INSTALL_MACHINE=64
 !ENDIF
 
+#Compiler and linker configuration
+CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE /I$(SRC_DIR)
+LDFLAGS = /NOLOGO
+
+#external libraries used for linking.
+EXT_LIB = user32.lib gdi32.lib advapi32.lib
 
 SRC_DIR = src
 OBJ_DIR = obj
@@ -75,10 +81,10 @@ UNDUMP_OBJ = \
 
 #Selecting hash provider
 !IF "$(HASH_PROVIDER)" == "OPENSSL"
-CCFLAGS = $(CCFLAGS) /DHASH_PROVIDER=HASH_OPENSSL
+CCFLAGS = $(CCFLAGS) /DCRYPTO_IMPL=HASH_OPENSSL
 UNDUMP_OBJ = $(UNDUMP_OBJ) $(OBJ_DIR)\hmac_openssl.obj
 !ELSE IF "$(HASH_PROVIDER)" == "CRYPTOAPI"
-CCFLAGS = $(CCFLAGS) /DHASH_PROVIDER=HASH_CRYPTOAPI
+CCFLAGS = $(CCFLAGS) /DCRYPTO_IMPL=HASH_CRYPTOAPI
 UNDUMP_OBJ = $(UNDUMP_OBJ) $(OBJ_DIR)\hmac_cryptoapi.obj
 !ENDIF
 
@@ -87,15 +93,6 @@ DESC_FILES = \
 	$(SRC_DIR)\ksie.desc \
 	$(SRC_DIR)\logsig.desc
 
-#Compiler and linker configuration
-
-
-#external libraries used for linking.
-EXT_LIB = user32.lib gdi32.lib advapi32.lib
-
-
-CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE /I$(SRC_DIR)
-LDFLAGS = /NOLOGO
 
 !IF "$(HASH_PROVIDER)" == "OPENSSL"
 LDFLAGS = $(LDFLAGS) /LIBPATH:"$(OPENSSL_DIR)\$(LIB_TYPE)"

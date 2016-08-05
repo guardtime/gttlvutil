@@ -18,74 +18,56 @@
  */
 
 #include "hmac.h"
-
 #include "common.h"
 
-#if CRYPTO_IMPL == HASH_OPENSSL
+#if CRYPTO_IMPL == HASH_CRYPTOAPI
 
 #include <string.h>
 #include <stdio.h>
-#include <openssl/evp.h>
+#include <windows.h>
+#include <Wincrypt.h>
 
 /**
- * Converts hash function ID to OpenSSL identifier
+ * Converts hash function ID from hash chain to crypto api identifier
  */
-static const EVP_MD *hashAlgorithmToEVP(GT_Hash_AlgorithmId id)
+static const ALG_ID hashAlgorithmToALG_ID(GT_Hash_AlgorithmId id)
 {
 	switch (id) {
-#ifndef OPENSSL_NO_SHA
 		case GT_HASHALG_SHA1:
-			return EVP_sha1();
-#endif
-#ifndef OPENSSL_NO_RIPEMD
-		case GT_HASHALG_RIPEMD160:
-			return EVP_ripemd160();
-#endif
+			return CALG_SHA1;
 		case GT_HASHALG_SHA2_256:
-			return EVP_sha256();
-#ifndef OPENSSL_NO_SHA512
+			return CALG_SHA_256;
 		case GT_HASHALG_SHA2_384:
-			return EVP_sha384();
+			return CALG_SHA_384;
 		case GT_HASHALG_SHA2_512:
-			return EVP_sha512();
-#endif
+			return CALG_SHA_512;
 		default:
-			return NULL;
+			return 0;
 	}
 }
 
-static int initEvpCtx(GT_Hash_AlgorithmId alg, EVP_MD_CTX **ctx) {
+static int prepareKeyForHashing(HCRYPTPROV cryptCtx, ALG_ID alg_id, const void *key, size_t key_len, size_t blocksize, unsigned char *ipad, unsigned char *opad) {
 	int res = GT_UNKNOWN_ERROR;
-
-	if (ctx == NULL) {
-		res = GT_INVALID_ARGUMENT;
-		goto cleanup;
-	}
-
-	*ctx = EVP_MD_CTX_create();
-	if (*ctx == NULL) {
-		res = GT_OUT_OF_MEMORY;
-		goto cleanup;
-	}
-	EVP_MD_CTX_init(*ctx);
-
-	res = GT_OK;
-cleanup:
-	return res;
-}
-
-static int prepareKeyForHashing(EVP_MD_CTX *ctx, const void *key, size_t key_len, size_t blocksize, unsigned char *ipad, unsigned char *opad) {
-	int res = GT_UNKNOWN_ERROR;
+	HCRYPTHASH cryptHash = 0;
 	unsigned char tmp[GT_HASH_MAX_BLOCK_SIZE] = {0};
 	unsigned int len;
 	size_t i;
 
 	if (key_len > blocksize) {
-		if (!EVP_DigestUpdate(ctx, key, key_len)) {
+		if (!CryptCreateHash(cryptCtx, alg_id, 0, 0, &cryptHash))
+		{
 			res = GT_CRYPTO_FAILURE;
 			goto cleanup;
 		}
-		if (!EVP_DigestFinal_ex(ctx, tmp, &len)) {
+
+		if (!CryptHashData(cryptHash, key, (DWORD)key_len, 0))
+		{
+			res = GT_CRYPTO_FAILURE;
+			goto cleanup;
+		}
+
+		if (!CryptGetHashParam(cryptHash, HP_HASHVAL, tmp, &len, 0))
+		{
 			res = GT_CRYPTO_FAILURE;
 			goto cleanup;
 		}
@@ -106,89 +88,96 @@ static int prepareKeyForHashing(EVP_MD_CTX *ctx, const void *key, size_t key_len
 
 	res = GT_OK;
 cleanup:
+	if (cryptHash) CryptDestroyHash(cryptHash);
+
 	return res;
 }
 
 int GT_Hmac_Calculate(GT_Hash_AlgorithmId alg, const void *key, size_t key_len, const void *data, size_t data_len, unsigned char *hsh, unsigned int *sz) {
 	int res = GT_UNKNOWN_ERROR;
-	const EVP_MD *evp_md = hashAlgorithmToEVP(alg);
-	EVP_MD_CTX *ctx = NULL;
+	HCRYPTPROV cryptProv = 0;
+	HCRYPTHASH cryptHash = 0;
+	const ALG_ID alg_id = hashAlgorithmToALG_ID(alg);
+	const DWORD blockSize = (DWORD)GT_Hash_getAlgorithmBlockSize(alg);
 	unsigned char ipad[GT_HASH_MAX_BLOCK_SIZE];
 	unsigned char opad[GT_HASH_MAX_BLOCK_SIZE];
-	size_t blockSize;
 	unsigned char idig[GT_HASH_MAX_LEN] = {0};
-	unsigned int idig_len;
+	DWORD idig_len;
 
 	if (data_len == 0) {
 		res = GT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
-	res = initEvpCtx(alg, &ctx);
-	if (res != GT_OK) goto cleanup;
-
-	blockSize = GT_Hash_getAlgorithmBlockSize(alg);
-
-	if (!EVP_DigestInit_ex(ctx, evp_md, NULL)) {
+	/* Create new crypto service provider (CSP). */
+	if (!CryptAcquireContext(&cryptProv, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)){
 		res = GT_CRYPTO_FAILURE;
 		goto cleanup;
 	}
 
-	res = prepareKeyForHashing(ctx, key, key_len, blockSize, ipad, opad);
+	res = prepareKeyForHashing(cryptProv, alg_id, key, key_len, blockSize, ipad, opad);
 	if (res != GT_OK) goto cleanup;
-
-	if (!EVP_DigestInit_ex(ctx, evp_md, NULL)) {
-		res = GT_CRYPTO_FAILURE;
-		goto cleanup;
-	}
 
 	/* Calculate inner digest */
-	if (!EVP_DigestUpdate(ctx, ipad, blockSize)) {
-		res = GT_CRYPTO_FAILURE;
-		goto cleanup;
-	}
-	if (!EVP_DigestUpdate(ctx, data, data_len)) {
+	if (!CryptCreateHash(cryptProv, alg_id, 0, 0, &cryptHash))
+	{
 		res = GT_CRYPTO_FAILURE;
 		goto cleanup;
 	}
 
-	if (!EVP_DigestFinal_ex(ctx, idig, &idig_len)) {
+	if (!CryptHashData(cryptHash, ipad, blockSize, 0))
+	{
+		res = GT_CRYPTO_FAILURE;
+		goto cleanup;
+	}
+	if (!CryptHashData(cryptHash, data, (DWORD)data_len, 0))
+	{
+		res = GT_CRYPTO_FAILURE;
+		goto cleanup;
+	}
+
+	if (!CryptGetHashParam(cryptHash, HP_HASHVAL, idig, &idig_len, 0))
+	{
 		res = GT_CRYPTO_FAILURE;
 		goto cleanup;
 	}
 
 	/* Calculate outer digest */
-	if (!EVP_DigestInit_ex(ctx, evp_md, NULL)) {
-		res = GT_CRYPTO_FAILURE;
-		goto cleanup;
-	}
-	if (!EVP_DigestUpdate(ctx, opad, blockSize)) {
-		res = GT_CRYPTO_FAILURE;
-		goto cleanup;
-	}
-	if (!EVP_DigestUpdate(ctx, idig, idig_len)) {
+	CryptDestroyHash(cryptHash);
+	cryptHash = 0;
+	if (!CryptCreateHash(cryptProv, alg_id, 0, 0, &cryptHash))
+	{
 		res = GT_CRYPTO_FAILURE;
 		goto cleanup;
 	}
 
-	if (!EVP_DigestFinal_ex(ctx, hsh, sz)) {
+	if (!CryptHashData(cryptHash, opad, blockSize, 0))
+	{
+		res = GT_CRYPTO_FAILURE;
+		goto cleanup;
+	}
+	if (!CryptHashData(cryptHash, idig, idig_len, 0))
+	{
+		res = GT_CRYPTO_FAILURE;
+		goto cleanup;
+	}
+
+	if (!CryptGetHashParam(cryptHash, HP_HASHVAL, hsh, sz, 0))
+	{
 		res = GT_CRYPTO_FAILURE;
 		goto cleanup;
 	}
 
 	/* Make sure the hash length is the same. */
 	if (GT_Hash_getAlgorithmLenght(alg) != *sz) {
-		res = GT_UNKNOWN_ERROR;
+		res = GT_BUFFER_OVERFLOW;
 		goto cleanup;
 	}
 
 	res = GT_OK;
 cleanup:
-
-	if (ctx != NULL) {
-		EVP_MD_CTX_cleanup(ctx);
-		EVP_MD_CTX_destroy(ctx);
-	}
+	if (cryptProv) CryptReleaseContext(cryptProv, 0);
+	if (cryptHash) CryptDestroyHash(cryptHash);
 
 	return res;
 }

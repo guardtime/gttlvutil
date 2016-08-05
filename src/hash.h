@@ -26,7 +26,9 @@
 extern "C" {
 #endif
 
-	#define HASH_MAX_LEN 64 /* Longest digest */
+	#define GT_HASH_MAX_LEN 64 /* Longest digest */
+
+	#define GT_HASH_MAX_BLOCK_SIZE (1024/8)
 
 	/**
 	 * Guardtime representation of hash algorithms

@@ -34,8 +34,8 @@ extern "C" {
 /**
 * Default implementation for data hashing.
 */
-#ifndef HASH_PROVIDER
-#	define HASH_PROVIDER HASH_OPENSSL
+#ifndef CRYPTO_IMPL
+#	define CRYPTO_IMPL HASH_OPENSSL
 #endif
 
 
