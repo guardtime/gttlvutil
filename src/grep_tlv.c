@@ -25,6 +25,7 @@ int  GT_grepTlv(GT_GrepTlvConf *conf, char *pattern, char *prefix, int *map, uns
 	int term = 0;
 	int match = 0;
 	int idx = -1;
+	int *idx_map = NULL;
 
 	while (roll) {
 		char *mod = NULL;
@@ -32,14 +33,16 @@ int  GT_grepTlv(GT_GrepTlvConf *conf, char *pattern, char *prefix, int *map, uns
 
 		if (p == mod) {
 			fprintf(stderr, "Invalid pattern: '%s'\n", p);
-			return GT_INVALID_FORMAT;
+			res = GT_INVALID_FORMAT;
+			goto cleanup;
 		}
 
 		if (*mod == '[') {
 			idx = strtol(mod + 1, &mod, 10);
 			if (*mod != ']') {
 				fprintf(stderr, "Invalid index in pattertn: '%s'\n", p);
-				return GT_INVALID_FORMAT;
+				res = GT_INVALID_FORMAT;
+				goto cleanup;
 			}
 			mod++;
 		}
@@ -58,7 +61,8 @@ int  GT_grepTlv(GT_GrepTlvConf *conf, char *pattern, char *prefix, int *map, uns
 				break;
 			default:
 				fprintf(stderr, "Invalid pattern: '%s'\n", p);
-				return GT_INVALID_FORMAT;
+				res = GT_INVALID_FORMAT;
+				goto cleanup;
 		}
 
 		if (t->tag == tag) {
@@ -122,21 +126,23 @@ int  GT_grepTlv(GT_GrepTlvConf *conf, char *pattern, char *prefix, int *map, uns
 			unsigned char *ptr = buf + t->hdr_len;
 			size_t len = t->dat_len;
 			GT_FTLV n;
-			int i[IDX_MAP_LEN];
-			memset(i, 0, sizeof(i));
 
+			idx_map = calloc(IDX_MAP_LEN, sizeof(int));
 			while (len > 0) {
 
 				res = GT_FTLV_memRead(ptr, len, &n);
 				if (res != GT_OK) break;
 
-				res = GT_grepTlv(conf, p, pre, i, ptr, &n, raw, rlen);
-				if (res != GT_OK) return res;
+				res = GT_grepTlv(conf, p, pre, idx_map, ptr, &n, raw, rlen);
+				if (res != GT_OK) goto cleanup;
 
 				ptr += n.hdr_len + n.dat_len;
 				len -= n.hdr_len + n.dat_len;
 			}
 		}
 	}
-	return GT_OK;
+	res = GT_OK;
+cleanup:
+	if (idx_map) free(idx_map);
+	return res;
 }
