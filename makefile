@@ -76,7 +76,6 @@ UNDUMP_OBJ = \
 	$(OBJ_DIR)\getopt.obj \
 	$(OBJ_DIR)\fast_tlv.obj \
 	$(OBJ_DIR)\hash.obj \
-	$(OBJ_DIR)\hmac.obj \
 	$(OBJ_DIR)\grep_tlv.obj
 
 #Selecting hash provider
