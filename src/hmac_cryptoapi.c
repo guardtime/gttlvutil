@@ -46,7 +46,7 @@ static const ALG_ID hashAlgorithmToALG_ID(GT_Hash_AlgorithmId id)
 	}
 }
 
-static int prepareKeyForHashing(HCRYPTPROV cryptCtx, ALG_ID alg_id, const void *key, size_t key_len, size_t blocksize, unsigned char *ipad, unsigned char *opad) {
+static int prepareKeyForHashing(HCRYPTPROV cryptCtx, ALG_ID alg_id, const DWORD algSize, const void *key, size_t key_len, size_t blocksize, unsigned char *ipad, unsigned char *opad) {
 	int res = GT_UNKNOWN_ERROR;
 	HCRYPTHASH cryptHash = 0;
 	unsigned char tmp[GT_HASH_MAX_BLOCK_SIZE] = {0};
@@ -66,6 +66,7 @@ static int prepareKeyForHashing(HCRYPTPROV cryptCtx, ALG_ID alg_id, const void *
 			goto cleanup;
 		}
 
+		len = algSize;
 		if (!CryptGetHashParam(cryptHash, HP_HASHVAL, tmp, &len, 0))
 		{
 			res = GT_CRYPTO_FAILURE;
@@ -99,10 +100,12 @@ int GT_Hmac_Calculate(GT_Hash_AlgorithmId alg, const void *key, size_t key_len, 
 	HCRYPTHASH cryptHash = 0;
 	const ALG_ID alg_id = hashAlgorithmToALG_ID(alg);
 	const DWORD blockSize = (DWORD)GT_Hash_getAlgorithmBlockSize(alg);
+	const DWORD algSize = (DWORD)GT_Hash_getAlgorithmLenght(alg);
 	unsigned char ipad[GT_HASH_MAX_BLOCK_SIZE];
 	unsigned char opad[GT_HASH_MAX_BLOCK_SIZE];
 	unsigned char idig[GT_HASH_MAX_LEN] = {0};
-	DWORD idig_len;
+	DWORD idig_len = algSize;
+	DWORD hmac_len = algSize;
 
 	if (data_len == 0) {
 		res = GT_INVALID_ARGUMENT;
@@ -115,7 +118,7 @@ int GT_Hmac_Calculate(GT_Hash_AlgorithmId alg, const void *key, size_t key_len, 
 		goto cleanup;
 	}
 
-	res = prepareKeyForHashing(cryptProv, alg_id, key, key_len, blockSize, ipad, opad);
+	res = prepareKeyForHashing(cryptProv, alg_id, algSize, key, key_len, blockSize, ipad, opad);
 	if (res != GT_OK) goto cleanup;
 
 	/* Calculate inner digest */
@@ -162,18 +165,18 @@ int GT_Hmac_Calculate(GT_Hash_AlgorithmId alg, const void *key, size_t key_len, 
 		goto cleanup;
 	}
 
-	if (!CryptGetHashParam(cryptHash, HP_HASHVAL, hsh, sz, 0))
+	if (!CryptGetHashParam(cryptHash, HP_HASHVAL, hsh, &hmac_len, 0))
 	{
 		res = GT_CRYPTO_FAILURE;
 		goto cleanup;
 	}
 
 	/* Make sure the hash length is the same. */
-	if (GT_Hash_getAlgorithmLenght(alg) != *sz) {
+	if (GT_Hash_getAlgorithmLenght(alg) != hmac_len) {
 		res = GT_BUFFER_OVERFLOW;
 		goto cleanup;
 	}
-
+	*sz = hmac_len;
 	res = GT_OK;
 cleanup:
 	if (cryptProv) CryptReleaseContext(cryptProv, 0);
