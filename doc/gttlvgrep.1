@@ -3,7 +3,7 @@
 .\"
 .\"
 .SH NAME
-\fBgttlvgrep \fR- A tool for dumping TLV's matching the given pattern.
+\fBgttlvgrep \fR- A tool for dumping TLVs matching the given pattern.
 .\"
 .\"
 .SH SYNOPSIS
@@ -15,9 +15,9 @@
 .\"
 .SH DESCRIPTION
 .\"
-gttlvgrep searches TLV's matching the given pattern and formats the output to \fIstdout\fR. By default only TLV payload (value) is dumped in hex format. See options \fB-n\fR and \fB-i\fR to make the output more human-redable or use parameter \fB-r\fR instead to dump the TLV's in binary. Use flag \fB-e\fR to dump consistent TLV structure with header and payload.
+gttlvgrep searches TLVs matching the given pattern and formats the output to \fIstdout\fR. By default only TLV payload (value) is dumped in hex format. See options \fB-n\fR and \fB-i\fR to make the output more human-readable or use parameter \fB-r\fR instead to dump the TLVs in binary. Use flag \fB-e\fR to dump consistent TLV structure with header and payload.
 .LP
-The pattern describes the hirarchy of the element or elements that the user is looking for. The path describes the TLV values in layers of the TLV tree, starting from the outermost. Each level is sepparated by a dot '\fB.\fR'. Each layer may contain one or multiple TLV tag value(s). Multiple values are sepparater by a comma '\fB,\fR'. Each TLV tag may be followed by a decimal index value enclosed in square brackets '\fB[\fR' and '\fB]\fR'.
+The pattern describes the hierarchy of the element or elements that the user is looking for. The path describes the TLV values in layers of the TLV tree, starting from the outermost. Each level is separated by a dot '\fB.\fR'. Each layer may contain one or multiple TLV tag value(s). Multiple values are separated by a comma '\fB,\fR'. Each TLV tag may be followed by a decimal index value enclosed in square brackets '\fB[\fR' and '\fB]\fR'.
 .\"
 .\"
 .SH OPTIONS
@@ -36,7 +36,7 @@ Include TLV header to extracted payload.
 .\"
 .TP
 \fB-r\fR
-Print raw TLV (binary). Will annulate options \fB-n\fR and \fB-i\fR.
+Print raw TLV (binary). Will cancel options \fB-n\fR and \fB-i\fR.
 .\"
 .TP
 \fB-n\fR
@@ -44,7 +44,7 @@ Print TLV path in human-readable format. Has no effect with option \fB-r\fR.
 .\"
 .TP
 \fB-i\fR
-Print TLV indexes in path in human-redable format. Has no effect without option \fB-n\fR.
+Print TLV indexes in path in human-readable format. Has no effect without option \fB-n\fR.
 .\"
 .TP
 \fB-v\fR
@@ -54,7 +54,7 @@ TLV utility package version.
 .\"
 .TP 2
 \fB1
-\fRTo extract KSI publications file \fIpubfile\fR first KSI signature verification certificate in binary a constant header "KSIPUBLF" must be ignored from the beginning of the file. Only binary payload without the TLV tag is extracted:
+\fRTo extract KSI publications file \fIpubfile\fR first KSI signature verification certificate in binary, a constant header "KSIPUBLF" must be ignored from the beginning of the file. Only binary payload without the TLV tag is extracted:
 .LP
 .RS 4
 .HP 4

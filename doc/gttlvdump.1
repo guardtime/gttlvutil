@@ -3,7 +3,7 @@
 .\"
 .\"
 .SH NAME
-\fBgttlvdump \fR- A tool to for displaying TLV encoded dada.
+\fBgttlvdump \fR- A tool to for displaying TLV encoded data.
 .\"
 .\"
 .SH SYNOPSIS
@@ -71,7 +71,7 @@ Constant header length in bytes from the beginning of the file or byte stream th
 .\"
 .TP
 \fB-d \fIint\fR
-Max depth of nested TLV elements. After the depth exceeded no more TLV parsing is done and the value is printed as binary payload. See parameter \fB-e\fR to determin the format of the binary payload. 
+Max depth of nested TLV elements. After the depth is exceeded no more TLV parsing is done and the value is printed as binary payload. See parameter \fB-e\fR to determine the format of the binary payload. 
 .\"
 .TP
 \fB-x\fR
@@ -91,7 +91,7 @@ Show the decimal value for TLV payload less than or equal to 8 bytes.
 .\"
 .TP
 \fB-s\fR
-Strict types - do not parse TLV's with unknown types.
+Strict types - do not parse TLVs with unknown types.
 .\"
 .TP
 \fB-a\fR
@@ -143,7 +143,7 @@ TLV utility package version.
 .\"
 .TP 2
 \fB2
-\fRTo dump KSI signature with all known TLV's described by the name and known not nested TLV elements in more human-readable way:
+\fRTo dump KSI signature with all known TLVs described by the name and known not nested TLV elements in more human-readable way:
 .LP
 .RS 4
 .HP 4
@@ -152,7 +152,7 @@ TLV utility package version.
 .\"
 .TP 2
 \fB3
-\fRTo dump only one layer of nested TLV's and print the higher level TLV's as binary payload:
+\fRTo dump only one layer of nested TLVs and print the higher level TLVs as binary payload:
 .LP
 .RS 4
 .HP 4
