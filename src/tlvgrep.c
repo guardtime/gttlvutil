@@ -142,14 +142,18 @@ static int grepFile(struct conf_st *conf, FILE *f) {
 
 	while (!feof(f)) {
 		res = GT_FTLV_fileRead(f, buf, sizeof(buf), &len, &t);
-		if (len == 0) break;
-
+		if (len == 0) {
+			/* Reached the end of file. */
+			res = GT_OK;
+			break;
+		}
 		if (res != GT_OK) {
 			fprintf(stderr, "%s: Failed to parse TLV.\n", conf->file_name);
-			return GT_FORMAT_ERROR;
+			return res;
 		}
 
 		res = grepTlv(conf, conf->pattern, NULL, idx, buf, &t);
+		if (res != GT_OK) return res;
 	}
 	return res;
 }
@@ -184,7 +188,7 @@ void printHelp(FILE *f) {
 }
 
 int main(int argc, char **argv) {
-
+	int res = GT_UNKNOWN_ERROR;
 	struct conf_st conf;
 
 	FILE *f = NULL;
@@ -199,14 +203,12 @@ int main(int argc, char **argv) {
 
 	if (argc < 2) {
 		printHelp(stderr);
-		exit(1);
+		res = GT_INVALID_ARGUMENT;
+		goto cleanup;
 	}
 
 	while ((c = getopt(argc, argv, "hH:enriv")) != -1) {
 		switch(c) {
-			case 'h':
-				printHelp(stdout);
-				exit(0);
 			case 'H':
 				conf.magic_len = atoi(optarg);
 				break;
@@ -223,17 +225,26 @@ int main(int argc, char **argv) {
 			case 'i':
 				conf.print_path_index = true;
 				break;
+
+			case 'h':
+				printHelp(stdout);
+				res = GT_OK;
+				goto cleanup;
 			case 'v':
 				printf("%s\n", TLV_UTIL_VERSION_STRING);
-				exit(0);
+				res = GT_OK;
+				goto cleanup;
 			default:
 				fprintf(stderr, "Invalid option '%c'.\n", c);
+				res = GT_INVALID_ARGUMENT;
+				goto cleanup;
 		}
 	}
 
 	if (optind >= argc) {
 		fprintf(stderr, "Error: no pattern provided!\n");
-		exit(1);
+		res = GT_INVALID_ARGUMENT;
+		goto cleanup;
 	}
 
 	conf.pattern = argv[optind++];
@@ -241,7 +252,8 @@ int main(int argc, char **argv) {
 	if (optind >= argc) {
 		f = stdin;
 		conf.file_name = "<stdin>";
-		if (grepFile(&conf, f) != GT_OK) goto cleanup;
+		res = grepFile(&conf, f);
+		if (res != GT_OK) goto cleanup;
 	} else {
 		for (; optind < argc; optind++) {
 			conf.file_name = argv[optind];
@@ -254,21 +266,23 @@ int main(int argc, char **argv) {
 			if (conf.magic_len) {
 				if (fseek(f, conf.magic_len, SEEK_SET)) {
 					fprintf(stderr, "%s: Unable to skip header.\n", conf.file_name);
+					res = GT_IO_ERROR;
 					goto cleanup;
 				}
 			}
 
-			if (grepFile(&conf, f) != GT_OK) {
-				goto cleanup;
-			}
+			res = grepFile(&conf, f);
+			if (res != GT_OK) goto cleanup;
 
 			fclose(f);
 			f = NULL;
 		}
 	}
 
+	res = GT_OK;
+
 cleanup:
 	if (f != NULL && f != stdin) fclose(f);
 
-	return 0;
+	return res;
 }

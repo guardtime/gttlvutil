@@ -1,0 +1,110 @@
+#
+# GUARDTIME CONFIDENTIAL
+#
+# Copyright (C) [2016] Guardtime, Inc
+# All Rights Reserved
+#
+# NOTICE:  All information contained herein is, and remains, the
+# property of Guardtime Inc and its suppliers, if any.
+# The intellectual and technical concepts contained herein are
+# proprietary to Guardtime Inc and its suppliers and may be
+# covered by U.S. and Foreign Patents and patents in process,
+# and are protected by trade secret or copyright law.
+# Dissemination of this information or reproduction of this
+# material is strictly forbidden unless prior written permission
+# is obtained from Guardtime Inc.
+# "Guardtime" and "KSI" are trademarks or registered trademarks of
+# Guardtime Inc.
+#
+
+
+###############################################################################
+
+gttlvdump test/resources/sig/ok-sig-2014-08-01.1.ksig
+>>>  /TLV.0800.*
+.*TLV.0805.*
+.*TLV.10,F.*
+.*TLV.02.*53dc2a00.*
+.*TLV.04.*01e4fc0853cacb3c888ee4d2f843083acb1a822e60403a6af7167f70d0ca8eee61.*/
+>>>= 0
+
+###############################################################################
+
+gttlvdump test/resources/sig/ok-sig-2014-08-01.1.ksig
+>>>  /TLV.0800.*
+  TLV.0805.*
+    TLV.10,F.*
+      TLV.02.*53dc2a00
+      TLV.04.*01e4fc0853cacb3c888ee4d2f843083acb1a822e60403a6af7167f70d0ca8eee61.*/
+>>>= 0
+
+###############################################################################
+
+gttlvdump -y test/resources/sig/ok-sig-2014-08-01.1.ksig
+>>>  /TLV.0800.*L = 2590.*
+.*TLV.0805.*L = 337.*
+.*TLV.10,F.*L = 41.*
+.*TLV.02.*L = 4.*53dc2a00.*
+.*TLV.04.*L = 33. 01e4fc0853cacb3c888ee4d2f843083acb1a822e60403a6af7167f70d0ca8eee61/
+>>>= 0
+
+###############################################################################
+
+gttlvdump -z test/resources/sig/ok-sig-2014-08-01.1.ksig
+>>>  /TLV.0800.*
+.*TLV.0805.*
+.*TLV.10,F.*
+.*TLV.02.*53dc2a00.*dec = 1406937600.*
+.*TLV.04.*01e4fc0853cacb3c888ee4d2f843083acb1a822e60403a6af7167f70d0ca8eee61.*/
+>>>= 0
+
+###############################################################################
+
+gttlvdump -a test/resources/sig/ok-sig-2014-08-01.1.ksig
+>>>  /# Uni-signature PDU.
+TLV.0800.*
+.*# Calendar auth record.
+.*TLV.0805.*
+.*# Published data.
+.*TLV.10,F.*
+.*# Published time.
+.*TLV.02.*53dc2a00
+.*# Published hash.
+.*TLV.04.*01e4fc0853cacb3c888ee4d2f843083acb1a822e60403a6af7167f70d0ca8eee61.*/
+>>>= 0
+
+###############################################################################
+
+gttlvdump -p test/resources/sig/ok-sig-2014-08-01.1.ksig
+>>>  /TLV.0800.*
+.*TLV.0805.*
+.*TLV.10,F.*
+.*TLV.02.*1406937600..2014-08-02 00.00.00 GMT.*
+.*TLV.04.*sha2-256.e4fc0853cacb3c888ee4d2f843083acb1a822e60403a6af7167f70d0ca8eee61.*/
+>>>= 0
+
+###############################################################################
+
+gttlvdump -P test/resources/sig/ok-sig-2014-08-01.1.ksig
+>>>  /TLV.0800.*Uni-signature PDU.*
+.*TLV.0805.*Calendar auth record.*
+.*TLV.10,F.*Published data.*
+.*TLV.02.*Published time. 53dc2a00.*
+.*TLV.04.*Published hash. 01e4fc0853cacb3c888ee4d2f843083acb1a822e60403a6af7167f70d0ca8eee61.*/
+>>>= 0
+
+###############################################################################
+
+gttlvdump -H 8 test/resources/pub/ksi-publications.bin
+<<<
+>>>  /4b53495055424c46.*
+TLV.0701.*
+.*TLV.01.*01
+.*TLV.02.*571661df
+TLV.0702.*
+.*TLV.01.*a42c61ad/
+>>>2
+>>>= 0
+
+###############################################################################
+

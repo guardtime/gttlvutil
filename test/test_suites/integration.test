@@ -1,0 +1,82 @@
+#
+# GUARDTIME CONFIDENTIAL
+#
+# Copyright (C) [2016] Guardtime, Inc
+# All Rights Reserved
+#
+# NOTICE:  All information contained herein is, and remains, the
+# property of Guardtime Inc and its suppliers, if any.
+# The intellectual and technical concepts contained herein are
+# proprietary to Guardtime Inc and its suppliers and may be
+# covered by U.S. and Foreign Patents and patents in process,
+# and are protected by trade secret or copyright law.
+# Dissemination of this information or reproduction of this
+# material is strictly forbidden unless prior written permission
+# is obtained from Guardtime Inc.
+# "Guardtime" and "KSI" are trademarks or registered trademarks of
+# Guardtime Inc.
+#
+
+
+
+###############################################################################
+
+gttlvundump test/resources/sig/ok-sig-2014-08-01.1.ksig.txt | gttlvdump -P
+>>>  /TLV.0800.*Uni-signature PDU.*
+.*TLV.0805.*Calendar auth record.*
+.*TLV.10,F.*Published data.*
+.*TLV.02.*Published time. 53dc2a00.*
+.*TLV.04.*Published hash. 01e4fc0853cacb3c888ee4d2f843083acb1a822e60403a6af7167f70d0ca8eee61.*/
+>>>= 0
+
+###############################################################################
+
+gttlvundump test/resources/sig/ok-sig-2014-08-01.1.ksig.txt > test/tmp/tmp.ksig
+>>>= 0
+
+gttlvdump -P test/tmp/tmp.ksig
+>>>  /TLV.0800.*Uni-signature PDU.*
+.*TLV.0805.*Calendar auth record.*
+.*TLV.10,F.*Published data.*
+.*TLV.02.*Published time. 53dc2a00.*
+.*TLV.04.*Published hash. 01e4fc0853cacb3c888ee4d2f843083acb1a822e60403a6af7167f70d0ca8eee61.*/
+>>>= 0
+
+###############################################################################
+
+gttlvundump test/resources/sig/ok-sig-2014-08-01.1.ksig.txt | gttlvgrep 800.805.10.02
+>>>
+53dc2a00
+>>>= 0
+
+###############################################################################
+
+gttlvdump test/resources/sig/ok-sig-2014-08-01.1.ksig > test/tmp/tmp.txt
+>>>= 0
+
+gttlvundump test/tmp/tmp.txt | gttlvdump -P
+>>>  /TLV.0800.*Uni-signature PDU.*
+.*TLV.0805.*Calendar auth record.*
+.*TLV.10,F.*Published data.*
+.*TLV.02.*Published time. 53dc2a00.*
+.*TLV.04.*Published hash. 01e4fc0853cacb3c888ee4d2f843083acb1a822e60403a6af7167f70d0ca8eee61.*/
+>>>= 0
+
+###############################################################################
+
+gttlvundump test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv.txt | gttlvgrep 300.302.802.01 -re | gttlvdump
+>>>
+TLV[01]: 53740380
+>>>= 0
+
+###############################################################################
+
+echo -en "\01" | gttlvwrap -t 0x0123 | gttlvdump
+>>>
+TLV[0123]:01
+>>>= 0
+
+###############################################################################
+
+
+
