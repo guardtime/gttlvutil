@@ -1,5 +1,3 @@
-#!/bin/bash
-
 #
 # GUARDTIME CONFIDENTIAL
 #
@@ -19,24 +17,26 @@
 # Guardtime Inc.
 #
 
-# Remove test temporary directory.  
-rm -rf test/tmp 2> /dev/null
+###############################################################################
+# Test user interface.
 
-# Create test temporary directory.
-mkdir -p test/tmp
+# Help
+gttlvwrap -h
+>>> /Usage:.*
+.*gttlvwrap.*/
+>>>= 0
 
-# Run test suites.
-shelltest -c --debug \
-	test/test_suites/dump.test \
-	test/test_suites/undump.test \
-	test/test_suites/grep.test \
-	test/test_suites/wrap.test \
-	test/test_suites/integration.test \
--- -j1
+# Version
+gttlvwrap -v | grep -f VERSION
+>>> /.*/
+>>>= 0
 
-exit_code=$?
+# Invalid parameter.
+gttlvwrap -f 
+>>>
+>>>2
+gttlvwrap: invalid option -- 'f'
+Unknown parameter, try -h.
+>>>= 1
 
-# Cleanup.  
-#rm -rf test/tmp 2> /dev/null
-
-exit $exit_code
+###############################################################################

@@ -44,7 +44,7 @@ gttlvdump test/missing/file
 >>>
 >>>2
 test/missing/file: Unable to open file.
->>>= 0
+>>>= 4
 
 ###############################################################################
 # Tlvdump KSI signature.

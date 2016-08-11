@@ -550,9 +550,11 @@ int main(int argc, char **argv) {
 			case 'h':
 				printf("Usage:\n"
 						"  gttlvundump [-h] tlvfile\n"
+						"\n"
+						"Options:\n"
 						"    -h       This help message.\n"
 						"    -v       TLV utility package version.\n"
-				);
+						"\n");
 				res = GT_OK;
 				goto cleanup;
 			case 'v':

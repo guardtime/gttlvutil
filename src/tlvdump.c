@@ -481,6 +481,8 @@ int main(int argc, char **argv) {
 			case 'h':
 				printf("Usage:\n"
 						"  gttlvdump [-h] [options] tlvfile\n"
+						"\n"
+						"Options:\n"
 						"    -h       This help message.\n"
 						"    -H <num> Constant header length.\n"
 						"    -d <num> Max depth of nested elements.\n"
@@ -495,7 +497,7 @@ int main(int argc, char **argv) {
 						"    -e <enc> Encoding of binary payload. Available encodings: 'hex' (default),\n"
 						"             'base64'.\n"
 						"    -v       TLV utility package version.\n"
-				);
+						"\n");
 				res = GT_OK;
 				goto cleanup;
 			case 'd':
@@ -588,7 +590,8 @@ int main(int argc, char **argv) {
 			input = fopen(conf.file_name, "rb");
 			if (input == NULL) {
 				fprintf(stderr, "%s: Unable to open file.\n", argv[optind + i]);
-				continue;
+				res = GT_IO_ERROR;
+				goto cleanup;
 			}
 
 			res = read_from(input, &conf);
@@ -602,7 +605,6 @@ cleanup:
 
 	if (input != NULL) fclose(input);
 	if (desc_free) desc_cleanup(&conf.desc);
-
 
 	return res;
 }

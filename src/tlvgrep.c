@@ -160,8 +160,10 @@ static int grepFile(struct conf_st *conf, FILE *f) {
 
 
 void printHelp(FILE *f) {
-	fprintf(f, "Usage:\n\n"
-			"  gttlvgrep <options> [pattern] <[tlv file]>\n\n"
+	fprintf(f,
+			"Usage:\n"
+			"  gttlvgrep <options> [pattern] <[tlv file]>\n"
+			"\n"
 			"Pattern:\n"
 			"  The pattern describes the hierarchy of the element or elements\n"
 			"  that the user is looking for. The path describes the TLV values\n"
@@ -183,7 +185,8 @@ void printHelp(FILE *f) {
 			"Examples:\n"
 			"  The following example will print out all the hash chain links in\n"
 			"  the second aggregation hash chain.\n\n"
-			"    $ gttlvgrep 800.801[1].07,08\n\n");
+			"    $ gttlvgrep 800.801[1].07,08\n"
+			"\n");
 
 }
 
