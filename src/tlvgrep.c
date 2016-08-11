@@ -203,7 +203,7 @@ int main(int argc, char **argv) {
 
 	if (argc < 2) {
 		printHelp(stderr);
-		res = GT_INVALID_ARGUMENT;
+		res = GT_INVALID_CMD_PARAM;
 		goto cleanup;
 	}
 
@@ -236,14 +236,14 @@ int main(int argc, char **argv) {
 				goto cleanup;
 			default:
 				fprintf(stderr, "Invalid option '%c'.\n", c);
-				res = GT_INVALID_ARGUMENT;
+				res = GT_INVALID_CMD_PARAM;
 				goto cleanup;
 		}
 	}
 
 	if (optind >= argc) {
 		fprintf(stderr, "Error: no pattern provided!\n");
-		res = GT_INVALID_ARGUMENT;
+		res = GT_INVALID_CMD_PARAM;
 		goto cleanup;
 	}
 

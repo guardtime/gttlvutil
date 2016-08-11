@@ -553,13 +553,16 @@ int main(int argc, char **argv) {
 						"    -h       This help message.\n"
 						"    -v       TLV utility package version.\n"
 				);
-				exit(0);
+				res = GT_OK;
+				goto cleanup;
 			case 'v':
 				printf("%s\n", TLV_UTIL_VERSION_STRING);
-				exit(0);
+				res = GT_OK;
+				goto cleanup;
 			default:
 				fprintf(stderr, "Unknown parameter, try -h.");
-				exit(1);
+				res = GT_INVALID_CMD_PARAM;
+				goto cleanup;
 		}
 	}
 
@@ -588,6 +591,7 @@ int main(int argc, char **argv) {
 		}
 	}
 
+	res = GT_OK;
 cleanup:
 	if (f != NULL && f != stdin) fclose(f);
 

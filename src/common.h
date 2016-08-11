@@ -29,6 +29,7 @@ typedef enum {
 
 enum StatusCodes {
 	GT_OK = 0,
+	GT_INVALID_CMD_PARAM,
 	GT_OUT_OF_MEMORY,
 	GT_FORMAT_ERROR,
 	GT_IO_ERROR,
@@ -36,6 +37,7 @@ enum StatusCodes {
 	GT_INVALID_FORMAT,
 	GT_BUFFER_OVERFLOW,
 	GT_PARSER_ERROR,
+
 	GT_END_OF_STREAM,
 	GT_UNKNOWN_ERROR = 0xffff
 };
