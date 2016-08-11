@@ -560,7 +560,7 @@ int main(int argc, char **argv) {
 				res = GT_OK;
 				goto cleanup;
 			default:
-				fprintf(stderr, "Unknown parameter, try -h.");
+				fprintf(stderr, "Unknown parameter, try -h.\n");
 				res = GT_INVALID_CMD_PARAM;
 				goto cleanup;
 		}
@@ -595,6 +595,6 @@ int main(int argc, char **argv) {
 cleanup:
 	if (f != NULL && f != stdin) fclose(f);
 
-	return 0;
+	return res;
 }
 

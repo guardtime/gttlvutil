@@ -17,6 +17,34 @@
 # Guardtime Inc.
 #
 
+###############################################################################
+# Test user interface.
+
+# Help
+gttlvdump -h
+>>> /Usage:.*
+.*gttlvdump.*/
+>>>= 0
+
+# Version
+gttlvdump -v | grep -f VERSION
+>>> /.*/
+>>>= 0
+
+# Invalid parameter.
+gttlvdump -f test/resources/sig/ok-sig-2014-08-01.1.ksig
+>>>
+>>>2
+gttlvdump: invalid option -- 'f'
+Unknown parameter, try -h.
+>>>= 1
+
+# Missing file.
+gttlvdump test/missing/file
+>>>
+>>>2
+test/missing/file: Unable to open file.
+>>>= 0
 
 ###############################################################################
 # Tlvdump KSI signature.

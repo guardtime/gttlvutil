@@ -134,11 +134,11 @@ gttlvundump test/resources/sig/ok-sig-2014-08-01.1.ksig.txt > test/tmp/undump_ok
 >>>
 >>>= 0
 
-gttlvdump test/tmp/undump_ok-sig-2014-08-01.1.ksig > dump_ok-sig-2014-08-01.1.ksig.txt
+gttlvdump test/tmp/undump_ok-sig-2014-08-01.1.ksig > test/tmp/dump_ok-sig-2014-08-01.1.ksig.txt
 >>>
 >>>= 0
 
-diff test/resources/sig/ok-sig-2014-08-01.1.ksig.txt dump_ok-sig-2014-08-01.1.ksig.txt
+diff test/resources/sig/ok-sig-2014-08-01.1.ksig.txt test/tmp/dump_ok-sig-2014-08-01.1.ksig.txt
 >>>
 >>>= 0
 

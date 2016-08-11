@@ -557,7 +557,8 @@ int main(int argc, char **argv) {
 				goto cleanup;
 				break;
 			default:
-				fprintf(stderr, "Unknown parameter, try -h.");
+				fprintf(stderr, "Unknown parameter, try -h.\n");
+				res = GT_INVALID_CMD_PARAM;
 				goto cleanup;
 		}
 	}
@@ -603,5 +604,5 @@ cleanup:
 	if (desc_free) desc_cleanup(&conf.desc);
 
 
-	return 0;
+	return res;
 }

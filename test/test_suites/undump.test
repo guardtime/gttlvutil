@@ -21,23 +21,57 @@
 ###############################################################################
 # Test user interface.
 
+# Help.
 gttlvundump -h
 >>> /Usage:.*
-.*gttlvundump.*
-.*
-.*.v.*/
+.*gttlvundump.*/
 >>>= 0
 
+# Check version.
 gttlvundump -v | grep -f VERSION
+>>> /.*/
+>>>= 0
+
+# Invalid parameter.
+gttlvundump -f test/resources/sig/ok-sig-2014-08-01.1.ksig.txt
+>>>
+>>>2
+gttlvundump: invalid option -- 'f'
+Unknown parameter, try -h.
+>>>= 1
+
+# Missing file.
+gttlvundump test/missing/file
+>>>
+>>>2
+test/missing/file: Unable to open file.
+>>>= 0
+
+###############################################################################
+# Create KSI signature binary stream. Compare it to the original file.
+
+gttlvundump test/resources/sig/ok-sig-2014-08-01.1.ksig.txt | diff test/resources/sig/ok-sig-2014-08-01.1.ksig -
 >>>
 >>>= 0
 
 ###############################################################################
-# Create a multi response binary stream. Compare it to the original file.
+# Create KSI signature binary file. Compare it to the original file.
+
+gttlvundump test/resources/sig/ok-sig-2014-08-01.1.ksig.txt > test/tmp/undump_ok-sig-2014-08-01.ksig
+>>>
+>>>= 0
+
+diff test/tmp/undump_ok-sig-2014-08-01.ksig test/resources/sig/ok-sig-2014-08-01.1.ksig
+>>>
+>>>= 0
+
+###############################################################################
+# Create a server multi response binary stream. Compare it to the original file.
 
 gttlvundump test/resources/tlv/test2-extend_response-1.txt test/resources/tlv/test2-extend_response-2.txt | diff test/resources/tlv/test2-extend_response-multiple.tlv -
 >>>
 >>>= 0
 
 ###############################################################################
+
 
