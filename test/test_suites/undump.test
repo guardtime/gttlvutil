@@ -29,14 +29,14 @@ gttlvundump -h
 
 # Check version.
 gttlvundump -v | grep -f VERSION
->>> /.*/
+>>> /^gttlvutil.[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/
 >>>= 0
 
 # Invalid parameter.
-gttlvundump -f test/resources/sig/ok-sig-2014-08-01.1.ksig.txt
+gttlvundump -V
 >>>
 >>>2
-gttlvundump: invalid option -- 'f'
+gttlvundump: invalid option -- 'V'
 Unknown parameter, try -h.
 >>>= 1
 

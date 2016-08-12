@@ -238,7 +238,7 @@ int main(int argc, char **argv) {
 				res = GT_OK;
 				goto cleanup;
 			default:
-				fprintf(stderr, "Invalid option '%c'.\n", c);
+				fprintf(stderr, "Unknown parameter, try -h.\n");
 				res = GT_INVALID_CMD_PARAM;
 				goto cleanup;
 		}

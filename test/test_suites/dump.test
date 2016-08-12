@@ -28,14 +28,14 @@ gttlvdump -h
 
 # Version
 gttlvdump -v | grep -f VERSION
->>> /.*/
+>>> /^gttlvutil.[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/
 >>>= 0
 
 # Invalid parameter.
-gttlvdump -f test/resources/sig/ok-sig-2014-08-01.1.ksig
+gttlvdump -V
 >>>
 >>>2
-gttlvdump: invalid option -- 'f'
+gttlvdump: invalid option -- 'V'
 Unknown parameter, try -h.
 >>>= 1
 
@@ -145,3 +145,14 @@ TLV.0702.*
 >>>= 0
 
 ###############################################################################
+# Try to dump garbage.
+
+echo -en "\x12\x34\x56" | gttlvdump 
+>>>
+>>>2 
+(null): Failed to parse 3 bytes.
+>>>= 0
+
+###############################################################################
+
+

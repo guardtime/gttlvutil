@@ -89,11 +89,51 @@ TLV[01]: 53740380
 >>>= 0
 
 ###############################################################################
-# Create a random TLV element.
+# Create a dummy TLV element with tag 0x0123. Tlvdump to stdout.
 
 echo -en "\01" | gttlvwrap -t 0x0123 | gttlvdump
 >>>
 TLV[0123]:01
+>>>= 0
+
+###############################################################################
+# Create a dummy TLV element with tag 0123. Tlvdump to stdout.
+
+echo -en "\01" | gttlvwrap -t 0123 | gttlvdump
+>>>
+TLV[0123]:01
+>>>= 0
+
+###############################################################################
+# Create dummy TLV element and set non-critical flag. Tlvdump to stdout.
+
+echo -en "\01" | gttlvwrap -t 0x0123 -L | gttlvdump
+>>>
+TLV[0123,N]:01
+>>>= 0
+
+###############################################################################
+# Create dummy TLV element and set forward flag. Tlvdump to stdout.
+
+echo -en "\01" | gttlvwrap -t 0x0123 -F | gttlvdump
+>>>
+TLV[0123,F]:01
+>>>= 0
+
+###############################################################################
+# Create an aggregation error response. Write the response to file. Compare the
+# the result to the original tlvdumped file.
+
+((echo -en "\x61\x6e\x6f\x6e\x00" | gttlvwrap -t 01; echo -en "\x54\xca\x47\xb5" | gttlvwrap -t 02; echo -en "\x01" | gttlvwrap -t 03) | gttlvwrap -t 01; (echo -en "" | gttlvwrap -t 01; echo -en "\x01\x03" | gttlvwrap -t 04; (echo -n "The request contained invalid payload"; echo -en "\x00") | gttlvwrap -t 05) | gttlvwrap -t 0202;(echo -en "\x01\xc4\xaa\xaf\xf7\x9b\xab\x91\x37\xd2\xc1\xd8\xc4\x3e\x4f\xcd\x09\xc3\xbc\xe2\x8e\x19\x07\x9b\xe3\x6b\xb0\xd2\x11\x86\x4e\x2a\x3e") | gttlvwrap -t 1f) | gttlvwrap -t 0200 | gttlvdump > test/tmp/wrap_dump_ok_req_err.txt
+>>>
+>>>= 0
+
+gttlvdump test/resources/tlv/ok_aggr_err_response-1.tlv > test/tmp/dump_ok_aggr_err_response-1.tlv.txt
+>>>
+>>>= 0
+
+diff test/tmp/wrap_dump_ok_req_err.txt test/tmp/dump_ok_aggr_err_response-1.tlv.txt
+>>>
 >>>= 0
 
 ###############################################################################
@@ -111,11 +151,11 @@ gttlvdump test/resources/sig/ok-sig-2014-08-01.1.ksig > test/tmp/dump_ok-sig-201
 >>>
 >>>= 0
 
-gttlvundump test/tmp/dump_ok-sig-2014-08-01.1.txt > undump_ok-sig-2014-08-01.1.txt.ksig
+gttlvundump test/tmp/dump_ok-sig-2014-08-01.1.txt > test/tmp/undump_ok-sig-2014-08-01.1.txt.ksig
 >>>
 >>>= 0
 
-diff test/resources/sig/ok-sig-2014-08-01.1.ksig undump_ok-sig-2014-08-01.1.ksig.txt.ksig
+diff test/resources/sig/ok-sig-2014-08-01.1.ksig test/tmp/undump_ok-sig-2014-08-01.1.txt.ksig
 >>>
 >>>= 0
 

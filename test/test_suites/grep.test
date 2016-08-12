@@ -18,6 +18,27 @@
 #
 
 
+###############################################################################
+# Test user interface.
+
+# Help
+gttlvgrep -h
+>>> /Usage:.*
+.*gttlvgrep.*/
+>>>= 0
+
+# Version
+gttlvgrep -v | grep -f VERSION
+>>> /^gttlvutil.[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/
+>>>= 0
+
+# Invalid parameter.
+gttlvgrep -V 
+>>>
+>>>2
+gttlvgrep: invalid option -- 'V'
+Unknown parameter, try -h.
+>>>= 1
 
 ###############################################################################
 # Tlvgrep entire KSI signature from KSI signature file.
@@ -218,15 +239,4 @@ gttlvgrep 800.802.01 -ein test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>= 0
 
 ###############################################################################
-
-
-
-
-
-
-
-
-
-
-
 
