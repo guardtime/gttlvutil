@@ -662,8 +662,6 @@ static int convertStream(FILE *f) {
 	while (1) {
 		res = parseTlv(f, stack, stack_len);
 		if (res == GT_END_OF_STREAM) {
-			res = runPostponedTasks(stack, stack_len);
-			if (res != GT_OK) goto cleanup;
 			break;
 		}
 		else if (res != GT_OK) goto cleanup;
@@ -715,6 +713,9 @@ static int convertStream(FILE *f) {
 			unsigned char buf[0xffff + 4];
 			size_t buf_len = 0;
 
+			res = runPostponedTasks(stack, stack_len);
+			if (res != GT_OK) goto cleanup;
+
 			res = serializeStack(stack, stack_len, buf, sizeof(buf), &buf_len);
 			if (res != GT_OK) goto cleanup;
 
@@ -744,6 +745,9 @@ static int convertStream(FILE *f) {
 	if (stack_len > 0) {
 		unsigned char buf[0xffff + 4];
 		size_t buf_len = 0;
+
+		res = runPostponedTasks(stack, stack_len);
+		if (res != GT_OK) goto cleanup;
 
 		res = serializeStack(stack, stack_len, buf, sizeof(buf), &buf_len);
 		if (res != GT_OK) goto cleanup;
