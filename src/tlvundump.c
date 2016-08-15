@@ -191,6 +191,7 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 	switch (hmacCalcInfo.ver) {
 		case 2:
 			{
+				/* HMAC in v2 approach should be last in PDU. */
 				if (!isLastTlv) {
 					res = GT_FORMAT_ERROR;
 					goto cleanup;
@@ -646,6 +647,8 @@ static int runPostponedTasks(TlvLine *stack, size_t stackLen) {
 		res = calculateHmac(hmacRaw, &hmacLen, stack, stackLen, ((stackLen-1) == hmacCalcInfo.stack_pos));
 		if (res != GT_OK) error(res, "Failed to calculate HMAC.");
 		memcpy(&tlv->dat[tlv->dat_len - hmacLen], hmacRaw, hmacLen);
+		/* Invalidate info. */
+		hmacCalcInfo.isValid = 0;
 	}
 	return res;
 }
