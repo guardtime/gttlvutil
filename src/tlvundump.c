@@ -167,7 +167,7 @@ cleanup:
 	return res;
 }
 
-static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size_t stack_len) {
+static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size_t stack_len, int isLastTlv) {
 	int res = GT_UNKNOWN_ERROR;
 	Buffer raw;
 	size_t calc_len = 0;
@@ -191,6 +191,11 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 	switch (hmacCalcInfo.ver) {
 		case 2:
 			{
+				if (!isLastTlv) {
+					res = GT_FORMAT_ERROR;
+					goto cleanup;
+				}
+
 				calc_len = raw.len - GT_Hash_getAlgorithmLenght(algId);
 
 				res = GT_Hmac_Calculate(algId, hmacCalcInfo.key, strlen(hmacCalcInfo.key), raw.buf + sizeof(raw.buf) - raw.len, calc_len, tmp, &tmp_len);
@@ -638,9 +643,8 @@ static int runPostponedTasks(TlvLine *stack, size_t stackLen) {
 		size_t hmacLen = 0;
 		TlvLine *tlv = &stack[hmacCalcInfo.stack_pos];
 
-		res = calculateHmac(hmacRaw, &hmacLen, stack, stackLen);
+		res = calculateHmac(hmacRaw, &hmacLen, stack, stackLen, ((stackLen-1) == hmacCalcInfo.stack_pos));
 		if (res != GT_OK) error(res, "Failed to calculate HMAC.");
-
 		memcpy(&tlv->dat[tlv->dat_len - hmacLen], hmacRaw, hmacLen);
 	}
 	return res;
