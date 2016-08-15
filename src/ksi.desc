@@ -24,7 +24,7 @@
 0504.05.04		RAW			nodeAcks
 0504.07			RAW			crc8
 0504.08			RAW			FCS
-0505			RAW			file_checksum
+0505			RAW			fileq_checksum
 
 0800			*			Uni-signature PDU
 0801		 	*			Aggregation chain
@@ -68,7 +68,7 @@
 0803.10.02		TIME		Published time
 0803.10.04		IMPRINT		Published hash
 0803.09			STR			Publication reference
-0803.0a			STR			Publication repositori URI
+0803.0a			STR			Publication repository URI
 
 0804 			*			Aggregation auth record
 0804.02			TIME		Aggregation time
@@ -90,7 +90,7 @@
 0805.0b.03		RAW			Certificate id
 0805.0b.04		STR			Cert repository URI
 
-0701			*			Publicationsfile header
+0701			*			Publications file header
 0701.01			INT			Version
 0701.02			TIME		Time created
 0701.03			STR			Repository URI

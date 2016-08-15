@@ -296,19 +296,19 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 				continue;
 			case ST_TLV_T:
 				if (c != 'T') {
-					error(GT_PARSER_ERROR, "Expected 'T'");
+					error(GT_PARSER_ERROR, "Expected 'T'.");
 				}
 				state = ST_TLV_L;
 				break;
 			case ST_TLV_L:
 				if (c != 'L') {
-					error(GT_PARSER_ERROR, "Expected 'L'");
+					error(GT_PARSER_ERROR, "Expected 'L'.");
 				}
 				state = ST_TLV_V;
 				break;
 			case ST_TLV_V:
 				if (c != 'V') {
-					error(GT_PARSER_ERROR, "Expected 'V'");
+					error(GT_PARSER_ERROR, "Expected 'V'.");
 				}
 				state = ST_FORCE;
 				break;
@@ -325,7 +325,7 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 				break;
 			case ST_FORCE_16:
 				if (c != '6') {
-					error(GT_PARSER_ERROR, "Expected '6'");
+					error(GT_PARSER_ERROR, "Expected '6'.");
 				}
 				tlv->force = 16;
 				state = ST_BRACKET_BEGIN;
@@ -333,7 +333,7 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 			case ST_BRACKET_BEGIN:
 				if (IS_SPACE(c)) break;
 				if (c != '[') {
-					error(GT_PARSER_ERROR, "Expected '['");
+					error(GT_PARSER_ERROR, "Expected '['.");
 				}
 				state = ST_TAG_BEGIN;
 				break;
@@ -358,7 +358,7 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 
 				/* Make sure the tag value does not overflow. */
 				if (tlv->tag > 0x1fff) {
-					error(GT_PARSER_ERROR, "TLV tag value may not exceed 0x1fff");
+					error(GT_PARSER_ERROR, "TLV tag value may not exceed 0x1fff.");
 				}
 				break;
 			case ST_FLAG_START:
@@ -399,14 +399,14 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 			case ST_BRACKET_END:
 				if (IS_SPACE(c)) break;
 				if (c != ']') {
-					error(GT_PARSER_ERROR, "Expected ']'");
+					error(GT_PARSER_ERROR, "Expected ']'.");
 				}
 				state = ST_COLON;
 				break;
 			case ST_COLON:
 				if (IS_SPACE(c)) break;
 				if (c != ':') {
-					error(GT_PARSER_ERROR, "Expected ':'");
+					error(GT_PARSER_ERROR, "Expected ':'.");
 				}
 
 				state = ST_DATA;
@@ -435,7 +435,7 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 					break;
 				} else {
 					if (tlv->dat_len >= sizeof(tlv->dat)) {
-						error(GT_PARSER_ERROR, "String value too lagre.");
+						error(GT_PARSER_ERROR, "String value too large.");
 					}
 					tlv->dat[tlv->dat_len++] = c;
 				}
@@ -554,7 +554,7 @@ static int serializeStack(TlvLine *stack, size_t stack_len, unsigned char *buf, 
 	size_t len = 0;
 	size_t subLen = 0;
 
-	/* Find the next occurrance of the same level of this branch. */
+	/* Find the next occurrence of the same level of this branch. */
 	for (i = 1; i < stack_len; i++) {
 		if (stack[0].level > stack[i].level) break;
 		if (stack[0].level == stack[i].level) {
@@ -573,7 +573,7 @@ static int serializeStack(TlvLine *stack, size_t stack_len, unsigned char *buf, 
 	/* Serialize payload. */
 	if (stack[0].dat_len > 0) {
 		if (subLen != 0) {
-			line_error(GT_INVALID_FORMAT, "Length sould be 0 when not a composite.", stack[0].lineNr);
+			line_error(GT_INVALID_FORMAT, "Length should be 0 when not a composite.", stack[0].lineNr);
 		}
 		memcpy(buf + buf_len - len - stack[0].dat_len, stack[0].dat, stack[0].dat_len);
 		len += subLen = stack[0].dat_len;
@@ -592,7 +592,7 @@ static int serializeStack(TlvLine *stack, size_t stack_len, unsigned char *buf, 
 		}
 
 		if (stack[0].force == 8) {
-			line_error(GT_INVALID_FORMAT, "Unable to fit data into TLV8", stack[0].lineNr);
+			line_error(GT_INVALID_FORMAT, "Unable to fit data into TLV8.", stack[0].lineNr);
 		}
 		buf[buf_len - len - 1] = subLen & 0xff;
 		buf[buf_len - len - 2] = (subLen >> 8) & 0xff;
@@ -604,7 +604,7 @@ static int serializeStack(TlvLine *stack, size_t stack_len, unsigned char *buf, 
 
 	} else {
 		if (buf_len - len < 2) {
-			line_error(GT_BUFFER_OVERFLOW, "TLV8 buffer overflow", stack[0].lineNr);
+			line_error(GT_BUFFER_OVERFLOW, "TLV8 buffer overflow.", stack[0].lineNr);
 		}
 		buf[buf_len - len - 1] = subLen & 0xff;
 		buf[buf_len - len - 2] = stack[0].tag & 0x1f;
@@ -778,7 +778,7 @@ int main(int argc, char **argv) {
 			case 'h':
 				printf("Usage:\n"
 						"  gttlvundump [-h] tlvfile\n"
-						"    -h       This help message\n"
+						"    -h       This help message.\n"
 						"    -v       TLV utility package version.\n"
 						"\n"
 						"\n"

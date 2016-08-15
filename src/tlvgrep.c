@@ -36,11 +36,11 @@ void printHelp(FILE *f) {
 	fprintf(f, "Usage:\n\n"
 			"  gttlvgrep <options> [pattern] <[tlv file]>\n\n"
 			"Pattern:\n"
-			"  The pattern describes the hirarchy of the element or elements\n"
+			"  The pattern describes the hierarchy of the element or elements\n"
 			"  that the user is looking for. The path describes the TLV values\n"
 			"  in layers of the TLV tree, starting from the outermost. Each level\n"
-			"  is sepparated by a dot '.'. Each layer may contain one or multiple\n"
-			"  TLV tag value(s). Multiple values are sepparater by a comma ','.\n"
+			"  is separated by a dot '.'. Each layer may contain one or multiple\n"
+			"  TLV tag value(s). Multiple values are separated by a comma ','.\n"
 			"  Each TLV tag may be followed by a decimal index value enclosed in\n"
 			"  square brackets '[' and ']'.\n"
 			"\n"
@@ -58,7 +58,7 @@ void printHelp(FILE *f) {
 			"\n"
 			"Examples:\n"
 			"  The following example will print out all the hash chain links in\n"
-			"  the second aggregation chain\n\n"
+			"  the second aggregation hash chain.\n\n"
 			"    $ gttlvgrep 800.801[1].07,08\n\n");
 
 }
@@ -69,6 +69,13 @@ int main(int argc, char **argv) {
 
 	FILE *f = NULL;
 	int c;
+
+	memset(&conf, 0, sizeof(conf));
+
+	/* Default conf. */
+	conf.print_raw = false;
+	conf.print_path = false;
+	conf.print_tlv_hdr = false;
 
 	if (argc < 2) {
 		printHelp(stderr);
@@ -112,7 +119,7 @@ int main(int argc, char **argv) {
 				printf("%s\n", TLV_UTIL_VERSION_STRING);
 				exit(0);
 			default:
-				fprintf(stderr, "Invalid option '%c'\n", c);
+				fprintf(stderr, "Invalid option '%c'.\n", c);
 		}
 	}
 

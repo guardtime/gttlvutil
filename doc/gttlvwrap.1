@@ -1,0 +1,78 @@
+.TH GTTLVWRAP 1
+.\"
+.\"
+.\"
+.SH NAME
+\fBgttlvwrap \fR- A tool for generating a TLV by wrapping piece of data with TLV header.
+.\"
+.\"
+.SH SYNOPSIS
+.\"
+.HP 4
+\fBgttlwrap  \fB-t \fItag\fR [\fB-i \fIinput\fR] [\fB-o \fIoutput\fR] [\fBoptions\fR] \fR[\fB-h\fR] \fR[\fB-v\fR]
+.LP
+.\"
+.\"
+.SH DESCRIPTION
+.\"
+gttlvwrap is a tool for generating TLVs from input data.
+.LP
+.\"
+.\"
+.SH OPTIONS
+.\"
+.TP
+\fB-h\fR
+Prints help text to \fIstdout\fR.
+.\"
+.TP
+\fB-t \fItag\fR
+TLV tag (type) in hex.
+.\"
+.TP
+\fB-L \fR
+Set the TLV Non-Critical flag.
+.\"
+.TP
+\fB-F\fR
+Set the TLV Forward Unknown flag.
+.\"
+.TP
+\fB-i \fIfile\fR
+Input file that is going to be wrapped with TLV header. If not specified data will be read from \fIstdin\fR.
+.\"
+.TP
+\fB-o \fIfile\fR
+Output file for generated TLV. If not specified data will be written to \fIstdout\fR.
+.\"
+.TP
+\fB-v\fR
+TLV utility package version.
+.\"
+.SH EXAMPLES
+.\"
+.TP 2
+\fB1
+\fRTo wrap  string \fI"TEST"\fR with TLV header and dump the result with gttlvdump:
+.LP
+.RS 4
+.HP 4
+\fBecho \fI"TEST" \fR| \fBgttlvwrap -t \fI1000 \fR| \fB gttlvdump\fR
+.RE
+.\"
+.TP 2
+\fB2
+\fRTo wrap a file \fIfile\fR with TLV header and set the Non-Critical flag:
+.LP
+.RS 4
+.HP 4
+\fBgttlvwrap -t \fI1000\fR \fB-L -i \fIfile\fR \fB-o \fIfile.tlv\fR
+.RE
+\"
+.SH AUTHOR
+.LP
+Guardtime AS, http://www.guardtime.com/
+.LP
+.SH SEE ALSO
+.LP
+\fBgttlvdump\fR(1), \fBgttlvgrep\fR(1), \fBgttlvundump\fR(1), \fBtlv\fR(5), \fBtlv-desc\fR(5)
