@@ -1,6 +1,8 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
+#include <stdlib.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -12,7 +14,7 @@ extern "C" {
 #endif
 
 #ifndef _SIZE_T_DEFINED
-#	define size_t unsigned long long
+#	typedef size_t unsigned long long
 #endif
 
 #define GT_TLV_MASK_TLV16 0x80u
@@ -22,6 +24,20 @@ extern "C" {
 #define GT_TLV_MASK_TLV8_TYPE 0x1fu
 
 #define TLV_UTIL_VERSION_STRING (PACKAGE_NAME" "VERSION)
+
+/**
+ * Crypto implementations.
+ */
+#define HASH_OPENSSL   1
+#define HASH_CRYPTOAPI 2
+
+/**
+* Default implementation for data hashing.
+*/
+#ifndef CRYPTO_IMPL
+#	define CRYPTO_IMPL HASH_OPENSSL
+#endif
+
 
 typedef enum {
 	false = 0, true = !false
@@ -36,6 +52,8 @@ enum StatusCodes {
 	GT_INVALID_FORMAT,
 	GT_BUFFER_OVERFLOW,
 	GT_PARSER_ERROR,
+	GT_CRYPTO_FAILURE,
+
 	GT_END_OF_STREAM,
 	GT_UNKNOWN_ERROR = 0xffff
 };
