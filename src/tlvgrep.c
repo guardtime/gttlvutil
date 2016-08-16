@@ -53,7 +53,6 @@ void printHelp(FILE *f) {
 			"Options:\n"
 			" -h       Print this help message.\n"
 			" -H num   Skip num first bytes.\n"
-			" -P       Print header.\n"
 			" -e       Print TLV header.\n"
 			" -n       Print TLV path. Has no effect with -r.\n"
 			" -r       Print raw TLV (will override -n and -i).\n"
@@ -76,13 +75,6 @@ int main(int argc, char **argv) {
 
 	FILE *f = NULL;
 	int c;
-
-	memset(&conf, 0, sizeof(conf));
-
-	/* Default conf. */
-	conf.print_raw = false;
-	conf.print_path = false;
-	conf.print_tlv_hdr = false;
 
 	if (argc < 2) {
 		printHelp(stderr);
