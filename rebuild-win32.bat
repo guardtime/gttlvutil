@@ -20,12 +20,13 @@ GOTO copyrightend
 
 :copyrightend
 
-
 CALL "%ProgramW6432%\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x86
 
 ECHO ************ Rebuilding project (Win32) ************
 
+SET OPENSSL_DIR=C:\Work\openssl-0.9.8g-win64
+
 nmake clean
-nmake INSTALL_MACHINE=32
+nmake INSTALL_MACHINE=32 HASH_PROVIDER=OPENSSL
 
 pause

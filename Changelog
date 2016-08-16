@@ -1,3 +1,4 @@
+* FEATURE: Added HMAC calculation handling to gttlvundump.
 * IMPROVEMENT: Help format changed.
 * BUGFIX: Typos fixed.
 * IMPROVEMENT: Man pages gttlvdump(1), gttlvgrep(1), gttlvundump(1), gttlvwrap(1), tlv(5) and tlv-desc(5) added to the project.
