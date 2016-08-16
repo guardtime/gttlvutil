@@ -573,7 +573,7 @@ int main(int argc, char **argv) {
 	/* If there are no input files, read from the standard in. */
 	if (optind >= argc) {
 #ifdef _WIN32
-		_setmode(_fileno(stdin), _O_BINARY);
+		_setmode(_fileno(stdin), _O_TEXT);
 #endif
 		res = read_from(stdin, &conf);
 		if (res != GT_OK) goto cleanup;
