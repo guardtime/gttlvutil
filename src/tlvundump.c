@@ -532,6 +532,7 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 
 			case ST_END:
 				if (IS_SPACE(c)) break;
+				if (c == '\r') break;
 				if (c == '\n' || c == EOF) {
 					tlv->lineNr = lineNr;
 					return GT_OK; /* Indicate success. */
