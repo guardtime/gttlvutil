@@ -75,7 +75,7 @@ cleanup:
 }
 
 
-int GT_FTLV_fileRead(FILE *fd, unsigned char *buf, size_t len, size_t *consumed, struct fast_tlv_s *t) {
+int GT_FTLV_fileRead(FILE *fd, unsigned char *buf, size_t len, size_t *consumed, GT_FTLV *t) {
 	int res = GT_UNKNOWN_ERROR;
 	size_t rd;
 	size_t count = 0;

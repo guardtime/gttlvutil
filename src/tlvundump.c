@@ -5,19 +5,41 @@
 #include <ctype.h>
 
 #include "common.h"
+#include "fast_tlv.h"
+#include "hash.h"
+#include "hmac.h"
+#include "grep_tlv.h"
 
 #ifdef _WIN32
 #	include <io.h>
 #	include <fcntl.h>
 #endif
 
+#ifdef _WIN32
+#	define popen  _popen
+#	define pclose _pclose
+#endif
+
+#define line_error(err, s, lineNr) { fprintf(stderr, "%s:%llu - %s\n", fileName, (unsigned long long)(lineNr), (s)); return err; }
+#define error(err, s) line_error(err, (s), lineNr)
+#define IS_SPACE(c) ((c) == ' ' || (c) == '\t')
+#define IS_DIGIT(c) ((c) >= '0' && (c) <= '9')
+#define IS_HEX(c) (IS_DIGIT(c) || (toupper(c) >= 'A' && toupper(c) <= 'F'))
+#define HEX_TO_DEC(c) (IS_DIGIT(c) ? ((c) - '0') : (toupper((c)) - 'A' + 10))
+
+/* Supported function scripts. */
+#define HMAC_CALC_FUNC "HMAC"
+
+#define HMAC_TOKEN_BUF 64
+#define FUNC_SCRIPT_BUF 1024
+#define HMAC_CALC_ARG_DEL "|"
+
 typedef struct {
-	char buf[0xffff + 4];
+	unsigned char buf[0xffff + 4];
 	size_t len;
 } Buffer;
 
 size_t lineNr = 0;
-size_t pos = 0;
 char *fileName = "<stdin>";
 
 enum {
@@ -46,6 +68,8 @@ enum {
 	ST_DATA_STRING_DEC_3,
 	ST_DATA_HEX_1,
 	ST_DATA_HEX_2,
+
+	ST_FUNC,
 	ST_END,
 };
 
@@ -68,23 +92,165 @@ typedef struct {
 	int headless;
 } TlvLine;
 
-#define line_error(err, s, lineNr) fprintf(stderr, "%s:%llu - %s\n", fileName, (unsigned long long)(lineNr), (s)); return err
-#define error(err, s) line_error(err, (s), lineNr)
-#define IS_SPACE(c) ((c) == ' ' || (c) == '\t')
-#define IS_DIGIT(c) ((c) >= '0' && (c) <= '9')
-#define IS_HEX(c) (IS_DIGIT(c) || (toupper(c) >= 'A' && toupper(c) <= 'F'))
-#define HEX_TO_DEC(c) (IS_DIGIT(c) ? ((c) - '0') : (toupper((c)) - 'A' + 10))
+struct HmacCalculationInfo {
+	int isValid;
 
-int parseTlv(FILE *f, TlvLine *tlv) {
+	char algId[HMAC_TOKEN_BUF];
+	char key[HMAC_TOKEN_BUF];
+	char pattern[HMAC_TOKEN_BUF];
+
+	unsigned char ver;
+	size_t stack_pos;
+} hmacCalcInfo = {0};
+
+static int serializeStack(TlvLine *stack, size_t stack_len, unsigned char *buf, size_t buf_len, size_t *total_len);
+static int writeStream(const void *raw, size_t size, size_t count, FILE *f);
+
+static int hmacGetScriptTokens(char *args, size_t aLen, char *alg, char *key, char *pat, unsigned char *ver) {
+	int res = GT_INVALID_FORMAT;
+	char *tmp = NULL;
+	char *token = NULL;
+
+	/* Make a temporary copy of the func script for further manipulation. */
+	tmp = malloc(aLen + 1);
+	strncpy(tmp, args, aLen);
+	tmp[aLen] = '\0';
+
+	/* Break the arguments up into tokens. */
+
+	/* Read calculation approach version. */
+	token = strtok(tmp, HMAC_CALC_ARG_DEL);
+	if (token == NULL) goto cleanup;
+	*ver = atoi(token + 1);
+	/* Verify for known version numbers. */
+	if (!(*ver == 1 || *ver == 2)) goto cleanup;
+
+
+	/* Read hash algorithm. */
+	token = strtok(NULL, HMAC_CALC_ARG_DEL);
+	if (token == NULL) goto cleanup;
+	strcpy(alg, token);
+
+	/* Read openssl key. */
+	token = strtok(NULL, HMAC_CALC_ARG_DEL);
+	if (token == NULL) goto cleanup;
+	strcpy(key, token);
+
+	if (*ver == 1) {
+		/* Read TLV pattern to include into calculation. */
+		token = strtok(NULL, HMAC_CALC_ARG_DEL);
+		if (token == NULL) goto cleanup;
+		strcpy(pat, token);
+	}
+
+	res = GT_OK;
+cleanup:
+	if (tmp) free(tmp);
+	return res;
+}
+
+static int initHmacCalcInfo(char *script, size_t spos) {
+	int res = GT_UNKNOWN_ERROR;
+	char *argBeg = strchr(script, '(') + 1;
+	char *argEnd = strchr(script, ')');
+	size_t argStrLen = argEnd - argBeg;
+
+	hmacCalcInfo.isValid = 0;
+
+	res = hmacGetScriptTokens(argBeg, argStrLen, hmacCalcInfo.algId, hmacCalcInfo.key, hmacCalcInfo.pattern, &hmacCalcInfo.ver);
+	if (res != GT_OK) goto cleanup;
+
+	hmacCalcInfo.stack_pos = spos;
+	hmacCalcInfo.isValid = 1;
+
+cleanup:
+	return res;
+}
+
+static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size_t stack_len, int isLastTlv) {
+	int res = GT_UNKNOWN_ERROR;
+	Buffer raw;
+	size_t calc_len = 0;
+	unsigned char tmp[GT_HASH_MAX_LEN];
+	unsigned int tmp_len;
+	GT_Hash_AlgorithmId algId;
+
+	if (stack == NULL || stack_len == 0) {
+		res = GT_FORMAT_ERROR;
+		goto cleanup;
+	}
+
+	/* Serialize current stack. */
+	res = serializeStack(stack, stack_len, raw.buf, sizeof(raw.buf), &raw.len);
+	if (res != GT_OK) goto cleanup;
+
+
+	res = GT_Hash_getAlgorithmId(hmacCalcInfo.algId, &algId);
+	if (res != GT_OK) goto cleanup;
+
+	switch (hmacCalcInfo.ver) {
+		case 2:
+			{
+				/* HMAC in v2 approach should be last in PDU. */
+				if (!isLastTlv) {
+					res = GT_FORMAT_ERROR;
+					goto cleanup;
+				}
+
+				calc_len = raw.len - GT_Hash_getAlgorithmLenght(algId);
+
+				res = GT_Hmac_Calculate(algId, hmacCalcInfo.key, strlen(hmacCalcInfo.key), raw.buf + sizeof(raw.buf) - raw.len, calc_len, tmp, &tmp_len);
+				if (res != GT_OK) goto cleanup;
+			}
+			break;
+
+		case 1:
+		default:
+			{
+				GT_GrepTlvConf conf;
+				int idx[IDX_MAP_LEN];
+				GT_FTLV t;
+				unsigned char buf[0xffff + 4];
+				unsigned char *raw_buf_ptr = raw.buf + sizeof(raw.buf) - raw.len;
+
+				memset(idx, 0, sizeof(idx));
+
+				GT_GrepTlv_initConf(&conf);
+				conf.print_raw = true;
+				conf.print_path = false;
+				conf.print_tlv_hdr = true;
+
+				res = GT_FTLV_memRead(raw_buf_ptr, raw.len, &t);
+				if (res != GT_OK) goto cleanup;
+
+				res = GT_grepTlv(&conf, hmacCalcInfo.pattern, NULL, idx, raw_buf_ptr, &t, buf, &calc_len);
+				if (res != GT_OK) goto cleanup;
+
+				res = GT_Hmac_Calculate(algId, hmacCalcInfo.key, strlen(hmacCalcInfo.key), buf, calc_len, tmp, &tmp_len);
+				if (res != GT_OK) goto cleanup;
+			}
+			break;
+	}
+
+	memcpy(hmac, tmp, tmp_len);
+	*hlen = tmp_len;
+
+	res = GT_OK;
+cleanup:
+
+	return res;
+}
+
+int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 	int state = ST_BEGIN;
+	TlvLine *tlv = &stack[stackLen];
 	int c;
 
 	memset(tlv, 0, sizeof(TlvLine));
 
 	c = fgetc(f);
-	pos = 1;
 	lineNr++;
-	while (1) {
+	for (;;) {
 		switch(state) {
 			case ST_BEGIN:
 				if (IS_HEX(c)) {
@@ -93,7 +259,6 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 				}
 				if (c == '\n') {
 					/* Count newlines. */
-					pos = 0;
 					lineNr++;
 					break;
 				} else if (c == '\r') {
@@ -250,6 +415,9 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 				if (IS_SPACE(c)) break;
 				if (c == '"') {
 					state = ST_DATA_STRING;
+				} else if (c == '$') {
+					state = ST_FUNC;
+					continue;
 				} else if (c == '\n' || c == EOF) {
 					state = ST_END;
 					continue;
@@ -327,6 +495,41 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 					continue;
 				}
 				break;
+
+			case ST_FUNC:
+				{
+					char funcScript[FUNC_SCRIPT_BUF];
+
+					/* Read function script. */
+					if (fgets(funcScript, sizeof(funcScript), f) != funcScript) {
+						error(GT_PARSER_ERROR, "Unable to read function script.");
+					}
+
+					/* Find handler. */
+					if (strstr(funcScript, HMAC_CALC_FUNC) == funcScript) {
+						GT_Hash_AlgorithmId algId;
+						size_t algSize;
+
+						if (initHmacCalcInfo(funcScript, stackLen) != GT_OK) {
+							error(GT_PARSER_ERROR, "Failed to parse HMAC calculation script.");
+						}
+
+						if (GT_Hash_getAlgorithmId(hmacCalcInfo.algId, &algId) != GT_OK) {
+							error(GT_PARSER_ERROR, "Unable to get hash algorithm id.");
+						}
+						/* Add algorithm id and init hmac hash value to 0. */
+						tlv->dat[tlv->dat_len++] = algId;
+						algSize = GT_Hash_getAlgorithmLenght(algId);
+						memset(&tlv->dat[tlv->dat_len], 0, algSize);
+						tlv->dat_len += algSize;
+					} else {
+						error(GT_PARSER_ERROR, "Unknown function script.");
+					}
+					tlv->lineNr = lineNr;
+					return GT_OK; /* Indicate success. */
+				}
+				break;
+
 			case ST_END:
 				if (IS_SPACE(c)) break;
 				if (c == '\n' || c == EOF) {
@@ -340,7 +543,6 @@ int parseTlv(FILE *f, TlvLine *tlv) {
 				error(GT_PARSER_ERROR, "Unknown error.");
 		}
 		c = fgetc(f);
-		pos++;
 	}
 
 	error(GT_PARSER_ERROR, "Unknown format error.");
@@ -433,6 +635,24 @@ static int writeStream(const void *raw, size_t size, size_t count, FILE *f) {
 	return GT_OK;
 }
 
+static int runPostponedTasks(TlvLine *stack, size_t stackLen) {
+	int res = GT_OK;
+
+	/* Check if HMAC calculation is on hold. */
+	if (hmacCalcInfo.isValid) {
+		unsigned char hmacRaw[1024] = {0};
+		size_t hmacLen = 0;
+		TlvLine *tlv = &stack[hmacCalcInfo.stack_pos];
+
+		res = calculateHmac(hmacRaw, &hmacLen, stack, stackLen, ((stackLen-1) == hmacCalcInfo.stack_pos));
+		if (res != GT_OK) error(res, "Failed to calculate HMAC.");
+		memcpy(&tlv->dat[tlv->dat_len - hmacLen], hmacRaw, hmacLen);
+		/* Invalidate info. */
+		hmacCalcInfo.isValid = 0;
+	}
+	return res;
+}
+
 static int convertStream(FILE *f) {
 	int res = GT_UNKNOWN_ERROR;
 	TlvLine *stack = NULL;
@@ -447,8 +667,10 @@ static int convertStream(FILE *f) {
 	}
 
 	while (1) {
-		res = parseTlv(f, &stack[stack_len]);
-		if (res == GT_END_OF_STREAM) break;
+		res = parseTlv(f, stack, stack_len);
+		if (res == GT_END_OF_STREAM) {
+			break;
+		}
 		else if (res != GT_OK) goto cleanup;
 
 		/* The variable stack_len is the index of the last element and is incremented
@@ -498,6 +720,9 @@ static int convertStream(FILE *f) {
 			unsigned char buf[0xffff + 4];
 			size_t buf_len = 0;
 
+			res = runPostponedTasks(stack, stack_len);
+			if (res != GT_OK) goto cleanup;
+
 			res = serializeStack(stack, stack_len, buf, sizeof(buf), &buf_len);
 			if (res != GT_OK) goto cleanup;
 
@@ -528,6 +753,9 @@ static int convertStream(FILE *f) {
 		unsigned char buf[0xffff + 4];
 		size_t buf_len = 0;
 
+		res = runPostponedTasks(stack, stack_len);
+		if (res != GT_OK) goto cleanup;
+
 		res = serializeStack(stack, stack_len, buf, sizeof(buf), &buf_len);
 		if (res != GT_OK) goto cleanup;
 
@@ -554,6 +782,40 @@ int main(int argc, char **argv) {
 						"Options:\n"
 						"    -h       This help message.\n"
 						"    -v       TLV utility package version.\n"
+						"\n"
+						"\n"
+						"  It is possible to create your own functions.\n"
+						"  Currently defined functions:\n"
+						"  - HMAC('version'|'algorithm'|'key'|'pattern')\n"
+						"      version    HMAC calculation version. Valid versions: v1, v2.\n"
+						"                 v1 - computation is performed over the concatenation of header and payload TLVs\n"
+						"                 v2 - computation is performed over the TLV header of the PDU, the complete \n"
+						"                      header TLV, complete payload TLVs in the order in which they appear within\n"
+						"                      the PDU, and the TLV header and the hash function ID of the MAC element itself.\n"
+						"      algorithm  Hash algorithm to be used for calculation (as defined by openssl).\n"
+						"      key        Secret cryptographic key.\n"
+						"      pattern    TLV pattern describing TLVs to be included into calculation (valid with v1).\n"
+						"                 Pattern format as defined by gttlvgrep.\n"
+						"\n"
+						"      Example:\n"
+						"        1. Calculation approach v1.\n"
+						"          TLV[0300]:\n"
+						"            TLV[01]:\n"
+						"              TLV[01]:616E6F6E00\n"
+						"            TLV[0301]:\n"
+						"              TLV[01]:01\n"
+						"              TLV[02]:54D9D6E7\n"
+						"              TLV[03]:54D9D6E7\n"
+						"            TLV[1f]:$HMAC(v1|sha256|anon|300.01,301)\n"
+						"        2. Calculation approach v2.\n"
+						"          TLV[0300]:\n"
+						"            TLV[01]:\n"
+						"              TLV[01]:616E6F6E00\n"
+						"            TLV[0301]:\n"
+						"              TLV[01]:01\n"
+						"              TLV[02]:54D9D6E7\n"
+						"              TLV[03]:54D9D6E7\n"
+						"            TLV[1f]:$HMAC(v2|sha256|anon)\n"
 						"\n");
 				res = GT_OK;
 				goto cleanup;

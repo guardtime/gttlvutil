@@ -62,7 +62,7 @@ extern "C" {
 	 * \param[in]	t			Pointer to  the #GT_FTLV object.
 	 * \return status code (\c GT_OK, when operation succeeded, otherwise an error code).
 	 */
-	int GT_FTLV_fileRead(FILE *f, unsigned char *buf, size_t len, size_t *consumed, struct fast_tlv_s *t);
+	int GT_FTLV_fileRead(FILE *f, unsigned char *buf, size_t len, size_t *consumed, GT_FTLV *t);
 
 	/**
 	 * Read the TLV from a memory buffer.
