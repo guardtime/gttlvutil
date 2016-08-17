@@ -29,6 +29,7 @@ mkdir -p test/tmp
 shelltest -c --debug \
 	test/test_suites/dump.test \
 	test/test_suites/undump.test \
+	test/test_suites/undump_hmac.test \
 	test/test_suites/grep.test \
 	test/test_suites/wrap.test \
 	test/test_suites/integration.test \

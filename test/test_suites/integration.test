@@ -211,7 +211,7 @@ gttlvdump -a test/resources/sig/ok-sig-2014-08-01.1.ksig | gttlvundump | gttlvdu
 ###############################################################################
 # Create a multi response binary stream. Compare it to the original file.
 
-gttlvundump test/resources/tlv/test2-extend_response-1.txt test/resources/tlv/test2-extend_response-2.txt | diff test/resources/tlv/test2-extend_response-multiple.tlv -
+gttlvundump test/resources/tlv/test2-extend_response-reqId_1.txt test/resources/tlv/test2-extend_response-reqId_2.txt | diff test/resources/tlv/test2-extend_response-multiple.tlv -
 >>>
 >>>= 0
 
