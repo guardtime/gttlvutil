@@ -11,7 +11,7 @@ void GT_GrepTlv_initConf(GT_GrepTlvConf *conf) {
 
 	/* Default conf. */
 	conf->print_raw = false;
-	conf->print_path = true;
+	conf->print_path = false;
 	conf->print_tlv_hdr = false;
 	conf->trunc_tlv_tag = 0;
 	conf->print_tlv_hdr_only = false;
