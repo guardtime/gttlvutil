@@ -74,6 +74,29 @@ gttlvgrep 800.801[2].07[1],08[0] test/resources/sig/ok-sig-2014-08-01.1.ksig
 01012e02210122265578464114f13e452dbd0013afd95ed9189ff88f368fd69699b18cc4aaad
 >>>= 0
 
+# Change position link in the list
+gttlvgrep 800.801[2].08[0],07[1] test/resources/sig/ok-sig-2014-08-01.1.ksig
+>>>
+01012e02210122265578464114f13e452dbd0013afd95ed9189ff88f368fd69699b18cc4aaad
+>>>= 0
+
+
+###############################################################################
+# Tlvgrep 2nd aggregation hash chain 2nd left and 4th right links.
+
+gttlvgrep 800.801[1].07[1],08[3] test/resources/sig/ok-sig-2014-08-01.1.ksig
+>>>
+010101022101ec97ee31cc71bdc84d9582a4f88c7e5ca443ced0e55a9e97168b0b688048a76e
+022101d46e2fb2cac197634f28ca2c1721a6708b327d6a0f8eac31a8eeeaea947289a3
+>>>= 0
+
+# Change position link in the list
+gttlvgrep 800.801[1].08[3],07[1] test/resources/sig/ok-sig-2014-08-01.1.ksig
+>>>
+010101022101ec97ee31cc71bdc84d9582a4f88c7e5ca443ced0e55a9e97168b0b688048a76e
+022101d46e2fb2cac197634f28ca2c1721a6708b327d6a0f8eac31a8eeeaea947289a3
+>>>= 0
+
 ###############################################################################
 # Tlvgrep 3rd aggregation hash chain 2nd leftlink.
 
