@@ -532,17 +532,11 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 
 			case ST_END:
 				if (IS_SPACE(c)) break;
-				if (c == '\r') break;
 				if (c == '\n' || c == EOF) {
 					tlv->lineNr = lineNr;
 					return GT_OK; /* Indicate success. */
 				} else {
-					unsigned char buf[40];
-					if (isprint(c))
-						sprintf(buf, "Unexpected character: %c.", (unsigned char)c);
-					else
-						sprintf(buf, "Unexpected character (hex value): %02x.", (unsigned char)c);
-					error(GT_PARSER_ERROR, buf);
+					error(GT_PARSER_ERROR, "Unexpected character.");
 				}
 				break;
 			default:
