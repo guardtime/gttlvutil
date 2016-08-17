@@ -500,6 +500,8 @@ int main(int argc, char **argv) {
 				goto cleanup;
 			case 'd':
 				conf.max_depth = atoi(optarg);
+				if (conf.max_depth == 0)
+					fprintf(stderr, "Warning: ignoring invalid value of option -d.\n");
 				break;
 			case 'x':
 				conf.print_off = true;
