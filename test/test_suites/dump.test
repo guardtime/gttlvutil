@@ -133,7 +133,7 @@ TLV[0800]:880501513029020453dc2a00042101e4fc0853cacb3c888ee4d2f843083acb1a822e60
 
 ###############################################################################
 # Tlvdump publications file.
-# Using '-H' option for defining constand header lenght.
+# Using '-H' option for defining constant header length.
 
 gttlvdump -H 8 test/resources/pub/ksi-publications.bin
 >>>  /4b53495055424c46.*

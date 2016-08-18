@@ -26,18 +26,18 @@ rm -rf test/tmp 2> /dev/null
 mkdir -p test/tmp
 
 # Run test suites.
-shelltest -c --debug \
+shelltest -c \
 	test/test_suites/dump.test \
 	test/test_suites/undump.test \
-	test/test_suites/undump_hmac.test \
 	test/test_suites/grep.test \
 	test/test_suites/wrap.test \
 	test/test_suites/integration.test \
+	test/test_suites/undump_hmac.test \
 -- -j1
 
 exit_code=$?
 
 # Cleanup.  
-#rm -rf test/tmp 2> /dev/null
+rm -rf test/tmp 2> /dev/null
 
 exit $exit_code

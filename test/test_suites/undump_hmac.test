@@ -160,6 +160,13 @@ echo "TLV[1f]:\$HMAC(v2|sha224|anon)" | gttlvundump
 >>>= 8
 
 ###############################################################################
+# Unssupported function script.
+
+(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$DUMMY(param)") | gttlvundump
+>>>2 /.*Unknown function script./
+>>>= 8
+
+###############################################################################
 # Test HMAC function script parameters for calculation v1.
 
 # Only version is provided.
