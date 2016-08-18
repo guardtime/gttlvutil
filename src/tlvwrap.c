@@ -58,7 +58,8 @@ cleanup:
 
 void printHelp(FILE *f) {
 	fprintf(f,
-		"\n  gttlvwrap <options>\n\n"
+		"Usage:\n"
+		"  gttlvwrap <options>\n\n"
 		"Options:\n"
 		"  -L         Set the TLV non-critical flag.\n"
 		"  -F         Set the TLV forward flag.\n"
@@ -92,10 +93,12 @@ int main(int argc, char **argv) {
 				type = strtol(optarg, &tail, 16);
 				if (*tail != 0) {
 					fprintf(stderr, "Bad tag value: '%s'.", optarg);
+					res = GT_INVALID_FORMAT;
 					goto cleanup;
 				}
 				if (type < 0 || type > 0x1fff) {
 					fprintf(stderr, "Tag value out of range.");
+					res = GT_INVALID_FORMAT;
 					goto cleanup;
 				}
 				break;
@@ -103,6 +106,7 @@ int main(int argc, char **argv) {
 				in = fopen(optarg, "rb");
 				if (in == NULL) {
 					fprintf(stderr, "Unable to open input file '%s'.\n", optarg);
+					res = GT_IO_ERROR;
 					goto cleanup;
 				}
 				break;
@@ -110,19 +114,22 @@ int main(int argc, char **argv) {
 				out = fopen(optarg, "wb");
 				if (out == NULL) {
 					fprintf(stderr, "Unable to open output file '%s'.\n", optarg);
+					res = GT_IO_ERROR;
 					goto cleanup;
 				}
 				break;
 			case 'h':
 				printHelp(stdout);
-				exit(0);
+				res = GT_OK;
+				goto cleanup;
 			case 'v':
 				printf("%s\n", TLV_UTIL_VERSION_STRING);
-				exit(0);
+				res = GT_OK;
+				goto cleanup;
 			default:
-				printHelp(stderr);
-				fprintf(stderr, "Error: Unknown option -%c.\n", c);
-				exit(1);
+				fprintf(stderr, "Unknown parameter, try -h.\n");
+				res = GT_INVALID_CMD_PARAM;
+				goto cleanup;
 		}
 	}
 

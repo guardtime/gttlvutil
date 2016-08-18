@@ -778,6 +778,8 @@ int main(int argc, char **argv) {
 			case 'h':
 				printf("Usage:\n"
 						"  gttlvundump [-h] tlvfile\n"
+						"\n"
+						"Options:\n"
 						"    -h       This help message.\n"
 						"    -v       TLV utility package version.\n"
 						"\n"
@@ -814,14 +816,17 @@ int main(int argc, char **argv) {
 						"              TLV[02]:54D9D6E7\n"
 						"              TLV[03]:54D9D6E7\n"
 						"            TLV[1f]:$HMAC(v2|sha256|anon)\n"
-						);
-				exit(0);
+						"\n");
+				res = GT_OK;
+				goto cleanup;
 			case 'v':
 				printf("%s\n", TLV_UTIL_VERSION_STRING);
-				exit(0);
+				res = GT_OK;
+				goto cleanup;
 			default:
-				fprintf(stderr, "Unknown parameter, try -h.");
-				exit(1);
+				fprintf(stderr, "Unknown parameter, try -h.\n");
+				res = GT_INVALID_CMD_PARAM;
+				goto cleanup;
 		}
 	}
 
@@ -850,9 +855,10 @@ int main(int argc, char **argv) {
 		}
 	}
 
+	res = GT_OK;
 cleanup:
 	if (f != NULL && f != stdin) fclose(f);
 
-	return 0;
+	return res;
 }
 
