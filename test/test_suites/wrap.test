@@ -1,0 +1,87 @@
+#
+# GUARDTIME CONFIDENTIAL
+#
+# Copyright (C) [2016] Guardtime, Inc
+# All Rights Reserved
+#
+# NOTICE:  All information contained herein is, and remains, the
+# property of Guardtime Inc and its suppliers, if any.
+# The intellectual and technical concepts contained herein are
+# proprietary to Guardtime Inc and its suppliers and may be
+# covered by U.S. and Foreign Patents and patents in process,
+# and are protected by trade secret or copyright law.
+# Dissemination of this information or reproduction of this
+# material is strictly forbidden unless prior written permission
+# is obtained from Guardtime Inc.
+# "Guardtime" and "KSI" are trademarks or registered trademarks of
+# Guardtime Inc.
+#
+
+###############################################################################
+# Test user interface.
+
+# Help
+gttlvwrap -h
+>>> /Usage:.*
+.*gttlvwrap.*/
+>>>= 0
+
+# Version
+gttlvwrap -v | grep -f VERSION
+>>> /^gttlvutil.([0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2})$/
+>>>= 0
+
+# Invalid parameter.
+gttlvwrap -V 
+>>>
+>>>2
+gttlvwrap: invalid option -- 'V'
+Unknown parameter, try -h.
+>>>= 1
+
+# Missing file.
+gttlvwrap -i test/tmp/missing/file
+>>>
+>>>2
+Unable to open input file 'test/tmp/missing/file'.
+>>>= 4
+
+###############################################################################
+# Create an aggregation error response. Compare it to the original file.
+# TLV[0200]:
+#   TLV[01]:
+#     TLV[01]: 616e6f6e00
+#     TLV[02]: 54ca47b5
+#     TLV[03]: 01
+#   TLV[0202]:
+#     TLV[01]:
+#     TLV[04]: 0103
+#     TLV[05]: 546865207265717565737420636f6e7461696e656420696e76616c6964207061796c6f616400
+#   TLV[1f]: 01c4aaaff79bab9137d2c1d8c43e4fcd09c3bce28e19079be36bb0d211864e2a3e
+
+((echo -en "\x61\x6e\x6f\x6e\x00" | gttlvwrap -t 01; echo -en "\x54\xca\x47\xb5" | gttlvwrap -t 02; echo -en "\x01" | gttlvwrap -t 03) | gttlvwrap -t 01; (echo -en "" | gttlvwrap -t 01; echo -en "\x01\x03" | gttlvwrap -t 04; (echo -n "The request contained invalid payload"; echo -en "\x00") | gttlvwrap -t 05) | gttlvwrap -t 0202; (echo -en "\x01\xc4\xaa\xaf\xf7\x9b\xab\x91\x37\xd2\xc1\xd8\xc4\x3e\x4f\xcd\x09\xc3\xbc\xe2\x8e\x19\x07\x9b\xe3\x6b\xb0\xd2\x11\x86\x4e\x2a\x3e") | gttlvwrap -t 1f) | gttlvwrap -t 0200 | diff test/resources/tlv/ok_aggr_err_response-1.tlv -
+>>> 
+>>>= 0
+
+###############################################################################
+# Create an aggregation error response (see above test case). Save the resulting 
+# steam to a temporary file and compare it to the original file.
+
+((echo -en "\x61\x6e\x6f\x6e\x00" | gttlvwrap -t 01; echo -en "\x54\xca\x47\xb5" | gttlvwrap -t 02; echo -en "\x01" | gttlvwrap -t 03) | gttlvwrap -t 01; (echo -en "" | gttlvwrap -t 01; echo -en "\x01\x03" | gttlvwrap -t 04; (echo -n "The request contained invalid payload"; echo -en "\00") | gttlvwrap -t 05) | gttlvwrap -t 0202; (echo -en "\x01\xc4\xaa\xaf\xf7\x9b\xab\x91\x37\xd2\xc1\xd8\xc4\x3e\x4f\xcd\x09\xc3\xbc\xe2\x8e\x19\x07\x9b\xe3\x6b\xb0\xd2\x11\x86\x4e\x2a\x3e") | gttlvwrap -t 1f) | gttlvwrap -t 0200 -o test/tmp/wrap_ok_aggr_err_response.tlv
+>>> 
+>>>= 0
+
+diff test/resources/tlv/ok_aggr_err_response-1.tlv test/tmp/wrap_ok_aggr_err_response.tlv
+>>> 
+>>>= 0
+
+###############################################################################
+# Wrap tlvutil package varsion number around a dummy tag.
+
+gttlvwrap -t 0123 -i VERSION | grep -E "([0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2})$"
+>>>
+Binary file (standard input) matches
+>>>= 0
+
+###############################################################################
+

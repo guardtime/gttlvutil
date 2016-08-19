@@ -19,22 +19,28 @@ static int grepFile(GT_GrepTlvConf *conf, FILE *f) {
 
 	while (!feof(f)) {
 		res = GT_FTLV_fileRead(f, buf, sizeof(buf), &len, &t);
-		if (len == 0) break;
-
+		if (len == 0) {
+			/* Reached the end of file. */
+			res = GT_OK;
+			break;
+		}
 		if (res != GT_OK) {
 			fprintf(stderr, "%s: Failed to parse TLV.\n", conf->file_name);
-			return GT_FORMAT_ERROR;
+			return res;
 		}
 
 		res = GT_grepTlv(conf, conf->pattern, NULL, idx, buf, &t, NULL, NULL);
+		if (res != GT_OK) return res;
 	}
 	return res;
 }
 
 
 void printHelp(FILE *f) {
-	fprintf(f, "Usage:\n\n"
-			"  gttlvgrep <options> [pattern] <[tlv file]>\n\n"
+	fprintf(f,
+			"Usage:\n"
+			"  gttlvgrep <options> [pattern] <[tlv file]>\n"
+			"\n"
 			"Pattern:\n"
 			"  The pattern describes the hierarchy of the element or elements\n"
 			"  that the user is looking for. The path describes the TLV values\n"
@@ -47,7 +53,6 @@ void printHelp(FILE *f) {
 			"Options:\n"
 			" -h       Print this help message.\n"
 			" -H num   Skip num first bytes.\n"
-			" -P       Print header.\n"
 			" -e       Print TLV header.\n"
 			" -n       Print TLV path. Has no effect with -r.\n"
 			" -r       Print raw TLV (will override -n and -i).\n"
@@ -59,27 +64,22 @@ void printHelp(FILE *f) {
 			"Examples:\n"
 			"  The following example will print out all the hash chain links in\n"
 			"  the second aggregation hash chain.\n\n"
-			"    $ gttlvgrep 800.801[1].07,08\n\n");
+			"    $ gttlvgrep 800.801[1].07,08\n"
+			"\n");
 
 }
 
 int main(int argc, char **argv) {
-
+	int res = GT_UNKNOWN_ERROR;
 	GT_GrepTlvConf conf;
 
 	FILE *f = NULL;
 	int c;
 
-	memset(&conf, 0, sizeof(conf));
-
-	/* Default conf. */
-	conf.print_raw = false;
-	conf.print_path = false;
-	conf.print_tlv_hdr = false;
-
 	if (argc < 2) {
 		printHelp(stderr);
-		exit(1);
+		res = GT_INVALID_CMD_PARAM;
+		goto cleanup;
 	}
 
 	/* Default conf. */
@@ -87,9 +87,6 @@ int main(int argc, char **argv) {
 
 	while ((c = getopt(argc, argv, "hH:oenriT:L:v")) != -1) {
 		switch(c) {
-			case 'h':
-				printHelp(stdout);
-				exit(0);
 			case 'H':
 				conf.magic_len = atoi(optarg);
 				break;
@@ -115,17 +112,26 @@ int main(int argc, char **argv) {
 			case 'L':
 				conf.trunc_len = atoi(optarg);
 				break;
+
+			case 'h':
+				printHelp(stdout);
+				res = GT_OK;
+				goto cleanup;
 			case 'v':
 				printf("%s\n", TLV_UTIL_VERSION_STRING);
-				exit(0);
+				res = GT_OK;
+				goto cleanup;
 			default:
-				fprintf(stderr, "Invalid option '%c'.\n", c);
+				fprintf(stderr, "Unknown parameter, try -h.\n");
+				res = GT_INVALID_CMD_PARAM;
+				goto cleanup;
 		}
 	}
 
 	if (optind >= argc) {
 		fprintf(stderr, "Error: no pattern provided!\n");
-		exit(1);
+		res = GT_INVALID_CMD_PARAM;
+		goto cleanup;
 	}
 
 	conf.pattern = argv[optind++];
@@ -133,7 +139,8 @@ int main(int argc, char **argv) {
 	if (optind >= argc) {
 		f = stdin;
 		conf.file_name = "<stdin>";
-		if (grepFile(&conf, f) != GT_OK) goto cleanup;
+		res = grepFile(&conf, f);
+		if (res != GT_OK) goto cleanup;
 	} else {
 		for (; optind < argc; optind++) {
 			conf.file_name = argv[optind];
@@ -146,21 +153,23 @@ int main(int argc, char **argv) {
 			if (conf.magic_len) {
 				if (fseek(f, conf.magic_len, SEEK_SET)) {
 					fprintf(stderr, "%s: Unable to skip header.\n", conf.file_name);
+					res = GT_IO_ERROR;
 					goto cleanup;
 				}
 			}
 
-			if (grepFile(&conf, f) != GT_OK) {
-				goto cleanup;
-			}
+			res = grepFile(&conf, f);
+			if (res != GT_OK) goto cleanup;
 
 			fclose(f);
 			f = NULL;
 		}
 	}
 
+	res = GT_OK;
+
 cleanup:
 	if (f != NULL && f != stdin) fclose(f);
 
-	return 0;
+	return res;
 }

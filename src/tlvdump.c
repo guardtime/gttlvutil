@@ -482,6 +482,8 @@ int main(int argc, char **argv) {
 			case 'h':
 				printf("Usage:\n"
 						"  gttlvdump [-h] [options] tlvfile\n"
+						"\n"
+						"Options:\n"
 						"    -h       This help message.\n"
 						"    -H <num> Constant header length.\n"
 						"    -d <num> Max depth of nested elements. Use 0 to disable filtering by level.\n"
@@ -496,7 +498,7 @@ int main(int argc, char **argv) {
 						"    -e <enc> Encoding of binary payload. Available encodings: 'hex' (default),\n"
 						"             'base64'.\n"
 						"    -v       TLV utility package version.\n"
-				);
+						"\n");
 				res = GT_OK;
 				goto cleanup;
 			case 'd': {
@@ -571,7 +573,8 @@ int main(int argc, char **argv) {
 				goto cleanup;
 				break;
 			default:
-				fprintf(stderr, "Unknown parameter, try -h.");
+				fprintf(stderr, "Unknown parameter, try -h.\n");
+				res = GT_INVALID_CMD_PARAM;
 				goto cleanup;
 		}
 	}
@@ -587,7 +590,7 @@ int main(int argc, char **argv) {
 	/* If there are no input files, read from the standard in. */
 	if (optind >= argc) {
 #ifdef _WIN32
-		_setmode(_fileno(stdin), _O_BINARY);
+		_setmode(_fileno(stdin), _O_TEXT);
 #endif
 		res = read_from(stdin, &conf);
 		if (res != GT_OK) goto cleanup;
@@ -601,7 +604,8 @@ int main(int argc, char **argv) {
 			input = fopen(conf.file_name, "rb");
 			if (input == NULL) {
 				fprintf(stderr, "%s: Unable to open file.\n", argv[optind + i]);
-				continue;
+				res = GT_IO_ERROR;
+				goto cleanup;
 			}
 
 			res = read_from(input, &conf);
@@ -616,6 +620,5 @@ cleanup:
 	if (input != NULL) fclose(input);
 	if (desc_free) desc_cleanup(&conf.desc);
 
-
-	return 0;
+	return res;
 }

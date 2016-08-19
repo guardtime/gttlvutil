@@ -44,7 +44,8 @@ typedef enum {
 } bool;
 
 enum StatusCodes {
-	GT_OK,
+	GT_OK = 0,
+	GT_INVALID_CMD_PARAM,
 	GT_OUT_OF_MEMORY,
 	GT_FORMAT_ERROR,
 	GT_IO_ERROR,

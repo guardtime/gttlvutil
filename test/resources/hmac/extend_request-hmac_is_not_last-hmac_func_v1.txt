@@ -1,0 +1,8 @@
+TLV[300]:
+  TLV[01]:
+    TLV[01]:616E6F6E00
+  TLV[1f]:$HMAC(v1|sha256|anon|300.01,301)
+  TLV[301]:
+    TLV[01]:01
+    TLV[02]:54D9D6E7
+    TLV[03]:54D9D6E7
