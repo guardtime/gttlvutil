@@ -25,19 +25,43 @@ rm -rf test/tmp 2> /dev/null
 # Create test temporary directory.
 mkdir -p test/tmp
 
-# Run test suites.
-shelltest -c \
-	test/test_suites/dump.test \
-	test/test_suites/undump.test \
-	test/test_suites/grep.test \
-	test/test_suites/wrap.test \
-	test/test_suites/integration.test \
-	test/test_suites/undump_hmac.test \
--- -j1
+# If tlv utils are available in project directory then use those, 
+# otherwise use the ones installed on the machine.
+if [ -f src/gttlvgrep ] && 
+   [ -f src/gttlvwrap ] && 
+   [ -f src/gttlvdump ] && 
+   [ -f src/gttlvundump ]; then
+  TLVGREP="src/gttlvgrep"
+  TLVWRAP="src/gttlvwrap"
+  TLVDUMP="src/gttlvdump"
+  TLVUNDUMP="src/gttlvundump"
+else
+  TLVGREP="gttlvgrep"
+  TLVWRAP="gttlvwrap"
+  TLVDUMP="gttlvdump"
+  TLVUNDUMP="gttlvundump"
+fi
 
+# Copy test suites to the tmp folder.
+cp -r test/test_suites/ test/tmp/test_suites/
+
+# Replace util names.
+sed -i -- "s|GTTLVGREP|$TLVGREP|g" test/tmp/test_suites/*.test
+sed -i -- "s|GTTLVWRAP|$TLVWRAP|g" test/tmp/test_suites/*.test
+sed -i -- "s|GTTLVDUMP|$TLVDUMP|g" test/tmp/test_suites/*.test
+sed -i -- "s|GTTLVUNDUMP|$TLVUNDUMP|g" test/tmp/test_suites/*.test
+
+# Gather all test suites.
+for f in test/tmp/test_suites/*.test; do
+  TEST_SUITES="$TEST_SUITES $f"
+done
+
+# Excecute automated tests.
+shelltest -c $TEST_SUITES -- -j1
+ 
 exit_code=$?
 
 # Cleanup.  
-rm -rf test/tmp 2> /dev/null
+#rm -rf test/tmp 2> /dev/null
 
 exit $exit_code

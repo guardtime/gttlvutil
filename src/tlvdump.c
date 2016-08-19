@@ -464,10 +464,9 @@ int main(int argc, char **argv) {
 #else
 	char buf[1024];
 
-	if(DIRECTORY_getMyPath(buf, sizeof(buf)) != GT_OK) {
+	if(DIRECTORY_getMyPath(buf, sizeof(buf), argv[0]) != GT_OK) {
 		fprintf(stderr, "Unable to get path to gttlvdump.\n");
 	}
-
 	setDescriptionFileDir(buf);
 #endif
 

@@ -22,26 +22,26 @@
 # Test user interface.
 
 # Help.
-gttlvundump -h
+GTTLVUNDUMP -h
 >>> /Usage:.*
 .*gttlvundump.*/
 >>>= 0
 
 # Check version.
-gttlvundump -v | grep -f VERSION
+GTTLVUNDUMP -v | grep -f VERSION
 >>> /^gttlvutil.[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/
 >>>= 0
 
 # Invalid parameter.
-gttlvundump -V
+GTTLVUNDUMP -V
 >>>
 >>>2
-gttlvundump: invalid option -- 'V'
+GTTLVUNDUMP: invalid option -- 'V'
 Unknown parameter, try -h.
 >>>= 1
 
 # Missing file.
-gttlvundump test/missing/file
+GTTLVUNDUMP test/missing/file
 >>>
 >>>2
 test/missing/file: Unable to open file.
@@ -50,14 +50,14 @@ test/missing/file: Unable to open file.
 ###############################################################################
 # Create KSI signature binary stream. Compare it to the original file.
 
-gttlvundump test/resources/sig/ok-sig-2014-08-01.1.ksig.txt | diff test/resources/sig/ok-sig-2014-08-01.1.ksig -
+GTTLVUNDUMP test/resources/sig/ok-sig-2014-08-01.1.ksig.txt | diff test/resources/sig/ok-sig-2014-08-01.1.ksig -
 >>>
 >>>= 0
 
 ###############################################################################
 # Create KSI signature binary file. Compare it to the original file.
 
-gttlvundump test/resources/sig/ok-sig-2014-08-01.1.ksig.txt > test/tmp/undump_ok-sig-2014-08-01.ksig
+GTTLVUNDUMP test/resources/sig/ok-sig-2014-08-01.1.ksig.txt > test/tmp/undump_ok-sig-2014-08-01.ksig
 >>>
 >>>= 0
 
@@ -68,7 +68,7 @@ diff test/tmp/undump_ok-sig-2014-08-01.ksig test/resources/sig/ok-sig-2014-08-01
 ###############################################################################
 # Create a server multi response binary stream. Compare it to the original file.
 
-gttlvundump test/resources/tlv/test2-extend_response-reqId_1.txt test/resources/tlv/test2-extend_response-reqId_2.txt | diff test/resources/tlv/test2-extend_response-multiple.tlv -
+GTTLVUNDUMP test/resources/tlv/test2-extend_response-reqId_1.txt test/resources/tlv/test2-extend_response-reqId_2.txt | diff test/resources/tlv/test2-extend_response-multiple.tlv -
 >>>
 >>>= 0
 

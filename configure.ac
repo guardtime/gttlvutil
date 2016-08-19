@@ -22,6 +22,16 @@ AC_TYPE_UINT8_T
 # Add more compile time warnings
 CFLAGS+=" -Wall"
 
+AC_ARG_ENABLE([local-data],
+[  --enable-local-data    Use local data.],
+[case "${enableval}" in
+  yes) local_data=true ;;
+  no)  local_data=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-local-data]) ;;
+esac],[local_data=false])
+AM_CONDITIONAL([PKG_DATA_DIR], [test x$local_data = xfalse])
+
+
 AC_CONFIG_FILES([GNUmakefile src/GNUmakefile])
 AC_OUTPUT
 
