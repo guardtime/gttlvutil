@@ -62,6 +62,6 @@ shelltest -c $TEST_SUITES -- -j1
 exit_code=$?
 
 # Cleanup.  
-#rm -rf test/tmp 2> /dev/null
+rm -rf test/tmp 2> /dev/null
 
 exit $exit_code

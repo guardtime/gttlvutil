@@ -4,7 +4,11 @@ TLVUTILs TEST README
  Additionally, the dependences and brief overview of files related to the
  tests will be described.
 
- Tests can be run with tlvutil package installed on the machine.
+ Tests can be run with tlvutil package installed on the machine, or within
+ the project directory. On unix platform executables are located in src and
+ on Windows in bin directory. If the platform specific binaries are available
+ then the tests are run with the corresponding binaries, otherwise the
+ installed binaries are used.
 
 
 DEPENDECES
