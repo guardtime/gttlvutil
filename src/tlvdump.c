@@ -484,7 +484,7 @@ int main(int argc, char **argv) {
 						"  gttlvdump [-h] [options] tlvfile\n"
 						"    -h       This help message.\n"
 						"    -H <num> Constant header length.\n"
-						"    -d <num> Max depth of nested elements.\n"
+						"    -d <num> Max depth of nested elements. Use 0 to disable filtering by level.\n"
 						"    -x       Display file offset for every TLV.\n"
 						"    -w       Wrap the output.\n"
 						"    -y       Show content length.\n"
