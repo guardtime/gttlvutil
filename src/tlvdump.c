@@ -505,7 +505,7 @@ int main(int argc, char **argv) {
 				char *endptr = NULL;
 				long int li = strtol(optarg, &endptr, 10);
 
-				res = GT_INVALID_FORMAT;
+				res = GT_INVALID_ARGUMENT;
 				if (errno == ERANGE) {
 					fprintf(stderr, "Option d is out of range.\n");
 					goto cleanup;
