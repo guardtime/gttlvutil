@@ -504,6 +504,8 @@ int main(int argc, char **argv) {
 			case 'd': {
 				char *endptr = NULL;
 				long int li = strtol(optarg, &endptr, 10);
+
+				res = GT_INVALID_FORMAT;
 				if (errno == ERANGE) {
 					fprintf(stderr, "Option d is out of range.\n");
 					goto cleanup;
@@ -514,6 +516,7 @@ int main(int argc, char **argv) {
 					fprintf(stderr, "Option d must be a decimal integer.\n");
 					goto cleanup;
 				}
+				res = GT_OK;
 				conf.max_depth = li;
 				break;
 			}
