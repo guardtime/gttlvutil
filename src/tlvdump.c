@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <time.h>
 #include <ctype.h>
+#include <errno.h>
 #include "fast_tlv.h"
 #include "desc.h"
 #include "common.h"
@@ -498,11 +499,22 @@ int main(int argc, char **argv) {
 				);
 				res = GT_OK;
 				goto cleanup;
-			case 'd':
-				conf.max_depth = atoi(optarg);
-				if (conf.max_depth == 0)
-					fprintf(stderr, "Warning: ignoring invalid value of option -d.\n");
+			case 'd': {
+				char *endptr = NULL;
+				long int li = strtol(optarg, &endptr, 10);
+				if (errno == ERANGE) {
+					fprintf(stderr, "Option d is out of range.\n");
+					goto cleanup;
+				} else if (li < 0) {
+					fprintf(stderr, "Option d cannot be negative.\n");
+					goto cleanup;
+				} else if (li == 0 && endptr != NULL && *endptr != '\0') {
+					fprintf(stderr, "Option d must be a decimal integer.\n");
+					goto cleanup;
+				}
+				conf.max_depth = li;
 				break;
+			}
 			case 'x':
 				conf.print_off = true;
 				break;
