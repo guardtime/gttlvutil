@@ -537,7 +537,7 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 					tlv->lineNr = lineNr;
 					return GT_OK; /* Indicate success. */
 				} else {
-					unsigned char buf[40];
+					char buf[40];
 					if (isprint(c)) {
 						sprintf(buf, "Unexpected character: %c.", (unsigned char)c);
 					} else {

@@ -20,7 +20,7 @@
 
 
 ###############################################################################
-# Convert extend response file which includes HMAC calculation function 
+# Convert extend response file which includes HMAC calculation function
 # (approach v1).
 
 # Verify the result by tlvgreping HMAC from resulting stream.
@@ -35,7 +35,7 @@ gttlvundump test/resources/hmac/extend_response-hmac_func_v1.txt | diff test/res
 >>>= 0
 
 ###############################################################################
-# Convert extend response file which includes HMAC calculation function 
+# Convert extend response file which includes HMAC calculation function
 # (approach v2).
 
 # Verify the result by tlvgreping HMAC from resulting stream.
@@ -50,7 +50,7 @@ gttlvundump test/resources/hmac/extend_response-hmac_func_v2.txt | diff test/res
 >>>= 0
 
 ###############################################################################
-# Convert extend response file with multiple responses which includes HMAC 
+# Convert extend response file with multiple responses which includes HMAC
 # calculation function (approach v2).
 
 gttlvundump test/resources/hmac/extend_response-multiple-hmac_func-mixed_ver.txt | gttlvgrep 300.1f
@@ -60,7 +60,7 @@ gttlvundump test/resources/hmac/extend_response-multiple-hmac_func-mixed_ver.txt
 >>>= 0
 
 ###############################################################################
-# Convert extend request file HMAC calculation function (approach v1). 
+# Convert extend request file HMAC calculation function (approach v1).
 # HMAC tag (1f) is not last.
 
 gttlvundump test/resources/hmac/extend_request-hmac_is_not_last-hmac_func_v1.txt | gttlvdump
@@ -75,7 +75,7 @@ gttlvundump test/resources/hmac/extend_request-hmac_is_not_last-hmac_func_v1.txt
 >>>= 0
 
 ###############################################################################
-# Convert extend request file HMAC calculation function (approach v2). 
+# Convert extend request file HMAC calculation function (approach v2).
 # HMAC tag (1f) is not last.
 
 # When using approach v2 HMAC should be the last, otherwise an error is triggered.
@@ -130,9 +130,8 @@ TLV[1f]: (L = 65) 05835719bdeefa3744af5a021c306efb2727fb2bd6c41c0af602db70402afa
 >>>= 0
 
 ###############################################################################
-# Test unsupported hash algorithm (SHA2-224). 
+# Test unsupported hash algorithm (SHA2-224).
 
-# Algorithm SHA2-512. KSI id=05. Digest lenght 512b.
 echo "TLV[1f]:\$HMAC(v2|sha224|anon)" | gttlvundump
 >>>
 >>>2 /.*Unable to get hash algorithm id./
@@ -160,7 +159,7 @@ echo "TLV[1f]:\$HMAC(v2|sha224|anon)" | gttlvundump
 >>>= 8
 
 ###############################################################################
-# Unssupported function script.
+# Unsupported function script.
 
 (cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$DUMMY(param)") | gttlvundump
 >>>2 /.*Unknown function script./
