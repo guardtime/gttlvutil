@@ -421,7 +421,7 @@ static int read_desc_dir(struct desc_st *desc, const char *dir_name) {
 
 	if (DIRECTORY_open(dir_name, &dir) != DIR_OK) {
 		fprintf(stderr, "%s:Unable to access description directory.\n", dir_name);
-		res = GT_OK;
+		res = GT_IO_ERROR;
 		goto cleanup;
 	}
 
@@ -568,6 +568,7 @@ int main(int argc, char **argv) {
 	/* If the description files have not been found in package directory, check in the executable dir. */
 	if (!desc_free) {
 		char buf[1024];
+
 
 		if(DIRECTORY_getMyPath(buf, sizeof(buf), argv[0]) != GT_OK) {
 			fprintf(stderr, "Unable to get path to gttlvdump.\n");
