@@ -459,17 +459,6 @@ int main(int argc, char **argv) {
 	struct conf_st conf;
 	bool desc_free = false;
 
-#ifdef DATA_DIR
-	setDescriptionFileDir(DATA_DIR);
-#else
-	char buf[1024];
-
-	if(DIRECTORY_getMyPath(buf, sizeof(buf), argv[0]) != GT_OK) {
-		fprintf(stderr, "Unable to get path to gttlvdump.\n");
-	}
-	setDescriptionFileDir(buf);
-#endif
-
 	memset(&conf, 0, sizeof(conf));
 
 	while ((c = getopt(argc, argv, "hH:d:xwyzaspPe:v")) != -1) {
@@ -564,12 +553,34 @@ int main(int argc, char **argv) {
 		}
 	}
 
+#ifdef DATA_DIR
+	setDescriptionFileDir(DATA_DIR);
+
 	/* Initialize the description structure. */
 	res = read_desc_dir(&conf.desc, getDescriptionFileDir());
 	if (res != GT_OK) {
 		fprintf(stderr, "Unable to read description directory '%s'.\n", getDescriptionFileDir());
 	} else {
 		desc_free = true;
+	}
+#endif
+
+	/* If the description files have not been found in package directory, check in the executable dir. */
+	if (!desc_free) {
+		char buf[1024];
+
+		if(DIRECTORY_getMyPath(buf, sizeof(buf), argv[0]) != GT_OK) {
+			fprintf(stderr, "Unable to get path to gttlvdump.\n");
+		}
+		setDescriptionFileDir(buf);
+
+		/* Initialize the description structure. */
+		res = read_desc_dir(&conf.desc, getDescriptionFileDir());
+		if (res != GT_OK) {
+			fprintf(stderr, "Unable to read description directory '%s'.\n", getDescriptionFileDir());
+		} else {
+			desc_free = true;
+		}
 	}
 
 	/* If there are no input files, read from the standard in. */
