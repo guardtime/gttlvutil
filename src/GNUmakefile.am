@@ -1,9 +1,11 @@
 AM_CFLAGS=-g -O0
 
-gttlvdumpdir=$(pkgdatadir)
-if PKG_DATA_DIR
-  AM_CFLAGS+= -DDATA_DIR="\"$(gttlvdumpdir)\""
+if USE_PKG_DATA_DIR
+  gttlvdumpdir=$(@DESC_DATA_DIR@)
+else
+  gttlvdumpdir=$(DESC_DATA_DIR)
 endif
+AM_CFLAGS+= -DDATA_DIR="\"$(gttlvdumpdir)\""
 
 man_MANS = \
 ../doc/gttlvdump.1\

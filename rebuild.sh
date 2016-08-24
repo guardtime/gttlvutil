@@ -21,14 +21,12 @@
 
 PRF=gttlvutil-$(tr -d [:space:] < VERSION)
 
-conf_args="--enable-local-data"
-
 rm -f ${PRF}*.tar.gz && \
 mkdir -p config m4 && \
 echo Running autoreconf... && \
 autoreconf -if && \
 echo Running configure script... && \
-./configure $conf_args && \
+./configure $* && \
 echo Running make... && \
 make clean && \
 make \
