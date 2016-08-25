@@ -116,6 +116,10 @@ Hash - printed as <\fIalg\fR>:<\fIhash in hex\fR> where <\fIalg\fR> is hash algo
 .RE
 .\"
 .TP
+\fB-t\fR
+Print time in local timezone. Is valid with -p.
+.\"
+.TP
 \fB-e \fIenc\fR
 Encoding of binary payload. Available encodings: 'hex' (default), 'base64'
 .\"
@@ -147,7 +151,7 @@ TLV utility package version.
 .LP
 .RS 4
 .HP 4
-\fBgttlvdump -pP \fIpubfile\fR
+\fBgttlvdump -pP \fIsigfile\fR
 .RE
 .\"
 .TP 2
@@ -156,7 +160,7 @@ TLV utility package version.
 .LP
 .RS 4
 .HP 4
-\fBgttlvdump -d \fI2 tlv-file\fR
+\fBgttlvdump -d \fI2 tlvfile\fR
 .RE
 .LP
 .\"
