@@ -32,6 +32,7 @@ struct conf_st {
 	bool type_strict;
 	bool pretty_val;
 	bool pretty_key;
+	bool timezone;
 	struct desc_st desc;
 	enum out_enc_en out_enc;
 };
@@ -259,13 +260,17 @@ static void print_time(unsigned char *buf, size_t len, int prefix_len, int type,
 		if (seconds >= 0xffffffff) {
 			fprintf(stderr, "Invalid time value.\n");
 		} else {
-			tm_info = gmtime(&seconds);
+			tm_info = (conf->timezone) ? localtime(&seconds) : gmtime(&seconds);
 			len = strftime(tmp, sizeof(tmp), "%Y-%m-%d %H:%M:%S", tm_info);
 			if (fract[0] != '\0') {
 				len += snprintf(tmp + len, sizeof(tmp) - len, ".%s", fract);
 			}
 
-			strftime(tmp + len, sizeof(tmp) - len, " %Z", tm_info);
+			if (conf->timezone) {
+				strftime(tmp + len, sizeof(tmp) - len, " %Z", tm_info);
+			} else {
+				snprintf(tmp + len, sizeof(tmp) - len, " GMT+00");
+			}
 		}
 		printf("(%llu) %s\n", (unsigned long long)t, tmp);
 	}
@@ -474,7 +479,7 @@ int main(int argc, char **argv) {
 
 	memset(&conf, 0, sizeof(conf));
 
-	while ((c = getopt(argc, argv, "hH:d:xwyzaspPe:v")) != -1) {
+	while ((c = getopt(argc, argv, "hH:d:xwyzaspPte:v")) != -1) {
 		switch(c) {
 			case 'H':
 				conf.hdr_len = atoi(optarg);
@@ -495,6 +500,7 @@ int main(int argc, char **argv) {
 						"    -s       Strict types - do not parse TLV's with unknown types.\n"
 						"    -p       Pretty print values.\n"
 						"    -P       Pretty print keys.\n"
+						"    -t       Print timezone according to OS setting (valid with -p).\n"
 						"    -e <enc> Encoding of binary payload. Available encodings: 'hex' (default),\n"
 						"             'base64'.\n"
 						"    -v       TLV utility package version.\n"
@@ -544,6 +550,9 @@ int main(int argc, char **argv) {
 			case 'P':
 				conf.pretty_key = true;
 				break;
+			case 't':
+				conf.timezone = true;
+				break;
 			case 'e': {
 				struct {
 					const char *alias;
@@ -570,6 +579,7 @@ int main(int argc, char **argv) {
 				}
 				break;
 			}
+
 			case 'v':
 				printf("%s\n", TLV_UTIL_VERSION_STRING);
 				res = GT_OK;

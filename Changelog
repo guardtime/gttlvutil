@@ -1,8 +1,6 @@
-<<<<<<< HEAD
+* IMPROVEMENT: Default time format is set to GMT+00. To express time in local timezone use -t option.
 * IMPROVEMENT: Added automated tests.
-=======
 * FEATURE: Added HMAC calculation handling to gttlvundump.
->>>>>>> develop
 * IMPROVEMENT: Help format changed.
 * BUGFIX: Typos fixed.
 * IMPROVEMENT: Man pages gttlvdump(1), gttlvgrep(1), gttlvundump(1), gttlvwrap(1), tlv(5) and tlv-desc(5) added to the project.
