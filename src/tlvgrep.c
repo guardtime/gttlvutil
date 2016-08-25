@@ -57,8 +57,6 @@ void printHelp(FILE *f) {
 			" -n       Print TLV path. Has no effect with -r.\n"
 			" -r       Print raw TLV (will override -n and -i).\n"
 			" -i       Print TLV indexes in path.\n"
-			" -T tag   TLV tag hex value representation, which data will be truncated to the lenght defined by -L\n"
-			" -L num   Set lenght of data bytes to be printed (valid with -T).\n"
 			" -v       TLV utility package version.\n"
 			"\n"
 			"Examples:\n"
@@ -105,12 +103,6 @@ int main(int argc, char **argv) {
 				break;
 			case 'i':
 				conf.print_path_index = true;
-				break;
-			case 'T':
-				conf.trunc_tlv_tag = strtol(optarg, NULL, 16);
-				break;
-			case 'L':
-				conf.trunc_len = atoi(optarg);
 				break;
 
 			case 'h':

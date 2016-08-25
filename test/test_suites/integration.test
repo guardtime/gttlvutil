@@ -216,4 +216,30 @@ gttlvundump test/resources/tlv/test2-extend_response-reqId_1.txt test/resources/
 >>>= 0
 
 ###############################################################################
+# TlvDump KSI signature using -e flag with '64' to display in base64.
+# TlvGrep calendar authentication record publication data publication hash and 
+# convert the result to base64. Save the result to file. 
+# The file content is used as pattern for searching the pablication hash in 
+# dumped stream.
 
+gttlvgrep -r 800.805.10.04 test/resources/sig/ok-sig-2014-08-01.1.ksig | base64 > test/tmp/grep_base64_pattern.txt
+>>>
+>>>= 0
+
+gttlvdump -e 64 test/resources/sig/ok-sig-2014-08-01.1.ksig | grep -of test/tmp/grep_base64_pattern.txt
+>>>
+AeT8CFPKyzyIjuTS+EMIOssagi5gQDpq9xZ/cNDKju5h
+>>>= 0
+
+###############################################################################
+# TlvDump KSI signature using -s flag for not parsing unknown elements.
+# Build a tree with dummy elements:
+# TLV[0123]:
+#  TLV[01]: 717765727479
+
+(echo -n "qwerty" | gttlvwrap -t 01) | gttlvwrap -t 123 | gttlvdump -s
+>>>
+TLV[0123]:0106717765727479
+>>>= 0
+
+###############################################################################

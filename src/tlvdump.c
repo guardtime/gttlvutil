@@ -73,7 +73,7 @@ static uint64_t get_uint64(unsigned char *buf, size_t len) {
 	return val;
 }
 
-#define wrap_line(p) if (conf->wrap && line_len > 0 && line_len % 64 == 0 ) { printf("\n%*s", prefix_len, ""); len = 0; } line_len += p
+#define wrap_line(p) if (conf->wrap && line_len > 0 && line_len % 64 == 0 ) { printf("\n%*s", prefix_len, ""); line_len = 0; } line_len += p
 static void print_hex(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
 	size_t i;
 	size_t line_len = 0;
