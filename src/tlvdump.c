@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <time.h>
 #include <ctype.h>
+#include <errno.h>
 #include "fast_tlv.h"
 #include "desc.h"
 #include "common.h"
@@ -72,7 +73,7 @@ static uint64_t get_uint64(unsigned char *buf, size_t len) {
 	return val;
 }
 
-#define wrap_line(p) if (conf->wrap && line_len > 0 && line_len % 64 == 0 ) { printf("\n%*s", prefix_len, ""); len = 0; } line_len += p
+#define wrap_line(p) if (conf->wrap && line_len > 0 && line_len % 64 == 0 ) { printf("\n%*s", prefix_len, ""); line_len = 0; } line_len += p
 static void print_hex(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
 	size_t i;
 	size_t line_len = 0;
@@ -473,7 +474,7 @@ int main(int argc, char **argv) {
 						"Options:\n"
 						"    -h       This help message.\n"
 						"    -H <num> Constant header length.\n"
-						"    -d <num> Max depth of nested elements.\n"
+						"    -d <num> Max depth of nested elements. Use 0 to disable filtering by level.\n"
 						"    -x       Display file offset for every TLV.\n"
 						"    -w       Wrap the output.\n"
 						"    -y       Show content length.\n"
@@ -488,9 +489,25 @@ int main(int argc, char **argv) {
 						"\n");
 				res = GT_OK;
 				goto cleanup;
-			case 'd':
-				conf.max_depth = atoi(optarg);
+			case 'd': {
+				char *endptr = NULL;
+				long int li = strtol(optarg, &endptr, 10);
+
+				res = GT_INVALID_ARGUMENT;
+				if (errno == ERANGE) {
+					fprintf(stderr, "Option d is out of range.\n");
+					goto cleanup;
+				} else if (li < 0) {
+					fprintf(stderr, "Option d cannot be negative.\n");
+					goto cleanup;
+				} else if (li == 0 && endptr != NULL && *endptr != '\0') {
+					fprintf(stderr, "Option d must be a decimal integer.\n");
+					goto cleanup;
+				}
+				res = GT_OK;
+				conf.max_depth = li;
 				break;
+			}
 			case 'x':
 				conf.print_off = true;
 				break;
@@ -587,7 +604,7 @@ int main(int argc, char **argv) {
 	/* If there are no input files, read from the standard in. */
 	if (optind >= argc) {
 #ifdef _WIN32
-		_setmode(_fileno(stdin), _O_BINARY);
+		_setmode(_fileno(stdin), _O_TEXT);
 #endif
 		res = read_from(stdin, &conf);
 		if (res != GT_OK) goto cleanup;

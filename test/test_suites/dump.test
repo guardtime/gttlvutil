@@ -59,6 +59,32 @@ GTTLVDUMP test/resources/sig/ok-sig-2014-08-01.1.ksig
 
 ###############################################################################
 # Tlvdump KSI signature.
+# Using '-x' option for displaying file offset for every TLV.
+
+GTTLVDUMP -x test/resources/sig/ok-sig-2014-08-01.1.ksig
+>>> /   0:TLV.0800.*
+   4.  TLV.0805.*
+   8.    TLV.10,F.*
+  10.      TLV.02.*53dc2a00*/
+>>>= 0
+
+###############################################################################
+# Tlvdump KSI signature.
+# Using '-w' option for displaying file offset for every TLV.
+
+GTTLVDUMP -w test/resources/sig/ok-sig-2014-08-01.1.ksig
+>>> /.*TLV.0002..09c2d248.*
+.*dee03a88.*
+.*d761dfb4.*
+.*668862c1.*
+.*031c6270.*
+.*91471b59.*
+.*a1f82cda.*
+.*e655e42a.*/
+>>>= 0
+
+###############################################################################
+# Tlvdump KSI signature.
 # Using '-y' option for showing content lenght.
 
 GTTLVDUMP -y test/resources/sig/ok-sig-2014-08-01.1.ksig

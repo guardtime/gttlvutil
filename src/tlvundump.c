@@ -20,7 +20,8 @@
 #	define pclose _pclose
 #endif
 
-#define line_error(err, s, lineNr) { fprintf(stderr, "%s:%llu - %s\n", fileName, (unsigned long long)(lineNr), (s)); return err; }
+#define error_log(s, lineNr) { fprintf(stderr, "%s:%llu - %s\n", fileName, (unsigned long long)(lineNr), (s)); }
+#define line_error(err, s, lineNr) { error_log(s, lineNr); return err; }
 #define error(err, s) line_error(err, (s), lineNr)
 #define IS_SPACE(c) ((c) == ' ' || (c) == '\t')
 #define IS_DIGIT(c) ((c) >= '0' && (c) <= '9')
@@ -180,13 +181,26 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 		goto cleanup;
 	}
 
+	/* Verify that HMAC is PDU child in first level. */
+	if (stack[hmacCalcInfo.stack_pos].level != 1) {
+		res = GT_FORMAT_ERROR;
+		error_log("HMAC TLV is not first level PDU child.", hmacCalcInfo.stack_pos+1);
+		goto cleanup;
+	}
+
 	/* Serialize current stack. */
 	res = serializeStack(stack, stack_len, raw.buf, sizeof(raw.buf), &raw.len);
-	if (res != GT_OK) goto cleanup;
+	if (res != GT_OK) {
+		error_log("Failed to generate raw data.", hmacCalcInfo.stack_pos+1);
+		goto cleanup;
+	}
 
 
 	res = GT_Hash_getAlgorithmId(hmacCalcInfo.algId, &algId);
-	if (res != GT_OK) goto cleanup;
+	if (res != GT_OK) {
+		error_log("Failed to get hash algorith id.", hmacCalcInfo.stack_pos+1);
+		goto cleanup;
+	}
 
 	switch (hmacCalcInfo.ver) {
 		case 2:
@@ -194,6 +208,7 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 				/* HMAC in v2 approach should be last in PDU. */
 				if (!isLastTlv) {
 					res = GT_FORMAT_ERROR;
+					error_log("HMAC TLV is not last in PDU.", hmacCalcInfo.stack_pos+1);
 					goto cleanup;
 				}
 
@@ -221,10 +236,22 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 				conf.print_tlv_hdr = true;
 
 				res = GT_FTLV_memRead(raw_buf_ptr, raw.len, &t);
-				if (res != GT_OK) goto cleanup;
+				if (res != GT_OK) {
+					error_log("Failed to init raw TLV.", hmacCalcInfo.stack_pos+1);
+					goto cleanup;
+				}
 
 				res = GT_grepTlv(&conf, hmacCalcInfo.pattern, NULL, idx, raw_buf_ptr, &t, buf, &calc_len);
-				if (res != GT_OK) goto cleanup;
+				if (res != GT_OK) {
+					error_log("Failed to grep pattern.", hmacCalcInfo.stack_pos+1);
+					goto cleanup;
+				}
+
+				if (calc_len == 0) {
+					error_log("Pattern not found.", hmacCalcInfo.stack_pos+1);
+					res = GT_FORMAT_ERROR;
+					goto cleanup;
+				}
 
 				res = GT_Hmac_Calculate(algId, hmacCalcInfo.key, strlen(hmacCalcInfo.key), buf, calc_len, tmp, &tmp_len);
 				if (res != GT_OK) goto cleanup;
@@ -532,11 +559,18 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 
 			case ST_END:
 				if (IS_SPACE(c)) break;
+				if (c == '\r') break;
 				if (c == '\n' || c == EOF) {
 					tlv->lineNr = lineNr;
 					return GT_OK; /* Indicate success. */
 				} else {
-					error(GT_PARSER_ERROR, "Unexpected character.");
+					char buf[40];
+					if (isprint(c)) {
+						sprintf(buf, "Unexpected character: %c.", (unsigned char)c);
+					} else {
+						sprintf(buf, "Unexpected character (hex value): %02x.", (unsigned char)c);
+					}
+					error(GT_PARSER_ERROR, buf);
 				}
 				break;
 			default:
@@ -645,7 +679,7 @@ static int runPostponedTasks(TlvLine *stack, size_t stackLen) {
 		TlvLine *tlv = &stack[hmacCalcInfo.stack_pos];
 
 		res = calculateHmac(hmacRaw, &hmacLen, stack, stackLen, ((stackLen-1) == hmacCalcInfo.stack_pos));
-		if (res != GT_OK) error(res, "Failed to calculate HMAC.");
+		if (res != GT_OK) line_error(res, "Failed to calculate HMAC.", hmacCalcInfo.stack_pos+1);
 		memcpy(&tlv->dat[tlv->dat_len - hmacLen], hmacRaw, hmacLen);
 		/* Invalidate info. */
 		hmacCalcInfo.isValid = 0;

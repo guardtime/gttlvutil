@@ -73,5 +73,75 @@ GTTLVUNDUMP test/resources/tlv/test2-extend_response-reqId_1.txt test/resources/
 >>>= 0
 
 ###############################################################################
+# Try to convert dummy data.
+
+echo "T1234567890" | gttlvundump
+>>>
+>>>2 
+<stdin>:1 - Expected 'L'.
+>>>= 8
+
+echo "TL1234567890" | gttlvundump
+>>>
+>>>2 
+<stdin>:1 - Expected 'V'.
+>>>= 8
+
+echo "TLV01234567890" | gttlvundump
+>>>
+>>>2 
+<stdin>:1 - Expected '['.
+>>>= 8
+
+echo "TLV1234567890" | gttlvundump
+>>>
+>>>2 
+<stdin>:1 - Expected '6'.
+>>>= 8
+
+echo "TLV16234567890" | gttlvundump
+>>>
+>>>2 
+<stdin>:1 - Expected '['.
+>>>= 8
+
+echo "TLV[q1234567890" | gttlvundump
+>>>
+>>>2 
+<stdin>:1 - Expected hex tag value.
+>>>= 8
+
+echo "TLV[1234567890" | gttlvundump
+>>>
+>>>2 
+<stdin>:1 - TLV tag value may not exceed 0x1fff.
+>>>= 8
+
+echo "TLV[1 234567890" | gttlvundump
+>>>
+>>>2 
+<stdin>:1 - Expected ']'.
+>>>= 8
+
+echo "TLV[1]234567890" | gttlvundump
+>>>
+>>>2 
+<stdin>:1 - Expected ':'.
+>>>= 8
+
+echo "TLV[1]:q234567890" | gttlvundump
+>>>
+>>>2 
+<stdin>:1 - Unexpected character: q.
+>>>= 8
+
+echo "TLV[1]:2345q67890" | gttlvundump
+>>>
+>>>2 
+<stdin>:1 - Unexpected character: q.
+>>>= 8
+
+###############################################################################
+
 
 
