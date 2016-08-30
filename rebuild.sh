@@ -21,12 +21,18 @@
 
 PRF=gttlvutil-$(tr -d [:space:] < VERSION)
 
+if [ $# -eq 0 ]; then
+  conf_args="--with-data-dir=-"
+else
+  conf_args=$* 
+fi
+
 rm -f ${PRF}*.tar.gz && \
 mkdir -p config m4 && \
 echo Running autoreconf... && \
 autoreconf -if && \
 echo Running configure script... && \
-./configure $* && \
+./configure $conf_args && \
 echo Running make... && \
 make clean && \
 make \
