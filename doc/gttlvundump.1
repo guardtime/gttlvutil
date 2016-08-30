@@ -18,6 +18,33 @@
 gttlvundump is a tool that constructs a binary TLV file from gttlvdump style input. Input is read from \fIstdin \fRif input file is not specified. When multiple input files are specified the result is concatenated starting from the first (left-most) file. The output is dumped to the \fIstdout\fR.
 .LP
 See \fBgttlvdump\fR(1) to learn about the expected format. It must be noted that only basic output format of \fBgttlvdump\fR is accepted as input.
+.LP
+It is possible the use functions in tlv files:
+.br
+- \fBHMAC('version'|'algorithm'|'key'|'pattern')\fR 
+for calculating HMAC value on a PDU.
+.RS 2
+.\"
+.TP
+\fBversion\fR
+PDU HMAC calculation version. Valid versions:
+.br
+\fIv1\fR - computation is performed over the concatenation of header and payload TLVs.
+.br
+\fIv2\fR - computation is performed over the TLV header of the PDU, the complete header TLV, complete payload TLVs in the order in which they appear within the PDU, and the TLV header and the hash function ID of the MAC element itself.
+.\"
+.TP
+\fBalgorithm\fR
+Hash algorithm to be used for calculation. Supported algoritms: \fIsha1\fR, \fIsha256\fR, \fIrmd160\fR, \fIsha384\fR, \fIsha512\fR.
+.\"
+.TP
+\fBkey\fR
+Secret cryptographic key.
+.\"
+.TP
+\fBpattern\fR
+TLV pattern describing TLVs to be included into calculation (valid with \fIv1\fR). Pattern format as defined by gttlvgrep.
+.RE
 .\"
 .\"
 .SH OPTIONS
@@ -32,7 +59,7 @@ TLV utility package version.
 .\"
 .SH EXAMPLES
 .\"
-.TP 2
+.TP 3
 \fB1
 \fRGenerate a TLV file from the given input file and dump the result with gttlvdump:
 .LP
@@ -48,7 +75,7 @@ TLV[1000]:
 \fBgttlvundump \fItest.tlv \fR| \fBgttlvdump\fR
 .RE
 .\"
-.TP 2
+.TP 3
 \fB2
 \fRTo concatenate two TLV's described in a.tlv and b.tlv and dump the result with gttlvdump: 
 .LP
@@ -56,8 +83,31 @@ TLV[1000]:
 .HP 4
 \fBgttlvundump \fIa.tlv \fIb.tlv \fR| \fBgttlvdump\fR
 .RE
-
-
+.TP 3
+\fB3
+\fRTo calculate HMAC value on a PDU:
+.LP
+.RS 4
+1. Calculation approach \fIv1\fR.
+  TLV[0300]:
+    TLV[01]:
+      TLV[01]:616E6F6E00
+    TLV[0301]:
+      TLV[01]:01
+      TLV[02]:54D9D6E7
+      TLV[03]:54D9D6E7
+    TLV[1f]:$HMAC(v1|sha256|anon|300.01,301)
+.br
+2. Calculation approach \fIv2\fR.
+  TLV[0300]:
+    TLV[01]:
+      TLV[01]:616E6F6E00
+    TLV[0301]:
+      TLV[01]:01
+      TLV[02]:54D9D6E7
+      TLV[03]:54D9D6E7
+    TLV[1f]:$HMAC(v2|sha256|anon)
+.RE
 .LP
 .\"
 .SH AUTHOR
