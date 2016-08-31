@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
 					res = GT_INVALID_FORMAT;
 					goto cleanup;
 				}
-				if (type < 0 || type > 0x1fff) {
+				if (type <= 0 || type > 0x1fff) {
 					fprintf(stderr, "Tag value out of range.");
 					res = GT_INVALID_FORMAT;
 					goto cleanup;
