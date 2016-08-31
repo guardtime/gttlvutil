@@ -1,4 +1,5 @@
 # gttlvutil
+
 Guardtime Keyless Signature Infrastructure (KSI) is an industrial scale blockchain platform that cryptographically 
 ensures data integrity and proves time of existence. Its keyless signatures, based on hash chains, link data to global 
 calendar blockchain. The checkpoints of the blockchain, published in newspapers and electronic media, enable long term 
@@ -6,34 +7,62 @@ integrity of any digital asset without the need to trust any system. There are m
 example is signing of any type of logs - system logs, financial transactions, call records, etc. For more, 
 see [https://guardtime.com](https://guardtime.com).
 
-The gttlvutil is a collection of utils for working with the KSI type-length-value (TLV) encoded binary data. This encoding is used
-throughout the KSI infrastructure - for KSI signature, publications file and network communication.
+The gttlvutil is a collection of utils for working with the KSI type-length-value (TLV) encoded binary data. This 
+encoding is used throughout the KSI infrastructure - for KSI signature, publications file and network communication.
 
 The following utils are provided: 
 * gttlvdump - converts TLV-encoded binary data into human readable text format 
 * gttlvundump - converts data in human readable text format into TLV-encoded binary data
 * gttlvwrap - wraps given data into TLV data structure
-* gttlvgrep - searches TLV type patterns in TLV binary stream
+* gttlvgrep - extracts data, that is described via TLV type pattern, from TLV binary stream
+
+
 
 
 ## Installation ##
+
+### Latest release from Guardtime repository ###
+
+In order to install the gttlvutil CentOS/RHEL packages directly from the Guardtime public repository, download and 
+save the repository configuration to the /etc/yum.repos.d/ folder:
+
+```
+cd /etc/yum.repos.d
+
+# In case of RHEL/CentOS 6
+sudo curl -O http://download.guardtime.com/ksi/configuration/guardtime.el6.repo
+
+# In case of RHEL/CentOS 7
+sudo curl -O http://download.guardtime.com/ksi/configuration/guardtime.el7.repo
+
+sudo yum install gttlvutil
+```
+
+### From source code ###
+
+If the latest version is needed, or the package is not available for the
+platform, check out source code from Github and build it using gcc or VS.
 
 To build the gttlvutil, a cryptography provider has to be installed in the system. The following providers are supported:
 * OpenSSL (recommended)
 * Windows native CryptoAPI
 
-For building under Windows you need the Windows SDK.
+Use rebuild-rpm.sh script to build an RPM installation package on CentOS/RHEL. 
 
-If you do not want to build your own binaries, you can get the latest stable release from the Guardtime repository.
-To set up the repository, save the appropriate repo file in your repositories directory (e.g. `/etc/yum.repos.d/`):
-* [http://download.guardtime.com/ksi/configuration/guardtime.el6.repo](http://download.guardtime.com/ksi/configuration/guardtime.el6.repo)
-* [http://download.guardtime.com/ksi/configuration/guardtime.el7.repo](http://download.guardtime.com/ksi/configuration/guardtime.el7.repo)
+See `WinBuild.txt` to read how to build KSI tool on Windows. 
+
+### Automated tests ###
+
+See `test/README.md` to learn how to run gttlvutil tests on linux.
+
+
+
 
 ## Usage ##
 
 ### gttlvdump ###
 
-* Convert KSI signature to human readble text format
+* Convert KSI signature to human readable text format
 ```
 gttlvdump signature.ksig
 ```
@@ -59,18 +88,25 @@ gttlvwrap -t 0123 -i test.file
 
 ### gttlvgrep ###
 
-* Find publication time from calendar authentication record in the given KSI signature
+* Extract publication time from calendar authentication record in the given KSI signature
 ```
 gttlvgrep 800.805.10.02 signature.ksig
 ```
 
-Detailed usage information is described in individual tool help ('-h') and in man pages: gttlvdump(1), gttlvgrep(1), gttlvwrap(1), tlv(5), tlv-desc(5).
+Detailed usage information is described in individual tool help ('-h') and in man pages: gttlvdump(1), gttlvgrep(1), 
+gttlvwrap(1), tlv-desc(5).
 
 For more information about TLV encoding see also man page: tlv(5)
+
+
+
 
 ## License ##
 
 See LICENSE file.
+
+
+
 
 ## Dependencies ##
 
@@ -78,6 +114,8 @@ See LICENSE file.
 | :---              | :---                              | :---         | :---                           |:---   |
 | OpenSSL           | Latest stable for target platform | BSD          | http://www.openssl.org/        | This product includes cryptographic software written by Eric Young (eay@cryptsoft.com).  This product includes software written by Tim Hudson (tjh@cryptsoft.com). |
 | Windows CryptoAPI |                                   |              |                                | Can be used as alternative to OpenSSL. Build time option. |
+
+
 
 
 ## Compatibility ##

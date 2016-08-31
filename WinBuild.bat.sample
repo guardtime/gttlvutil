@@ -20,16 +20,30 @@ GOTO copyrightend
 
 :copyrightend
 
-CALL "%ProgramW6432%\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64
+rem To configure the build environment for 64-bit build setenv with /x64 is
+rem called. See WinBuild.txt for more information how to choose the right
+rem build environment.
 
-ECHO ************ Rebuilding project (Win64) ************
+call "%ProgramW6432%\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64
 
-SET OPENSSL_DIR=C:\Work\openssl-0.9.8g-win64
+rem To avoid the variables to leak out of the script setlocal is called.
+setlocal
 
-ECHO Cleaning up . . .
+
+rem Specify OpenSSL library type.
+
+set lib_type=lib
+set rtl=MTd
+
+rem In this example gttlvutils are built with OpenSSL library. 
+
+set hash_provider=CRYPTOAPI
+set openssl_dir=C:\path\to\openssl
+
+rem Rebuild the gttlvutils.
+
 nmake clean
+nmake /S RTL=%rtl% HASH_PROVIDER=%hash_provider% OPENSSL_DIR=%openssl_dir% LIB_TYPE=%lib_type% 
 
-ECHO Building . . .
-nmake INSTALL_MACHINE=64 HASH_PROVIDER=OPENSSL
-
+endlocal
 pause
