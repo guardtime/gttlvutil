@@ -1,17 +1,17 @@
 # gttlvutil
 
-Guardtime Keyless Signature Infrastructure (KSI) is an industrial scale blockchain platform that cryptographically 
-ensures data integrity and proves time of existence. Its keyless signatures, based on hash chains, link data to global 
-calendar blockchain. The checkpoints of the blockchain, published in newspapers and electronic media, enable long term 
-integrity of any digital asset without the need to trust any system. There are many applications for KSI, a classical 
-example is signing of any type of logs - system logs, financial transactions, call records, etc. For more, 
+Guardtime Keyless Signature Infrastructure (KSI) is an industrial scale blockchain platform that cryptographically
+ensures data integrity and proves time of existence. Its keyless signatures, based on hash chains, link data to global
+calendar blockchain. The checkpoints of the blockchain, published in newspapers and electronic media, enable long term
+integrity of any digital asset without the need to trust any system. There are many applications for KSI, a classical
+example is signing of any type of logs - system logs, financial transactions, call records, etc. For more,
 see [https://guardtime.com](https://guardtime.com).
 
-The gttlvutil is a collection of utils for working with the KSI type-length-value (TLV) encoded binary data. This 
+The gttlvutil is a collection of utils for working with the KSI type-length-value (TLV) encoded binary data. This
 encoding is used throughout the KSI infrastructure - for KSI signature, publications file and network communication.
 
-The following utils are provided: 
-* gttlvdump - converts TLV-encoded binary data into human readable text format 
+The following utils are provided:
+* gttlvdump - converts TLV-encoded binary data into human readable text format
 * gttlvundump - converts data in human readable text format into TLV-encoded binary data
 * gttlvwrap - wraps given data into TLV data structure
 * gttlvgrep - extracts data, that is described via TLV type pattern, from TLV binary stream
@@ -23,7 +23,7 @@ The following utils are provided:
 
 ### Latest release from Guardtime repository ###
 
-In order to install the gttlvutil CentOS/RHEL packages directly from the Guardtime public repository, download and 
+In order to install the gttlvutil CentOS/RHEL packages directly from the Guardtime public repository, download and
 save the repository configuration to the /etc/yum.repos.d/ folder:
 
 ```
@@ -47,9 +47,9 @@ To build the gttlvutil, a cryptography provider has to be installed in the syste
 * OpenSSL (recommended)
 * Windows native CryptoAPI
 
-Use rebuild-rpm.sh script to build an RPM installation package on CentOS/RHEL. 
+Use rebuild-rpm.sh script to build an RPM installation package on CentOS/RHEL.
 
-See `WinBuild.txt` to read how to build KSI tool on Windows. 
+See `WinBuild.txt` to read how to build KSI tool on Windows.
 
 ### Automated tests ###
 
@@ -93,7 +93,7 @@ gttlvwrap -t 0123 -i test.file
 gttlvgrep 800.805.10.02 signature.ksig
 ```
 
-Detailed usage information is described in individual tool help ('-h') and in man pages: gttlvdump(1), gttlvgrep(1), 
+Detailed usage information is described in individual tool help ('-h') and in man pages: gttlvdump(1), gttlvgrep(1),
 gttlvwrap(1), tlv-desc(5).
 
 For more information about TLV encoding see also man page: tlv(5)
@@ -121,7 +121,7 @@ See LICENSE file.
 ## Compatibility ##
 
 | OS / Platform                       | Compatibility                                |
-| :---                                | :---                                         | 
+| :---                                | :---                                         |
 | RHEL 6 and 7, x86_64 architecture   | Fully compatible and tested                  |
 | CentOS 6 and 7, x86_64 architecture | Fully compatible and tested                  |
 | Debian                              | Compatible but not tested on a regular basis |
