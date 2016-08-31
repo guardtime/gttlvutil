@@ -63,34 +63,39 @@ See `test/README.md` to learn how to run gttlvutil tests on linux.
 ### gttlvdump ###
 
 * Convert KSI signature to human readable text format
+
 ```
-gttlvdump signature.ksig
+  gttlvdump signature.ksig
 ```
 
 * Convert publications file to human readable text format
+
 ```
-gttlvdump -H 8 publicationsfile.bin
+  gttlvdump -H 8 publicationsfile.bin
 ```
 
 ### gttlvundump ###
 
 * Convert KSI signature in human readable text format to binary TLV
+
 ```
-gttlvundump signature.txt
+  gttlvundump signature.txt
 ```
 
 ### gttlvwrap ###
 
 * Wrap the content of the given file into TLV structure with type '0123'
+
 ```
-gttlvwrap -t 0123 -i test.file
+  gttlvwrap -t 0123 -i test.file
 ```
 
 ### gttlvgrep ###
 
 * Extract publication time from calendar authentication record in the given KSI signature
+
 ```
-gttlvgrep 800.805.10.02 signature.ksig
+  gttlvgrep 800.805.10.02 signature.ksig
 ```
 
 Detailed usage information is described in individual tool help ('-h') and in man pages: gttlvdump(1), gttlvgrep(1),
