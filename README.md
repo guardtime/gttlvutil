@@ -6,59 +6,60 @@ integrity of any digital asset without the need to trust any system. There are m
 example is signing of any type of logs - system logs, financial transactions, call records, etc. For more, 
 see [https://guardtime.com](https://guardtime.com).
 
-The gttlvutil is a collection of tools for converting KSI TLV data structures to and from binary data streams.
-Following tools are included:
-* gttlvdump - tool for decoding KSI binary data into human readable text stream. 
-* gttlvundump - tool for encoding KSI TLV textually described data into binary data stream.
-* gttlvwrap - tool for wraping input data into KSI TLV data structures.
-* gttlvgrep - tool for seaching TLV type patterns in KSI binary stream.
+The gttlvutil is a collection of utils for working with the KSI type-length-value (TLV) encoded binary data. This encoding is used
+throughout the KSI infrastructure - for KSI signature, publications file and network communication.
+
+The following utils are provided: 
+* gttlvdump - converts TLV-encoded binary data into human readable text format 
+* gttlvundump - converts data in human readable text format into TLV-encoded binary data
+* gttlvwrap - wraps given data into TLV data structure
+* gttlvgrep - searches TLV type patterns in TLV binary stream
 
 
 ## Installation ##
 
-To build the gttlvutil, you need to have a cryptography provider installed on your system. The following cryptography 
-providers are supported, choose one:
+To build the gttlvutil, a cryptography provider has to be installed in the system. The following providers are supported:
 * OpenSSL (recommended)
 * Windows native CryptoAPI
 
 For building under Windows you need the Windows SDK.
 
 If you do not want to build your own binaries, you can get the latest stable release from the Guardtime repository.
-To set up the repository, save this repo file in your repositories directory (e.g. /etc/yum.repos.d/): 
-[http://download.guardtime.com/ksi/configuration/guardtime.el6.repo](http://download.guardtime.com/ksi/configuration/guardtime.el6.repo)
-
+To set up the repository, save the appropriate repo file in your repositories directory (e.g. `/etc/yum.repos.d/`):
+* [http://download.guardtime.com/ksi/configuration/guardtime.el6.repo](http://download.guardtime.com/ksi/configuration/guardtime.el6.repo)
+* [http://download.guardtime.com/ksi/configuration/guardtime.el7.repo](http://download.guardtime.com/ksi/configuration/guardtime.el7.repo)
 
 ## Usage ##
 
 ### gttlvdump ###
 
-* Decode KSI signature
+* Convert KSI signature to human readble text format
 ```
 gttlvdump signature.ksig
 ```
 
-* Decode publications file
+* Convert publications file to human readable text format
 ```
 gttlvdump -H 8 publicationsfile.bin
 ```
 
 ### gttlvundump ###
 
-* Encode KSI signature
+* Convert KSI signature in human readable text format to binary TLV
 ```
 gttlvundump signature.txt
 ```
 
 ### gttlvwrap ###
 
-* Wrap file content into TLV structure with type value '0123'
+* Wrap the content of the given file into TLV structure with type '0123'
 ```
 gttlvwrap -t 0123 -i test.file
 ```
 
 ### gttlvgrep ###
 
-* Search for a publication time from calendar authentication record
+* Find publication time from calendar authentication record in the given KSI signature
 ```
 gttlvgrep 800.805.10.02 signature.ksig
 ```
@@ -66,7 +67,6 @@ gttlvgrep 800.805.10.02 signature.ksig
 Detailed usage information is described in individual tool help ('-h') and in man pages: gttlvdump(1), gttlvgrep(1), gttlvwrap(1), tlv(5), tlv-desc(5).
 
 For more information about TLV encoding see also man page: tlv(5)
-
 
 ## License ##
 
