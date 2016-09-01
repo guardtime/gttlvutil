@@ -14,7 +14,7 @@ The following utils are provided:
 * gttlvdump - converts TLV-encoded binary data into human readable text format
 * gttlvundump - converts data in human readable text format into TLV-encoded binary data
 * gttlvwrap - wraps given data into TLV data structure
-* gttlvgrep - extracts data, that is described via TLV type pattern, from TLV binary stream
+* gttlvgrep - extracts TLV value, that is described via TLV type pattern, from TLV binary data
 
 
 
