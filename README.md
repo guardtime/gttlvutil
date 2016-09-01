@@ -101,7 +101,7 @@ See `test/README.md` to learn how to run gttlvutil tests on linux.
 Detailed usage information is described in individual tool help ('-h') and in man pages: gttlvdump(1), gttlvgrep(1),
 gttlvwrap(1), tlv-desc(5).
 
-For more information about TLV encoding see also man page: tlv(5)
+For more information about TLV encoding see also man page tlv(5).
 
 
 
