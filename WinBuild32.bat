@@ -20,18 +20,18 @@ GOTO copyrightend
 
 :copyrightend
 
-rem To configure the build environment for 64-bit build setenv with /x64 is
+rem To configure the build environment for 32-bit build setenv with /x86 is
 rem called. See WinBuild.txt for more information how to choose the right
 rem build environment.
 
-call "%ProgramW6432%\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64
+call "%ProgramW6432%\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x86
 
 rem To avoid the variables to leak out of the script setlocal is called.
 setlocal
 
 rem Installer configuration.
 
-set install_machine=64
+set install_machine=32
 
 rem OpenSSL library configuration.
 
@@ -50,7 +50,7 @@ set hash_provider=CRYPTOAPI
 rem Rebuild the gttlvutils.
 
 nmake clean
-nmake  RTL=%rtl% HASH_PROVIDER=%hash_provider% OPENSSL_DIR=%openssl_dir% LIB_TYPE=%lib_type% INSTALL_MACHINE=%install_machine%
+nmake /S RTL=%rtl% HASH_PROVIDER=%hash_provider% OPENSSL_DIR=%openssl_dir% LIB_TYPE=%lib_type% INSTALL_MACHINE=%install_machine%
 
 endlocal
 pause

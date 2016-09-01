@@ -40,12 +40,13 @@ Build process
     compiled obj files. Out directory contains executable and if built the msi
     installer file.
 
-    WinBuild.bat.sample is default build script. It is using Windows native 
-    CryptoAPI as cryptography provider and is configures for 64-bit OS.
+    WinBuild32.bat and WinBuild64.bat are default build script for corresponding
+    envirounment. They are using Windows native CryptoAPI as cryptography provider.
 
     Top level build scripts:
 
-      WinBuild.bat.sample
+      WinBuild32.bat
+      WinBuild64.bat
       makefile
 
     Documentation and source code for gttlvutils:
@@ -69,11 +70,11 @@ Build process
 Configuring build scripts
 =====================================
 
-    For building process, above described top-level makefile or modified
-    versions of WinBuild.bat.sample must be called. WinBuild.bat.sample
-    contain the call to the makefile that must be modified. See sample build
-    scripts, the options of makefile and examples in the end of this document
-    to learn how to get the build to work properly.
+    For building process, above described top-level makefile, or default 
+    version of build script must be called. For more sophisticated build
+    configuration the default build scripts must be modified. See the options 
+    of makefile and examples in the end of this document to learn how to 
+    configure it according to your needs.
 
     Makefile can be executed via CMD shell or Visual Studio command prompt
     shell. When using CMD shell environment must be configured using setenv
