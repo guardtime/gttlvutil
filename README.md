@@ -11,10 +11,10 @@ The gttlvutil is a collection of utils for working with the KSI type-length-valu
 encoding is used throughout the KSI infrastructure - for KSI signature, publications file and network communication.
 
 The following utils are provided:
-* gttlvdump - converts TLV-encoded binary data into human readable text format
-* gttlvundump - converts data in human readable text format into TLV-encoded binary data
-* gttlvwrap - wraps given data into TLV data structure
-* gttlvgrep - extracts TLV value, that is described via TLV type pattern, from TLV binary data
+* gttlvdump - converts TLV-encoded binary data into human readable text format.
+* gttlvundump - converts data in human readable text format into TLV-encoded binary data.
+* gttlvwrap - wraps given data into TLV data structure.
+* gttlvgrep - extracts TLV value, that is described via TLV type pattern, from TLV binary data.
 
 
 
