@@ -19,7 +19,7 @@ gttlvundump is a tool that constructs a binary TLV file from gttlvdump style inp
 .LP
 See \fBgttlvdump\fR(1) to learn about the expected format. It must be noted that only basic output format of \fBgttlvdump\fR is accepted as input.
 .LP
-It is possible the use functions in tlv files:
+It is possible to use functions in tlv files:
 .br
 - \fBHMAC('version'|'algorithm'|'key'|'pattern')\fR 
 for calculating HMAC value on a PDU.
@@ -35,7 +35,7 @@ PDU HMAC calculation version. Valid versions:
 .\"
 .TP
 \fBalgorithm\fR
-Hash algorithm to be used for calculation. Supported algoritms: \fIsha1\fR, \fIsha256\fR, \fIrmd160\fR, \fIsha384\fR, \fIsha512\fR.
+Hash algorithm to be used for calculation. Use \fB-h\fR to get the list of supported hash algorithms.
 .\"
 .TP
 \fBkey\fR

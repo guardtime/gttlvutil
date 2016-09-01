@@ -54,6 +54,29 @@ static const EVP_MD *hashAlgorithmToEVP(GT_Hash_AlgorithmId id)
 	}
 }
 
+int GT_Hmac_IsAlgorithmsSupported(GT_Hash_AlgorithmId id) {
+	switch (id) {
+#ifndef OPENSSL_NO_SHA
+		case GT_HASHALG_SHA1:
+#endif
+#ifndef OPENSSL_NO_RIPEMD
+		case GT_HASHALG_RIPEMD160:
+#endif
+		case GT_HASHALG_SHA2_256:
+#ifndef OPENSSL_NO_SHA512
+		case GT_HASHALG_SHA2_384:
+		case GT_HASHALG_SHA2_512:
+#endif
+			return 1;
+		default:
+			return 0;
+	}
+}
+
+const char *GT_Hmac_GetCryptoProvider() {
+	return "OpenSSL";
+}
+
 static int initEvpCtx(GT_Hash_AlgorithmId alg, EVP_MD_CTX **ctx) {
 	int res = GT_UNKNOWN_ERROR;
 

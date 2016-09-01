@@ -147,7 +147,7 @@ printf "TLV[123]:\n  TLV[1f]:\$HMAC(v2|sha224|anon)" | gttlvundump
 # Wrong calculation version.
 
 (cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v3|sha256|anon)") | gttlvundump
->>>2 /.*Failed to parse HMAC calculation script./
+>>>2 /.*Error in HMAC function call definition./
 >>>= 8
 
 ###############################################################################
@@ -176,17 +176,17 @@ printf "TLV[123]:\n  TLV[1f]:\$HMAC(v2|sha224|anon)" | gttlvundump
 
 # Only version is provided.
 (cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v1)") | gttlvundump
->>>2 /.*Failed to parse HMAC calculation script./
+>>>2 /.*Error in HMAC function call definition./
 >>>= 8
 
 # Version and algorithm are provided.
 (cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v1|sha256)") | gttlvundump
->>>2 /.*Failed to parse HMAC calculation script./
+>>>2 /.*Error in HMAC function call definition./
 >>>= 8
 
 # Version, algorithm and key are provided.
 (cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v1|sha256|anon)") | gttlvundump
->>>2 /.*Failed to parse HMAC calculation script./
+>>>2 /.*Error in HMAC function call definition./
 >>>= 8
 
 # All needed parameters are provided.
@@ -195,11 +195,10 @@ printf "TLV[123]:\n  TLV[1f]:\$HMAC(v2|sha224|anon)" | gttlvundump
 010458a036efa3a44ca482cab675738873efef6b13479e0b555ce025d3a9972257
 >>>= 0
 
-# Extra parameters should be ignored
-(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v1|sha256|anon|300.01,302|Extra|Params)") | gttlvundump | gttlvgrep 300.1f
->>>
-010458a036efa3a44ca482cab675738873efef6b13479e0b555ce025d3a9972257
->>>= 0
+# No extra parameters are allowed.
+(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v1|sha256|anon|300.01,302|Extra|Params)") | gttlvundump
+>>>2 /.*Error in HMAC function call definition./
+>>>= 8
 
 # Test invalid pattern
 (cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v1|sha256|anon|invalid.pattern)") | gttlvundump | gttlvgrep 300.1f
@@ -214,12 +213,12 @@ printf "TLV[123]:\n  TLV[1f]:\$HMAC(v2|sha224|anon)" | gttlvundump
 
 # Only version is provided.
 (cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v2)") | gttlvundump
->>>2 /.*Failed to parse HMAC calculation script./
+>>>2 /.*Error in HMAC function call definition./
 >>>= 8
 
 # Version and algorithm are provided.
 (cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v2|sha256)") | gttlvundump
->>>2 /.*Failed to parse HMAC calculation script./
+>>>2 /.*Error in HMAC function call definition./
 >>>= 8
 
 # All needed parameters are provided.
@@ -228,17 +227,15 @@ printf "TLV[123]:\n  TLV[1f]:\$HMAC(v2|sha224|anon)" | gttlvundump
 011e9d919d262eb8f466b63b692ac49dc84630f78ccfc445a76ae500c0173557d0
 >>>= 0
 
-# Calculation v1 pattern should be ignored.
-(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v2|sha256|anon|300.01,302)") | gttlvundump | gttlvgrep 300.1f
->>>
-011e9d919d262eb8f466b63b692ac49dc84630f78ccfc445a76ae500c0173557d0
->>>= 0
+# No extra parameters are allowed.
+(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v2|sha256|anon|300.01,302)") | gttlvundump
+>>>2 /.*Error in HMAC function call definition./
+>>>= 8
 
-# Extra parameters should be ignored
-(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v2|sha256|anon|Extra|Params)") | gttlvundump | gttlvgrep 300.1f
->>>
-011e9d919d262eb8f466b63b692ac49dc84630f78ccfc445a76ae500c0173557d0
->>>= 0
+# No extra parameters are allowed.
+(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v2|sha256|anon|Extra|Params)") | gttlvundump
+>>>2 /.*Error in HMAC function call definition./
+>>>= 8
 
 ###############################################################################
 
