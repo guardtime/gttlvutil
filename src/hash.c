@@ -47,21 +47,21 @@ int GT_Hash_getAlgorithmId(char *arg, GT_Hash_AlgorithmId *id) {
 }
 
 size_t GT_Hash_getAlgorithmLenght(GT_Hash_AlgorithmId id) {
-	if (id == hshAlgoInfo[id].id) {
+	if (id < GT_NOF_HASHALGS && id == hshAlgoInfo[id].id) {
 		return hshAlgoInfo[id].lenght / 8;
 	}
 	return 0;
 }
 
 size_t GT_Hash_getAlgorithmBlockSize(GT_Hash_AlgorithmId id) {
-	if (id == hshAlgoInfo[id].id) {
+	if (id < GT_NOF_HASHALGS && id == hshAlgoInfo[id].id) {
 		return hshAlgoInfo[id].blockSize / 8;
 	}
 	return 0;
 }
 
 char* GT_Hash_getAlgorithmName(GT_Hash_AlgorithmId id) {
-	if (id == hshAlgoInfo[id].id) {
+	if (id < GT_NOF_HASHALGS && id == hshAlgoInfo[id].id) {
 		return hshAlgoInfo[id].name;
 	}
 	return NULL;

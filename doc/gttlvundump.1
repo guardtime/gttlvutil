@@ -19,32 +19,8 @@ gttlvundump is a tool that constructs a binary TLV file from gttlvdump style inp
 .LP
 See \fBgttlvdump\fR(1) to learn about the expected format. It must be noted that only basic output format of \fBgttlvdump\fR is accepted as input.
 .LP
-It is possible to use functions in tlv files:
+It is possible to use functions in TLV files. For detailed description of supported functions see \fBFUNCTIONS\fR section. To use a function it has to be preceeded with '$' sign, eg. \fI$FUNC(arg)\fR. Function arguments are delimited with '|' sign.
 .br
-- \fBHMAC('version'|'algorithm'|'key'|'pattern')\fR 
-for calculating HMAC value on a PDU.
-.RS 2
-.\"
-.TP
-\fBversion\fR
-PDU HMAC calculation version. Valid versions:
-.br
-\fIv1\fR - computation is performed over the concatenation of header and payload TLVs.
-.br
-\fIv2\fR - computation is performed over the TLV header of the PDU, the complete header TLV, complete payload TLVs in the order in which they appear within the PDU, and the TLV header and the hash function ID of the MAC element itself.
-.\"
-.TP
-\fBalgorithm\fR
-Hash algorithm to be used for calculation. Use \fB-h\fR to get the list of supported hash algorithms.
-.\"
-.TP
-\fBkey\fR
-Secret cryptographic key.
-.\"
-.TP
-\fBpattern\fR
-TLV pattern describing TLVs to be included into calculation (valid with \fIv1\fR). Pattern format as defined by gttlvgrep.
-.RE
 .\"
 .\"
 .SH OPTIONS
@@ -56,6 +32,36 @@ Prints help text to \fIstdout\fR.
 .TP
 \fB-v\fR
 TLV utility package version.
+.\"
+.\"
+.SH FUNCTIONS
+.\"
+.TP
+\fBHMAC(\fIversion\fR|\fIalgorithm\fR|\fIkey\fR|\fIpattern\fB)\fR
+Calculate HMAC value on a PDU.
+.\"
+.RS
+.TP
+\fIversion\fR
+PDU HMAC calculation version. Valid versions:
+.br
+\fIv1\fR - computation is performed over the concatenation of header and payload TLVs.
+.br
+\fIv2\fR - computation is performed over the TLV header of the PDU, the complete header TLV, complete payload TLVs in the order in which they appear within the PDU, and the TLV header and the hash function ID of the MAC element itself.
+.\"
+.TP
+\fIalgorithm\fR
+Hash algorithm to be used for calculation. Use \fB-h\fR to get the list of supported hash algorithms.
+.\"
+.TP
+\fIkey\fR
+Secret cryptographic key.
+.\"
+.TP
+\fIpattern\fR
+TLV pattern describing TLVs to be included into calculation (valid with \fIv1\fR). Pattern format as defined by gttlvgrep.
+.RE
+.\"
 .\"
 .SH EXAMPLES
 .\"
@@ -88,7 +94,7 @@ TLV[1000]:
 \fRTo calculate HMAC value on a PDU:
 .LP
 .RS 4
-1. Calculation approach \fIv1\fR.
+1. PDU \fIv1\fR HMAC calculation.
   TLV[0300]:
     TLV[01]:
       TLV[01]:616E6F6E00
@@ -96,9 +102,9 @@ TLV[1000]:
       TLV[01]:01
       TLV[02]:54D9D6E7
       TLV[03]:54D9D6E7
-    TLV[1f]:$HMAC(v1|sha256|anon|300.01,301)
-.br
-2. Calculation approach \fIv2\fR.
+    TLV[1f]:\fI$HMAC(v1|sha256|anon|300.01,301)\fR
+.LP
+2. PDU \fIv2\fR HMAC calculation.
   TLV[0300]:
     TLV[01]:
       TLV[01]:616E6F6E00
@@ -106,7 +112,7 @@ TLV[1000]:
       TLV[01]:01
       TLV[02]:54D9D6E7
       TLV[03]:54D9D6E7
-    TLV[1f]:$HMAC(v2|sha256|anon)
+    TLV[1f]:\fI$HMAC(v2|sha256|anon)\fR
 .RE
 .LP
 .\"

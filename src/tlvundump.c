@@ -865,7 +865,7 @@ int main(int argc, char **argv) {
 							"\n"
 							"\n"
 							"Supported function calls:\n"
-							"  HMAC('version'|'algorithm'|'key'|'pattern')\n"
+							"  HMAC(version|algorithm|key|pattern)\n"
 							"    version    PDU version:\n"
 							"               v1 computation is performed over the concatenation of header\n"
 							"                  and payload TLVs.\n"
@@ -873,8 +873,7 @@ int main(int argc, char **argv) {
 							"                  the complete header TLV, complete payload TLVs in the\n"
 							"                  order in which they appear within the PDU, and the TLV\n"
 							"                  header and the hash function ID of the MAC element itself.\n"
-							"    algorithm  Hash algorithm to be used for calculation. Supported algoritms:\n"
-							"               sha1, sha256, rmd160, sha384, sha512.\n"
+							"    algorithm  Hash algorithm to be used for calculation.\n"
 							"    key        Secret cryptographic key.\n"
 							"    pattern    TLV pattern describing TLVs to be included into calculation\n"
 							"               (valid with v1). Pattern format as defined by gttlvgrep.\n"
@@ -900,9 +899,13 @@ int main(int argc, char **argv) {
 							"        TLV[03]:54D9D6E7\n"
 							"      TLV[1f]:$HMAC(v2|sha256|anon)\n"
 							"\n"
+							"Cryptogrophy provider:\n"
+							"  %s\n"
+							"\n"
 							"Supported hash algorithms:\n"
 							"  %s\n"
 							"\n",
+							GT_Hmac_GetCryptoProvider(),
 							buf
 							);
 					res = GT_OK;
