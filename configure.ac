@@ -29,12 +29,6 @@ AC_ARG_WITH([data-dir],
      -)
        # Search desc files from the same directory where executable is located.
        ;;
-     pkgdatadir)
-       # Search desc files from the default system directory. 
-       AC_SUBST(DESC_DATA_DIR, "pkgdatadir")
-       use_pkgdatadir=true
-       use_datadir=true
-       ;;
      *)
        # Search desc files from the specified path.
        AC_SUBST(DESC_DATA_DIR, "$withval")
