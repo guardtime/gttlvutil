@@ -30,8 +30,7 @@
 /**
  * Converts hash function ID from hash chain to crypto api identifier
  */
-static const ALG_ID hashAlgorithmToALG_ID(GT_Hash_AlgorithmId id)
-{
+static const ALG_ID hashAlgorithmToALG_ID(GT_Hash_AlgorithmId id) {
 	switch (id) {
 		case GT_HASHALG_SHA1:
 			return CALG_SHA1;
@@ -44,6 +43,22 @@ static const ALG_ID hashAlgorithmToALG_ID(GT_Hash_AlgorithmId id)
 		default:
 			return 0;
 	}
+}
+
+int GT_Hmac_IsAlgorithmsSupported(GT_Hash_AlgorithmId id) {
+	switch (id) {
+		case GT_HASHALG_SHA1:
+		case GT_HASHALG_SHA2_256:
+		case GT_HASHALG_SHA2_384:
+		case GT_HASHALG_SHA2_512:
+			return 1;
+		default:
+			return 0;
+	}
+}
+
+const char *GT_Hmac_GetCryptoProvider() {
+	return "Windows CryptoAPI";
 }
 
 static int prepareKeyForHashing(HCRYPTPROV cryptCtx, ALG_ID alg_id, const DWORD algSize, const void *key, size_t key_len, size_t blocksize, unsigned char *ipad, unsigned char *opad) {

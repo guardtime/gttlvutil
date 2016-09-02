@@ -144,6 +144,10 @@ static int hmacGetScriptTokens(char *args, size_t aLen, char *alg, char *key, ch
 		strcpy(pat, token);
 	}
 
+	/* Check if there are unknown parameters. */
+	token = strtok(NULL, HMAC_CALC_ARG_DEL);
+	if (token != NULL) goto cleanup;
+
 	res = GT_OK;
 cleanup:
 	if (tmp) free(tmp);
@@ -538,12 +542,17 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 						size_t algSize;
 
 						if (initHmacCalcInfo(funcScript, stackLen) != GT_OK) {
-							error(GT_PARSER_ERROR, "Failed to parse HMAC calculation script.");
+							error(GT_PARSER_ERROR, "Error in HMAC function call definition.");
 						}
 
 						if (GT_Hash_getAlgorithmId(hmacCalcInfo.algId, &algId) != GT_OK) {
 							error(GT_PARSER_ERROR, "Unable to get hash algorithm id.");
 						}
+
+						if (!GT_Hmac_IsAlgorithmsSupported(algId)) {
+							error(GT_PARSER_ERROR, "Unsupported hash algorithm.");
+						}
+
 						/* Add algorithm id and init hmac hash value to 0. */
 						tlv->dat[tlv->dat_len++] = algId;
 						algSize = GT_Hash_getAlgorithmLenght(algId);
@@ -802,6 +811,37 @@ cleanup:
 	return res;
 }
 
+int getListOfSupportedHashAlgs(char *buf, size_t bufLen) {
+	int res = GT_UNKNOWN_ERROR;
+	int len = 1;
+	int i;
+
+	if (bufLen < len) {
+		res = GT_BUFFER_OVERFLOW;
+		goto cleanup;
+	}
+	buf[0] = '\0';
+
+	for (i = 0; i < GT_NOF_HASHALGS; i++) {
+
+		if (GT_Hmac_IsAlgorithmsSupported(i)) {
+			const char *name = NULL;
+			name = GT_Hash_getAlgorithmName(i);
+			len += strlen(name) + 1;
+			if (len > bufLen) {
+				res = GT_BUFFER_OVERFLOW;
+				goto cleanup;
+			}
+			strcat(buf, name);
+			strcat(buf, " ");
+		}
+	}
+
+	res = GT_OK;
+cleanup:
+	return res;
+}
+
 int main(int argc, char **argv) {
 	int res = GT_UNKNOWN_ERROR;
 	FILE *f = NULL;
@@ -810,49 +850,67 @@ int main(int argc, char **argv) {
 	while ((c = getopt(argc, argv, "hv")) != -1) {
 		switch(c) {
 			case 'h':
-				printf("Usage:\n"
-						"  gttlvundump [-h] tlvfile\n"
-						"\n"
-						"Options:\n"
-						"    -h       This help message.\n"
-						"    -v       TLV utility package version.\n"
-						"\n"
-						"\n"
-						"  It is possible to create your own functions.\n"
-						"  Currently defined functions:\n"
-						"  - HMAC('version'|'algorithm'|'key'|'pattern')\n"
-						"      version    HMAC calculation version. Valid versions: v1, v2.\n"
-						"                 v1 - computation is performed over the concatenation of header and payload TLVs\n"
-						"                 v2 - computation is performed over the TLV header of the PDU, the complete \n"
-						"                      header TLV, complete payload TLVs in the order in which they appear within\n"
-						"                      the PDU, and the TLV header and the hash function ID of the MAC element itself.\n"
-						"      algorithm  Hash algorithm to be used for calculation (as defined by openssl).\n"
-						"      key        Secret cryptographic key.\n"
-						"      pattern    TLV pattern describing TLVs to be included into calculation (valid with v1).\n"
-						"                 Pattern format as defined by gttlvgrep.\n"
-						"\n"
-						"      Example:\n"
-						"        1. Calculation approach v1.\n"
-						"          TLV[0300]:\n"
-						"            TLV[01]:\n"
-						"              TLV[01]:616E6F6E00\n"
-						"            TLV[0301]:\n"
-						"              TLV[01]:01\n"
-						"              TLV[02]:54D9D6E7\n"
-						"              TLV[03]:54D9D6E7\n"
-						"            TLV[1f]:$HMAC(v1|sha256|anon|300.01,301)\n"
-						"        2. Calculation approach v2.\n"
-						"          TLV[0300]:\n"
-						"            TLV[01]:\n"
-						"              TLV[01]:616E6F6E00\n"
-						"            TLV[0301]:\n"
-						"              TLV[01]:01\n"
-						"              TLV[02]:54D9D6E7\n"
-						"              TLV[03]:54D9D6E7\n"
-						"            TLV[1f]:$HMAC(v2|sha256|anon)\n"
-						"\n");
-				res = GT_OK;
-				goto cleanup;
+				{
+					char buf[1024];
+
+					res = getListOfSupportedHashAlgs(buf, sizeof(buf));
+					if (res != GT_OK) goto cleanup;
+
+					printf("Usage:\n"
+							"  gttlvundump [-h] tlvfile\n"
+							"\n"
+							"Options:\n"
+							"    -h       This help message.\n"
+							"    -v       TLV utility package version.\n"
+							"\n"
+							"\n"
+							"Supported function calls:\n"
+							"  HMAC(version|algorithm|key|pattern)\n"
+							"    version    PDU version:\n"
+							"               v1 computation is performed over the concatenation of header\n"
+							"                  and payload TLVs.\n"
+							"               v2 computation is performed over the TLV header of the PDU,\n"
+							"                  the complete header TLV, complete payload TLVs in the\n"
+							"                  order in which they appear within the PDU, and the TLV\n"
+							"                  header and the hash function ID of the MAC element itself.\n"
+							"    algorithm  Hash algorithm to be used for calculation.\n"
+							"    key        Secret cryptographic key.\n"
+							"    pattern    TLV pattern describing TLVs to be included into calculation\n"
+							"               (valid with v1). Pattern format as defined by gttlvgrep.\n"
+							"\n"
+							"\n"
+							"Example:\n"
+							"  1. PDU v1 HMAC calculation.\n"
+							"    TLV[0300]:\n"
+							"      TLV[01]:\n"
+							"        TLV[01]:616E6F6E00\n"
+							"      TLV[0301]:\n"
+							"        TLV[01]:01\n"
+							"        TLV[02]:54D9D6E7\n"
+							"        TLV[03]:54D9D6E7\n"
+							"      TLV[1f]:$HMAC(v1|sha256|anon|300.01,301)\n"
+							"  2. PDU v2 HMAC calculation.\n"
+							"    TLV[0300]:\n"
+							"      TLV[01]:\n"
+							"        TLV[01]:616E6F6E00\n"
+							"      TLV[0301]:\n"
+							"        TLV[01]:01\n"
+							"        TLV[02]:54D9D6E7\n"
+							"        TLV[03]:54D9D6E7\n"
+							"      TLV[1f]:$HMAC(v2|sha256|anon)\n"
+							"\n"
+							"Cryptogrophy provider:\n"
+							"  %s\n"
+							"\n"
+							"Supported hash algorithms:\n"
+							"  %s\n"
+							"\n",
+							GT_Hmac_GetCryptoProvider(),
+							buf
+							);
+					res = GT_OK;
+					goto cleanup;
+				}
 			case 'v':
 				printf("%s\n", TLV_UTIL_VERSION_STRING);
 				res = GT_OK;
