@@ -1,0 +1,147 @@
+#
+# GUARDTIME CONFIDENTIAL
+#
+# Copyright (C) [2016] Guardtime, Inc
+# All Rights Reserved
+#
+# NOTICE:  All information contained herein is, and remains, the
+# property of Guardtime Inc and its suppliers, if any.
+# The intellectual and technical concepts contained herein are
+# proprietary to Guardtime Inc and its suppliers and may be
+# covered by U.S. and Foreign Patents and patents in process,
+# and are protected by trade secret or copyright law.
+# Dissemination of this information or reproduction of this
+# material is strictly forbidden unless prior written permission
+# is obtained from Guardtime Inc.
+# "Guardtime" and "KSI" are trademarks or registered trademarks of
+# Guardtime Inc.
+#
+
+
+###############################################################################
+# Test user interface.
+
+# Help.
+gttlvundump -h
+>>> /Usage:.*
+.*gttlvundump.*/
+>>>= 0
+
+# Check version.
+gttlvundump -v | grep -f VERSION
+>>> /^gttlvutil.[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/
+>>>= 0
+
+# Invalid parameter.
+gttlvundump -V
+>>>
+>>>2
+gttlvundump: invalid option -- 'V'
+Unknown parameter, try -h.
+>>>= 1
+
+# Missing file.
+gttlvundump test/missing/file
+>>>
+>>>2
+test/missing/file: Unable to open file.
+>>>= 0
+
+###############################################################################
+# Create KSI signature binary stream. Compare it to the original file.
+
+gttlvundump test/resources/sig/ok-sig-2014-08-01.1.ksig.txt | diff test/resources/sig/ok-sig-2014-08-01.1.ksig -
+>>>
+>>>= 0
+
+###############################################################################
+# Create KSI signature binary file. Compare it to the original file.
+
+gttlvundump test/resources/sig/ok-sig-2014-08-01.1.ksig.txt > test/tmp/undump_ok-sig-2014-08-01.ksig
+>>>
+>>>= 0
+
+diff test/tmp/undump_ok-sig-2014-08-01.ksig test/resources/sig/ok-sig-2014-08-01.1.ksig
+>>>
+>>>= 0
+
+###############################################################################
+# Create a server multi response binary stream. Compare it to the original file.
+
+gttlvundump test/resources/tlv/test2-extend_response-reqId_1.txt test/resources/tlv/test2-extend_response-reqId_2.txt | diff test/resources/tlv/test2-extend_response-multiple.tlv -
+>>>
+>>>= 0
+
+###############################################################################
+# Try to convert dummy data.
+
+echo "T1234567890" | gttlvundump
+>>>
+>>>2 
+<stdin>:1 - Expected 'L'.
+>>>= 8
+
+echo "TL1234567890" | gttlvundump
+>>>
+>>>2 
+<stdin>:1 - Expected 'V'.
+>>>= 8
+
+echo "TLV01234567890" | gttlvundump
+>>>
+>>>2 
+<stdin>:1 - Expected '['.
+>>>= 8
+
+echo "TLV1234567890" | gttlvundump
+>>>
+>>>2 
+<stdin>:1 - Expected '6'.
+>>>= 8
+
+echo "TLV16234567890" | gttlvundump
+>>>
+>>>2 
+<stdin>:1 - Expected '['.
+>>>= 8
+
+echo "TLV[q1234567890" | gttlvundump
+>>>
+>>>2 
+<stdin>:1 - Expected hex tag value.
+>>>= 8
+
+echo "TLV[1234567890" | gttlvundump
+>>>
+>>>2 
+<stdin>:1 - TLV tag value may not exceed 0x1fff.
+>>>= 8
+
+echo "TLV[1 234567890" | gttlvundump
+>>>
+>>>2 
+<stdin>:1 - Expected ']'.
+>>>= 8
+
+echo "TLV[1]234567890" | gttlvundump
+>>>
+>>>2 
+<stdin>:1 - Expected ':'.
+>>>= 8
+
+echo "TLV[1]:q234567890" | gttlvundump
+>>>
+>>>2 
+<stdin>:1 - Unexpected character: q.
+>>>= 8
+
+echo "TLV[1]:2345q67890" | gttlvundump
+>>>
+>>>2 
+<stdin>:1 - Unexpected character: q.
+>>>= 8
+
+###############################################################################
+
+
+

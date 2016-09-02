@@ -1,0 +1,173 @@
+.TH GTTLVDUMP 1
+.\"
+.\"
+.\"
+.SH NAME
+\fBgttlvdump \fR- A tool to for displaying TLV encoded data.
+.\"
+.\"
+.SH SYNOPSIS
+.\"
+.HP 4
+\fBgttlvdump [-h][options] tlvfile
+.LP
+.\"
+.\"
+.SH DESCRIPTION
+.\"
+gttlvdump is a tool that dumps TLV (see \fBtlv\fR(5)) encoded files in human-readable format to \fIstdout\fR.
+.LP
+The output format is as described in \fBFigure 1\fR. Every TLV begins with string "TLV" followed by the description of the TLV header between the square brackets '\fB[\fR' and '\fB]\fR'. TLV header contains the type of the TLV in hex and if set the Non-Critical flag (\fBN\fR) and Forward Unknown flag (\fBF\fR). If the TLV value is displayed as octet string, the value is printed after TLV payload. If the value is displayed as nested TLV, it is indented under the parent TLV.
+.LP
+With additional parameters the way the TLV is displayed can be altered and some extra information can be shown. See parameters \fB-a\fR (annotation), \fB-x\fR (offset), \fB-y\fR (payload size), \fB-p\fR (key name) to display extra information about TLV. See parameters \fB-d\fR, \fB-x\fR, \fB-w\fR, \fB-z\fR, \fB-s\fR, \fB-P\fR and \fB-e\fR to alter the way the TLV is displayed.
+.\"
+.RS 4
+.TP 3
+\fB1\fR)
+TLV where value part is displayed not as nested TLV (e.g. octet string, string, integer, time or hash imprint).
+.LP
+.RS 3
+<annotation>
+.br
+<offset>\fBTLV[\fR<type>,<F>,<N>\fB]:\fR <payload size> <key name>:<value>
+.br
+ ...
+.RE
+.LP
+.\"
+.TP 3
+\fB2\fR)
+TLV where value part is displayed as nested TLV.
+.LP
+.RS 3
+<annotation>
+.br
+<offset>\fBTLV[\fR<type>,<F>,<N>\fB]:\fR <payload size> <key name>:
+.br
+  <annotation>
+.br
+<offset>  \fBTLV[\fR<type>,<F>,<N>\fB]:\fR <payload size> <key name>:<value>
+.br
+ ...
+.RE
+.LP
+.RE
+\fBFigure 1: \fRThe output format of gttlvdump.
+.LP
+.\"
+Some parameters depend on known TLV elements (\fB-s\fR, \fB-a\fR, \fB-P\fR, \fB-p\fR). Known TLV elements are specified in TLV description files (see section \fBFILES\fR and \fBtlv-desc\fR(5) to read more about TLV description file.
+.LP
+.\"
+.\"
+.SH OPTIONS
+.\"
+.TP
+\fB-h\fR
+Prints help text to \fIstdout\fR.
+.\"
+.TP
+\fB-H \fIint\fR
+Constant header length in bytes from the beginning of the file or byte stream that is left out from TLV parsing. The header is printed in hex followed by the decoded TLV.
+.\"
+.TP
+\fB-d \fIint\fR
+Max depth of nested TLV elements. After the depth is exceeded no more TLV parsing is done and the value is printed as binary payload. Use 0 to disable filtering by level (default behaviour). See parameter \fB-e\fR to determine the format of the binary payload. 
+.\"
+.TP
+\fB-x\fR
+Display the TLV offset in bytes relative to the beginning of the file or stream. It must be noted that when constant header \fB-H\fR is used the TLV offset is displayed relative to the first byte after header.
+.\"
+.TP
+\fB-w\fR
+Wrap the output.
+.\"
+.TP
+\fB-y\fR
+Show the size (Length) of TLV structure payload (Value) in bytes.
+.\"
+.TP
+\fB-z\fR
+Show the decimal value for TLV payload less than or equal to 8 bytes.
+.\"
+.TP
+\fB-s\fR
+Strict types - do not parse TLVs with unknown types.
+.\"
+.TP
+\fB-a\fR
+Annotate known KSI TLV elements with the names. To annotate the TLV payload value, use \fB-P\fR instead.
+.\"
+.TP
+\fB-P\fR
+Pretty print known KSI element keys.
+.\"
+.TP
+\fB-p\fR
+Pretty print known KSI element values. If set will override \fB-z\fR. Known value types are:
+.RS 8
+.IP \(bu 4
+Integer - printed as decimal value.
+.IP \(bu 4
+String - printed as string between double quotes (\fB"\fR). Characters \fB\\\fR and \fB"\fR are printed as \fB\\\\\fR and \fB\\"\fR accordingly. Non printable characters are printed as \fB\\\fR<\fIint\fR> where <\fIint\fR> is the byte value in decimal.
+.IP \(bu 4
+Time - printed as "(<\fIint\fR>) <\fIYYYY\fR>-<\fIMM\fR>-<\fIDD\fR> <\fIhh\fR>:<\fImm\fR>:<\fIss\fR> <\fITime Zone\fR>" where int is number of seconds since 1970-01-01  00:00:00  UTC as decimal number.
+.IP \(bu 4
+Hash - printed as <\fIalg\fR>:<\fIhash in hex\fR> where <\fIalg\fR> is hash algorithm followed by the hash value in hex. 
+.RE
+.\"
+.TP
+\fB-t\fR
+Print time in local timezone. Is valid with -p.
+.\"
+.TP
+\fB-e \fIenc\fR
+Encoding of binary payload. Available encodings: 'hex' (default), 'base64'
+.\"
+.TP
+\fB-v\fR
+TLV utility package version.
+.LP
+.\"
+.SH FILES
+.\"
+.TP
+\fI/usr/share/gttlvutil/*.desc\fR - description files that define known TLV elements. See \fBtlv-desc\fR(5) for more details.
+.LP 
+.\"
+.SH EXAMPLES
+.\"
+.TP 2
+\fB1
+\fRTo dump KSI publications file \fIpubfile\fR a constant header "KSIPUBLF" must be ignored from the beginning of the file:
+.LP
+.RS 4
+.HP 4
+\fBgttlvdump -H\fR \fI8 pubfile\fR
+.RE
+.\"
+.TP 2
+\fB2
+\fRTo dump KSI signature with all known TLVs described by the name and known not nested TLV elements in more human-readable way:
+.LP
+.RS 4
+.HP 4
+\fBgttlvdump -pP \fIsigfile\fR
+.RE
+.\"
+.TP 2
+\fB3
+\fRTo dump only one layer of nested TLVs and print the higher level TLVs as binary payload:
+.LP
+.RS 4
+.HP 4
+\fBgttlvdump -d \fI2 tlvfile\fR
+.RE
+.LP
+.\"
+.SH AUTHOR
+.LP
+Guardtime AS, http://www.guardtime.com/
+.LP
+.SH SEE ALSO
+.LP
+\fBgttlvgrep\fR(1), \fBgttlvundump\fR(1), \fBgttlvwrap\fR(1), \fBtlv\fR(5), \fBtlv-desc\fR(5)

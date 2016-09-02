@@ -1,0 +1,74 @@
+.TH TLV-DESC 5
+.\"
+.\"
+.\"
+.SH NAME
+\fBDESC \fR- TLV description file.
+.\"
+.\"
+.SH DESCRIPTION
+.LP
+TLV description (see \fBtlv\fR(5)) file that specifies TLV type, payload type and name. TLV description file is used by programs under gttlvutil packages.
+.LP
+.\"
+.\"
+.SH FORMAT
+.\"
+TLV description file contains TLV descriptions line by line. Each line has columns separated by tab characters. Each line has following format:
+.LP
+.RS 4
+<\fItype\fR>  <\fIpayload type\fR>  <\fIname\fR>
+.RE
+.\"
+.LP
+\fBType\fR specifies the TLV and its parent(s) type value in hex separated by dot character '\fB.\fR'. Left TLV is the parent and right one is its child (a nested TLV).
+.LP
+\fBPayload type\fR specifies how the TLV should be parsed and displayed. Payload type can have the following values:
+.LP
+.IP \(bu 4
+\fBRAW\fR - Payload is interpreted as octet string.
+.IP \(bu 4
+\fBINT\fR - Payload is interpreted as unsigned integer.
+.IP \(bu 4
+\fBSTR\fR - Payload is interpreted as string.
+.IP \(bu 4
+\fBIMPRINT\fR - Payload is interpreted as hash value imprint (hash algorithm + hash value).
+.IP \(bu 4
+\fBTIME\fR - Payload is interpreted as time (number of seconds since 1970-01-01 00:00:00 UTC).
+.IP \(bu 4
+\fB*\fR - Payload is interpreted as parent of nested TLVs.
+.LP
+\fBName\fR is a string describing the TLV.
+
+
+.SH EXAMPLES
+.\"
+.\"
+.TP 2
+\fB1
+\fRExample of a TLV description for parent TLV 0x1000 that contains nested TLVs:
+.LP
+.RS 4
+1000        *       Parent TLV
+.br
+1000.01     INT     ID
+.br
+1000.02     STRING  Name
+.br
+1000.03     RAW     Binary data
+.br
+1000.1100   *       Nested TLV
+.br
+.LP
+1100.01   INT       ID
+.br
+1100.02   RAW       Binary data
+.LP
+
+.SH AUTHOR
+Guardtime AS, http://www.guardtime.com/
+.\"
+.\"
+.SH SEE ALSO
+.\"
+\fBgttlvdump\fR(1), \fBgttlvgrep\fR(1), \fBgttlvundump\fR(1), \fBgttlvwrap\fR(1), \fBtlv\fR(5)
