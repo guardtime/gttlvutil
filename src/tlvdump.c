@@ -76,7 +76,9 @@ static uint64_t get_uint64(unsigned char *buf, size_t len) {
 	return val;
 }
 
-#define wrap_line(p) if (conf->wrap && line_len > 0 && line_len % conf->wrap_width == 0 ) { printf("\n%*s", prefix_len, ""); line_len = 0; } line_len += p
+
+#define wrap_offset(l)	printf("\n%*s", (l), "")
+#define wrap_line(p)	if (conf->wrap && line_len > 0 && line_len % conf->wrap_width == 0 ) { wrap_offset(prefix_len); line_len = 0; } line_len += p
 static void print_hex(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
 	size_t i;
 	size_t line_len = 0;
@@ -221,8 +223,19 @@ static void print_str(unsigned char *buf, size_t len, size_t prefix_len, struct 
 
 static void print_imprint(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
 	if (len > 0) {
-		if (buf[0] < sizeof(hash_alg) / sizeof(char *)) {
-			printf("%s:", hash_alg[buf[0]]);
+		if (conf->pretty_val) {
+			if (buf[0] < sizeof(hash_alg) / sizeof(char *)) {
+				printf("%s:", hash_alg[buf[0]]);
+			} else {
+				printf("%02x:", buf[0]);
+			}
+			if (conf->wrap) {
+				wrap_offset(prefix_len);
+			}
+			print_raw_data(buf + 1, len - 1, prefix_len, conf);
+		} else if (conf->wrap && conf->out_enc == ENCODE_HEX) {
+			printf("%02x", buf[0]);
+			wrap_offset(prefix_len);
 			print_raw_data(buf + 1, len - 1, prefix_len, conf);
 		} else {
 			print_raw_data(buf, len, prefix_len, conf);
@@ -368,7 +381,11 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 				break;
 		}
 	} else {
-		print_raw_data(ptr, len, prefix_len, conf);
+		if (type == TLV_IMPRINT && conf->wrap) {
+			print_imprint(ptr, len, prefix_len, conf);
+		} else {
+			print_raw_data(ptr, len, prefix_len, conf);
+		}
 	}
 }
 
