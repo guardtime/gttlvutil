@@ -17,6 +17,7 @@
 #endif
 
 #define INDENT_LEN 2
+#define DEFAULT_WRAP 64
 
 enum out_enc_en { ENCODE_HEX, ENCODE_BASE64 };
 
@@ -26,6 +27,7 @@ struct conf_st {
 	size_t max_depth;
 	bool print_off;
 	bool wrap;
+	size_t wrap_width;
 	bool print_len;
 	bool convert;
 	bool use_desc;
@@ -74,7 +76,7 @@ static uint64_t get_uint64(unsigned char *buf, size_t len) {
 	return val;
 }
 
-#define wrap_line(p) if (conf->wrap && line_len > 0 && line_len % 64 == 0 ) { printf("\n%*s", prefix_len, ""); line_len = 0; } line_len += p
+#define wrap_line(p) if (conf->wrap && line_len > 0 && line_len % conf->wrap_width == 0 ) { printf("\n%*s", prefix_len, ""); line_len = 0; } line_len += p
 static void print_hex(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
 	size_t i;
 	size_t line_len = 0;
@@ -479,34 +481,11 @@ int main(int argc, char **argv) {
 
 	memset(&conf, 0, sizeof(conf));
 
-	while ((c = getopt(argc, argv, "hH:d:xwyzaspPte:v")) != -1) {
+	while ((c = getopt(argc, argv, "hH:d:xw:yzaspPte:v")) != -1) {
 		switch(c) {
 			case 'H':
 				conf.hdr_len = atoi(optarg);
 				break;
-			case 'h':
-				printf("Usage:\n"
-						"  gttlvdump [-h] [options] tlvfile\n"
-						"\n"
-						"Options:\n"
-						"    -h       This help message.\n"
-						"    -H <num> Constant header length.\n"
-						"    -d <num> Max depth of nested elements. Use 0 to disable filtering by level.\n"
-						"    -x       Display file offset for every TLV.\n"
-						"    -w       Wrap the output.\n"
-						"    -y       Show content length.\n"
-						"    -z       Convert payload with length les than 8 bytes to decimal.\n"
-						"    -a       Annotate known KSI elements.\n"
-						"    -s       Strict types - do not parse TLV's with unknown types.\n"
-						"    -p       Pretty print values.\n"
-						"    -P       Pretty print keys.\n"
-						"    -t       Print timezone according to OS setting (valid with -p).\n"
-						"    -e <enc> Encoding of binary payload. Available encodings: 'hex' (default),\n"
-						"             'base64'.\n"
-						"    -v       TLV utility package version.\n"
-						"\n");
-				res = GT_OK;
-				goto cleanup;
 			case 'd': {
 				char *endptr = NULL;
 				long int li = strtol(optarg, &endptr, 10);
@@ -529,8 +508,11 @@ int main(int argc, char **argv) {
 			case 'x':
 				conf.print_off = true;
 				break;
-			case 'w':
-				conf.wrap = true;
+			case 'w': {
+					size_t w = atoi(optarg);
+					conf.wrap_width = (w == 0) ? DEFAULT_WRAP : w;
+					conf.wrap = true;
+				}
 				break;
 			case 'y':
 				conf.print_len = true;
@@ -580,6 +562,32 @@ int main(int argc, char **argv) {
 				break;
 			}
 
+			case 'h':
+				printf("Usage:\n"
+						"  gttlvdump [-h] [options] tlvfile\n"
+						"\n"
+						"Options:\n"
+						"    -h       This help message.\n"
+						"    -H <num> Constant header length.\n"
+						"    -d <num> Max depth of nested elements. Use 0 to disable filtering by level.\n"
+						"    -x       Display file offset for every TLV.\n"
+						"    -w <num> Wrap the output. Specify max data line width. Use 0 for default\n"
+						"             width (%d).\n"
+						"    -y       Show content length.\n"
+						"    -z       Convert payload with length les than 8 bytes to decimal.\n"
+						"    -a       Annotate known KSI elements.\n"
+						"    -s       Strict types - do not parse TLV's with unknown types.\n"
+						"    -p       Pretty print values.\n"
+						"    -P       Pretty print keys.\n"
+						"    -t       Print timezone according to OS setting (valid with -p).\n"
+						"    -e <enc> Encoding of binary payload. Available encodings: 'hex' (default),\n"
+						"             'base64'.\n"
+						"    -v       TLV utility package version.\n"
+						"\n",
+						DEFAULT_WRAP
+						);
+				res = GT_OK;
+				goto cleanup;
 			case 'v':
 				printf("%s\n", TLV_UTIL_VERSION_STRING);
 				res = GT_OK;
