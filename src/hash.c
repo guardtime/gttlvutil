@@ -22,22 +22,23 @@
 #include <string.h>
 
 const struct GT_Hash_AlgorithmInfo {
-	char *name;
 	GT_Hash_AlgorithmId id;
+	char *name;
 	size_t lenght;
 	size_t blockSize;
 } hshAlgoInfo[] = {
-		{"sha1",   GT_HASHALG_SHA1,      160, 512},
-		{"sha256", GT_HASHALG_SHA2_256,  256, 512},
-		{"rmd160", GT_HASHALG_RIPEMD160, 160, 512},
-		{"sha384", GT_HASHALG_SHA2_384,  384, 1024},
-		{"sha512", GT_HASHALG_SHA2_512,  512, 1024}
+		{GT_HASHALG_SHA1,       "sha1",   160, 512},
+		{GT_HASHALG_SHA2_256,   "sha256", 256, 512},
+		{GT_HASHALG_RIPEMD160,  "rmd160", 160, 512},
+		{GT_HASHALG_UNKNOWN_03, NULL,     0,   0  },
+		{GT_HASHALG_SHA2_384,   "sha384", 384, 1024},
+		{GT_HASHALG_SHA2_512,   "sha512", 512, 1024}
 };
 
 int GT_Hash_getAlgorithmId(char *arg, GT_Hash_AlgorithmId *id) {
 	int i;
 	for (i = 0; i < sizeof(hshAlgoInfo) / sizeof(hshAlgoInfo[0]); i++) {
-		if (strstr(arg, hshAlgoInfo[i].name)) {
+		if (hshAlgoInfo[i].name != NULL && strstr(arg, hshAlgoInfo[i].name)) {
 			*id = hshAlgoInfo[i].id;
 			return GT_OK;
 		}
@@ -46,21 +47,22 @@ int GT_Hash_getAlgorithmId(char *arg, GT_Hash_AlgorithmId *id) {
 }
 
 size_t GT_Hash_getAlgorithmLenght(GT_Hash_AlgorithmId id) {
-	int i;
-	for (i = 0; i < sizeof(hshAlgoInfo) / sizeof(hshAlgoInfo[0]); i++) {
-		if (id == hshAlgoInfo[i].id) {
-			return hshAlgoInfo[i].lenght / 8;
-		}
+	if (id < GT_NOF_HASHALGS && id == hshAlgoInfo[id].id) {
+		return hshAlgoInfo[id].lenght / 8;
 	}
 	return 0;
 }
 
 size_t GT_Hash_getAlgorithmBlockSize(GT_Hash_AlgorithmId id) {
-	int i;
-	for (i = 0; i < sizeof(hshAlgoInfo) / sizeof(hshAlgoInfo[0]); i++) {
-		if (id == hshAlgoInfo[i].id) {
-			return hshAlgoInfo[i].blockSize / 8;
-		}
+	if (id < GT_NOF_HASHALGS && id == hshAlgoInfo[id].id) {
+		return hshAlgoInfo[id].blockSize / 8;
 	}
 	return 0;
+}
+
+char* GT_Hash_getAlgorithmName(GT_Hash_AlgorithmId id) {
+	if (id < GT_NOF_HASHALGS && id == hshAlgoInfo[id].id) {
+		return hshAlgoInfo[id].name;
+	}
+	return NULL;
 }

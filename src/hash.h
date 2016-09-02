@@ -40,16 +40,20 @@ extern "C" {
 		GT_HASHALG_SHA2_256 = 0x01,
 		/** The RIPEMD-160 algorithm. */
 		GT_HASHALG_RIPEMD160 = 0x02,
+		/** Unsupported algorithm. */
+		GT_HASHALG_UNKNOWN_03 = 0x03,
 		/** The SHA-384 algorithm. */
 		GT_HASHALG_SHA2_384 = 0x04,
 		/** The SHA-512 algorithm. */
-		GT_HASHALG_SHA2_512 = 0x05
+		GT_HASHALG_SHA2_512 = 0x05,
 
+		GT_NOF_HASHALGS
 	} GT_Hash_AlgorithmId;
 
 	int GT_Hash_getAlgorithmId(char *arg, GT_Hash_AlgorithmId *id);
 	size_t GT_Hash_getAlgorithmLenght(GT_Hash_AlgorithmId id);
 	size_t GT_Hash_getAlgorithmBlockSize(GT_Hash_AlgorithmId id);
+	char* GT_Hash_getAlgorithmName(GT_Hash_AlgorithmId id);
 
 
 #ifdef __cplusplus
