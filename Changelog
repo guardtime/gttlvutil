@@ -1,4 +1,4 @@
-* IMPROVEMENT: tlvdump - added agument to wrap argument for specifing data line lenght.
+* IMPROVEMENT: tlvdump - added argument to '-w' flag for specifying data line length.
 * IMPROVEMENT: Default time format is set to GMT+00. To express time in local timezone use -t option.
 * IMPROVEMENT: Added automated tests.
 * FEATURE: Added HMAC calculation handling to gttlvundump.
