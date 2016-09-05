@@ -222,11 +222,11 @@ GTTLVUNDUMP test/resources/tlv/test2-extend_response-reqId_1.txt test/resources/
 # The file content is used as pattern for searching the pablication hash in 
 # dumped stream.
 
-gttlvgrep -r 800.805.10.04 test/resources/sig/ok-sig-2014-08-01.1.ksig | base64 > test/tmp/grep_base64_pattern.txt
+GTTLVGREP -r 800.805.10.04 test/resources/sig/ok-sig-2014-08-01.1.ksig | base64 > test/tmp/grep_base64_pattern.txt
 >>>
 >>>= 0
 
-gttlvdump -e 64 test/resources/sig/ok-sig-2014-08-01.1.ksig | grep -of test/tmp/grep_base64_pattern.txt
+GTTLVDUMP -e 64 test/resources/sig/ok-sig-2014-08-01.1.ksig | grep -of test/tmp/grep_base64_pattern.txt
 >>>
 AeT8CFPKyzyIjuTS+EMIOssagi5gQDpq9xZ/cNDKju5h
 >>>= 0
@@ -237,7 +237,7 @@ AeT8CFPKyzyIjuTS+EMIOssagi5gQDpq9xZ/cNDKju5h
 # TLV[0123]:
 #  TLV[01]: 717765727479
 
-(echo -n "qwerty" | gttlvwrap -t 01) | gttlvwrap -t 123 | gttlvdump -s
+(echo -n "qwerty" | GTTLVWRAP -t 01) | GTTLVWRAP -t 123 | GTTLVDUMP -s
 >>>
 TLV[0123]:0106717765727479
 >>>= 0

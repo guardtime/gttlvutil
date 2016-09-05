@@ -73,14 +73,14 @@ GTTLVDUMP -x test/resources/sig/ok-sig-2014-08-01.1.ksig
 # Using '-w' option for wrapping TLV values.
 
 # Use default wrap width.
-gttlvdump -w - test/resources/sig/ok-sig-2014-08-01.1.ksig
+GTTLVDUMP -w - test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>> /.*TLV\[07\].*
 .*TLV\[02\]. 01.*
 .*641812ad8ded1024089a018e6fc00d92766f9a901d3deb302696e13f3ab07e48.*/
 >>>= 0
 
 # Wrap width 16.
-gttlvdump -w 16 test/resources/sig/ok-sig-2014-08-01.1.ksig
+GTTLVDUMP -w 16 test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>> /.*TLV\[07\].*
 .*TLV\[02\]. 01.*
 .*641812ad8ded1024089a018e6fc00d92.*
@@ -88,7 +88,7 @@ gttlvdump -w 16 test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>= 0
 
 # Wrap width 5.
-gttlvdump -w 5 test/resources/sig/ok-sig-2014-08-01.1.ksig
+GTTLVDUMP -w 5 test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>> /.*TLV\[07\].*
 .*TLV\[02\]. 01.*
 .*641812ad8d.*

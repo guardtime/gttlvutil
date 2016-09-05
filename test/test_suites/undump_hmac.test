@@ -101,7 +101,7 @@ GTTLVUNDUMP test/resources/hmac/extend_request-hmac_is_last-hmac_func_v2.txt | G
 # Convert extend request file HMAC calculation function (approach v2).
 # HMAC tag (1f) indent level is 2.
 
-gttlvundump test/resources/hmac/extend_request-hmac_is_last-indent_level_2-hmac_func_v2.txt
+GTTLVUNDUMP test/resources/hmac/extend_request-hmac_is_last-indent_level_2-hmac_func_v2.txt
 >>>
 >>>2 /.*HMAC TLV is not first level PDU child.*
 .*Failed to calculate HMAC./
