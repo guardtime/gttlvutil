@@ -154,13 +154,13 @@ TLV[0123]:
 # Half of a byte value is given
 gttlvundump test/resources/tlv/dummy-half_byte.txt
 >>>
->>>2 /.*Hexadecimal value must be in byte-precision./
+>>>2 /.*Hex strings must contain even number of characters./
 >>>= 8
 
 # One and half byte values are given
 gttlvundump test/resources/tlv/dummy-one_and_a_half_byte.txt
 >>>
->>>2 /.*Hexadecimal value must be in byte-precision./
+>>>2 /.*Hex strings must contain even number of characters./
 >>>= 8
 
 ###############################################################################
