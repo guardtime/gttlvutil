@@ -521,9 +521,7 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 					tlv->dat[tlv->dat_len++] |= HEX_TO_DEC(c);
 					state = ST_DATA_HEX_1;
 				} else {
-					state = ST_END;
-					tlv->dat_len++;
-					continue;
+					error(GT_PARSER_ERROR, "Hex strings must contain even number of characters.");
 				}
 				break;
 
