@@ -1,3 +1,4 @@
+* IMPROVEMENT: Added a parameter to -w for wrapping the long byte strings to a specified width.
 * IMPROVEMENT: Default time format is set to GMT+00. To express time in local timezone use -t option.
 * IMPROVEMENT: Added automated tests.
 * FEATURE: Added HMAC calculation handling to gttlvundump.
