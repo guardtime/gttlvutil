@@ -17,7 +17,7 @@
 #endif
 
 #define INDENT_LEN 2
-#define DEFAULT_WRAP 64
+#define DEFAULT_WRAP 32
 
 enum out_enc_en { ENCODE_HEX, ENCODE_BASE64 };
 
@@ -78,7 +78,7 @@ static uint64_t get_uint64(unsigned char *buf, size_t len) {
 
 
 #define wrap_offset(l)	printf("\n%*s", (l), "")
-#define wrap_line(p)	if (conf->wrap && line_len > 0 && line_len % conf->wrap_width == 0 ) { wrap_offset(prefix_len); line_len = 0; } line_len += p
+#define wrap_line(p)	if (conf->wrap && line_len > 0 && line_len % (conf->wrap_width * 2) == 0 ) { wrap_offset(prefix_len); line_len = 0; } line_len += p
 static void print_hex(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
 	size_t i;
 	size_t line_len = 0;
@@ -124,8 +124,6 @@ static void print_base64(unsigned char *buf, size_t len, int prefix_len, struct 
 	}
 	putchar('\n');
 }
-
-
 
 static void print_raw_data(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
 	switch (conf->out_enc) {
@@ -525,11 +523,9 @@ int main(int argc, char **argv) {
 			case 'x':
 				conf.print_off = true;
 				break;
-			case 'w': {
-					size_t w = atoi(optarg);
-					conf.wrap_width = (w == 0) ? DEFAULT_WRAP : w;
-					conf.wrap = true;
-				}
+			case 'w':
+				conf.wrap_width = (*optarg == '-') ? DEFAULT_WRAP : atoi(optarg);
+				conf.wrap = true;
 				break;
 			case 'y':
 				conf.print_len = true;
@@ -588,8 +584,8 @@ int main(int argc, char **argv) {
 						"    -H <num> Constant header length.\n"
 						"    -d <num> Max depth of nested elements. Use 0 to disable filtering by level.\n"
 						"    -x       Display file offset for every TLV.\n"
-						"    -w <num> Wrap the output. Specify max data line width. Use 0 for default\n"
-						"             width (%d).\n"
+						"    -w <num> Wrap the output. Specify max data line width in bytes. Use '-' for\n"
+						"             default width (%d bytes).\n"
 						"    -y       Show content length.\n"
 						"    -z       Convert payload with length les than 8 bytes to decimal.\n"
 						"    -a       Annotate known KSI elements.\n"
