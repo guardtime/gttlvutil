@@ -142,6 +142,27 @@ echo "TLV[1]:2345q67890" | gttlvundump
 >>>= 8
 
 ###############################################################################
+# Verify that TLV hex values are handled in byte-precision.
 
+# Correct TLV value is given
+printf "TLV[123]:\n  TLV[1f]:1a" | gttlvundump | gttlvdump
+>>>
+TLV[0123]:
+  TLV[1f]: 1a
+>>>= 0
 
+# Half of a byte value is given
+printf "TLV[123]:\n  TLV[1f]:1" | gttlvundump
+>>>
+>>>2 
+<stdin>:2 - Hexadecimal value must be in byte-precision.
+>>>= 8
 
+# One and half byte values are given
+printf "TLV[123]:\n  TLV[1f]:10a" | gttlvundump
+>>>
+>>>2 
+<stdin>:2 - Hexadecimal value must be in byte-precision.
+>>>= 8
+
+###############################################################################
