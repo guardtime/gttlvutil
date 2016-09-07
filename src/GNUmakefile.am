@@ -17,10 +17,12 @@ if USE_PKG_DATA_DIR
   gttlvdumpdir=$(@DESC_DATA_DIR@)
 else 
   gttlvdumpdir=$(DESC_DATA_DIR)
-endif
-AM_CFLAGS+= -DDATA_DIR="\"$(gttlvdumpdir)\""
-dist_gttlvdump_DATA=logsig.desc ksi.desc ksie.desc
-endif
+endif #USE_PKG_DATA_DIR
+  AM_CFLAGS+= -DDATA_DIR="\"$(gttlvdumpdir)\""
+  dist_gttlvdump_DATA=logsig.desc ksi.desc ksie.desc
+else
+  AM_CFLAGS+= -DDATA_DIR="\"\""
+endif #USE_DATA_DIR
 
 gttlvdump_SOURCES=common.h tlvdump.c fast_tlv.h fast_tlv.c desc.h desc.c dir.c dir.h
 gttlvwrap_SOURCES=common.h tlvwrap.c

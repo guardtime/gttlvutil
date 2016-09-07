@@ -475,6 +475,44 @@ cleanup:
 	return res;
 }
 
+int initDescriptions(struct conf_st *conf, char *arg0) {
+	int res = GT_UNKNOWN_ERROR;
+	bool inited = false;
+
+	if (strlen(DATA_DIR)) {
+		setDescriptionFileDir(DATA_DIR);
+
+		/* Initialize the description structure. */
+		res = read_desc_dir(&(conf->desc), getDescriptionFileDir());
+		if (res != GT_OK) {
+			fprintf(stderr, "Unable to read description directory '%s'.\n", getDescriptionFileDir());
+		} else {
+			inited = true;
+		}
+	}
+
+	/* If the description files have not been found in package directory,
+	 * fallback to the executable dir. */
+	if (!inited) {
+		char buf[1024];
+
+		if(DIRECTORY_getMyPath(buf, sizeof(buf), arg0) != GT_OK) {
+			fprintf(stderr, "Unable to get path to gttlvdump.\n");
+		}
+		setDescriptionFileDir(buf);
+
+		/* Initialize the description structure. */
+		res = read_desc_dir(&(conf->desc), getDescriptionFileDir());
+		if (res != GT_OK) {
+			fprintf(stderr, "Unable to read description directory '%s'.\n", getDescriptionFileDir());
+		} else {
+			inited = true;
+		}
+	}
+
+	return res;
+}
+
 int main(int argc, char **argv) {
 	int res;
 	int c;
@@ -601,35 +639,9 @@ int main(int argc, char **argv) {
 		}
 	}
 
-#ifdef DATA_DIR
-	setDescriptionFileDir(DATA_DIR);
-
-	/* Initialize the description structure. */
-	res = read_desc_dir(&conf.desc, getDescriptionFileDir());
-	if (res != GT_OK) {
-		fprintf(stderr, "Unable to read description directory '%s'.\n", getDescriptionFileDir());
-	} else {
+	res = initDescriptions(&conf, argv[0]);
+	if (res == GT_OK) {
 		desc_free = true;
-	}
-#endif
-
-	/* If the description files have not been found in package directory, check in the executable dir. */
-	if (!desc_free) {
-		char buf[1024];
-
-
-		if(DIRECTORY_getMyPath(buf, sizeof(buf), argv[0]) != GT_OK) {
-			fprintf(stderr, "Unable to get path to gttlvdump.\n");
-		}
-		setDescriptionFileDir(buf);
-
-		/* Initialize the description structure. */
-		res = read_desc_dir(&conf.desc, getDescriptionFileDir());
-		if (res != GT_OK) {
-			fprintf(stderr, "Unable to read description directory '%s'.\n", getDescriptionFileDir());
-		} else {
-			desc_free = true;
-		}
 	}
 
 	/* If there are no input files, read from the standard in. */
