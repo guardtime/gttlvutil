@@ -145,7 +145,7 @@ echo "TLV[1]:2345q67890" | GTTLVUNDUMP
 # Verify that TLV hex values are handled in byte-precision.
 
 # Correct TLV value is given
-GTTLVUNDUMP test/resources/tlv/dummy.txt | gttlvdump
+GTTLVUNDUMP test/resources/tlv/dummy.txt | GTTLVDUMP
 >>>
 TLV[0123]:
   TLV[1f]: 1a
