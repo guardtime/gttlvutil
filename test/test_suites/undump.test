@@ -142,6 +142,25 @@ echo "TLV[1]:2345q67890" | GTTLVUNDUMP
 >>>= 8
 
 ###############################################################################
+# Verify that TLV hex values are handled in byte-precision.
 
+# Correct TLV value is given
+gttlvundump test/resources/tlv/dummy.txt | gttlvdump
+>>>
+TLV[0123]:
+  TLV[1f]: 1a
+>>>= 0
 
+# Half of a byte value is given
+gttlvundump test/resources/tlv/dummy-half_byte.txt
+>>>
+>>>2 /.*Hex strings must contain even number of characters./
+>>>= 8
 
+# One and half byte values are given
+gttlvundump test/resources/tlv/dummy-one_and_a_half_byte.txt
+>>>
+>>>2 /.*Hex strings must contain even number of characters./
+>>>= 8
+
+###############################################################################
