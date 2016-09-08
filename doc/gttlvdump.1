@@ -128,6 +128,14 @@ Print time in local timezone. Is valid with -p.
 Encoding of binary payload. Available encodings: 'hex' (default), 'base64'
 .\"
 .TP
+\fB-D \fIpth\fR
+Set description TLV files directory. Description files will be loaded additionally to the default files.
+.\"
+.TP
+\fB-o\fR
+Override default TLV description files. If set, the default description files are ignored. Option is valid with \fB-D\fR.
+.\"
+.TP
 \fB-v\fR
 TLV utility package version.
 .LP
@@ -135,7 +143,7 @@ TLV utility package version.
 .SH FILES
 .\"
 .TP
-\fI/usr/share/gttlvutil/*.desc\fR - description files that define known TLV elements. See \fBtlv-desc\fR(5) for more details.
+\fI/usr/share/gttlvutil/*.desc\fR - default description files that define known TLV elements. See \fBtlv-desc\fR(5) for more details.
 .LP 
 .\"
 .SH EXAMPLES

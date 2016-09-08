@@ -18,6 +18,7 @@
 
 #define INDENT_LEN 2
 #define DEFAULT_WRAP 32
+#define PATH_SIZE 2048
 
 enum out_enc_en { ENCODE_HEX, ENCODE_BASE64 };
 
@@ -35,6 +36,8 @@ struct conf_st {
 	bool pretty_val;
 	bool pretty_key;
 	bool timezone;
+	struct desc_st usr_desc;
+	bool override;
 	struct desc_st desc;
 	enum out_enc_en out_enc;
 };
@@ -43,7 +46,7 @@ static char *hash_alg[] = {
 	"sha-1", "sha2-256", "ripemd-160", "sha2-224", "sha2-384", "sha2-512", "ripemd-256", "sha3-224", "sha3-256", "sha3-512", "sm3"
 };
 
-static char descriptionDir[2048];
+static char descriptionDir[PATH_SIZE];
 
 static const char *getDescriptionFileDir(void) {
 	if (descriptionDir[0] == '\0') {
@@ -457,9 +460,9 @@ static int read_desc_dir(struct desc_st *desc, const char *dir_name) {
 		len = strlen(name);
 
 		if (len > 5 && !strcmp(name + len - 5, ".desc")) {
-			char buf[1024];
+			char buf[PATH_SIZE];
 
-			snprintf(buf, sizeof(buf), "%s/%s", getDescriptionFileDir(), name);
+			snprintf(buf, sizeof(buf), "%s/%s", dir_name, name);
 
 			res = desc_add_file(desc, buf);
 			if (res != GT_OK) {
@@ -475,26 +478,26 @@ cleanup:
 	return res;
 }
 
-int initDescriptions(struct conf_st *conf, char *arg0) {
+static int loadDefaultDescriptions(struct desc_st *desc, char *arg0) {
 	int res = GT_UNKNOWN_ERROR;
-	bool inited = false;
+	bool loaded = false;
 
 	if (strlen(DATA_DIR)) {
 		setDescriptionFileDir(DATA_DIR);
 
 		/* Initialize the description structure. */
-		res = read_desc_dir(&(conf->desc), getDescriptionFileDir());
+		res = read_desc_dir(desc, getDescriptionFileDir());
 		if (res != GT_OK) {
-			fprintf(stderr, "Unable to read description directory '%s'.\n", getDescriptionFileDir());
+			fprintf(stderr, "Unable to read default description directory '%s'.\n", getDescriptionFileDir());
 		} else {
-			inited = true;
+			loaded = true;
 		}
 	}
 
 	/* If the description files have not been found in package directory,
 	 * fallback to the executable dir. */
-	if (!inited) {
-		char buf[1024];
+	if (!loaded) {
+		char buf[PATH_SIZE];
 
 		if(DIRECTORY_getMyPath(buf, sizeof(buf), arg0) != GT_OK) {
 			fprintf(stderr, "Unable to get path to gttlvdump.\n");
@@ -502,15 +505,60 @@ int initDescriptions(struct conf_st *conf, char *arg0) {
 		setDescriptionFileDir(buf);
 
 		/* Initialize the description structure. */
-		res = read_desc_dir(&(conf->desc), getDescriptionFileDir());
+		res = read_desc_dir(desc, getDescriptionFileDir());
 		if (res != GT_OK) {
-			fprintf(stderr, "Unable to read description directory '%s'.\n", getDescriptionFileDir());
-		} else {
-			inited = true;
+			fprintf(stderr, "Unable to read default description directory '%s'.\n", getDescriptionFileDir());
 		}
 	}
 
 	return res;
+}
+
+static int loadUserDescriptions(struct desc_st *desc, const char *path) {
+	int res = GT_UNKNOWN_ERROR;
+
+	/* Read user description files. */
+	res = read_desc_dir(desc, path);
+	if (res != GT_OK) {
+		fprintf(stderr, "Unable to read user description directory '%s'.\n", path);
+	}
+
+	return res;
+}
+
+static int checkDuplicateDescriptions(struct conf_st *conf) {
+	size_t i;
+	size_t size;
+	unsigned char cache[0xffff/8];
+
+	if (conf == NULL) {
+		return GT_INVALID_ARGUMENT;
+	}
+
+	size = sizeof(conf->desc.map) / sizeof(struct desc_st *);
+
+	/* Cache default description tags. */
+	for (i = 0; i < size; i++) {
+		if (conf->desc.map[i] == NULL) {
+			break;
+		} else {
+			cache[conf->desc.map[i]->key / 8] |= 1 << conf->desc.map[i]->key % 8;
+		}
+	}
+
+	/* Check for duplicates. */
+	for (i = 0; i < size; i++) {
+		if (conf->usr_desc.map[i] == NULL) {
+			break;
+		} else {
+			if (cache[conf->usr_desc.map[i]->key / 8] & (1 << conf->usr_desc.map[i]->key % 8)) {
+				fprintf(stderr, "Duplicate in description files: tag=%04x\n", conf->usr_desc.map[i]->key);
+				return GT_DUPLICATE_ERROR;
+			}
+		}
+	}
+
+	return GT_OK;
 }
 
 int main(int argc, char **argv) {
@@ -518,11 +566,19 @@ int main(int argc, char **argv) {
 	int c;
 	FILE *input = NULL;
 	struct conf_st conf;
-	bool desc_free = false;
+	bool def_desc_loaded = false;
+	bool usr_desc_loaded = false;
+	char *usr_desc_path = NULL;
 
 	memset(&conf, 0, sizeof(conf));
 
-	while ((c = getopt(argc, argv, "hH:d:xw:yzaspPte:v")) != -1) {
+	/* Read descriptions from files. */
+	res = loadDefaultDescriptions(&conf.desc, argv[0]);
+	if (res == GT_OK) {
+		def_desc_loaded = true;
+	}
+
+	while ((c = getopt(argc, argv, "hH:d:xw:yzaspPte:vD:o")) != -1) {
 		switch(c) {
 			case 'H':
 				conf.hdr_len = atoi(optarg);
@@ -600,6 +656,17 @@ int main(int argc, char **argv) {
 				}
 				break;
 			}
+			case 'D':
+				usr_desc_path = calloc(PATH_SIZE, sizeof(char));
+				if (!usr_desc_path) {
+					res = GT_BUFFER_OVERFLOW;
+					goto cleanup;
+				}
+				strcpy(usr_desc_path, optarg);
+				break;
+			case 'o':
+				conf.override = true;
+				break;
 
 			case 'h':
 				printf("Usage:\n"
@@ -610,7 +677,7 @@ int main(int argc, char **argv) {
 						"    -H <num> Constant header length.\n"
 						"    -d <num> Max depth of nested elements. Use 0 to disable filtering by level.\n"
 						"    -x       Display file offset for every TLV.\n"
-						"    -w <num> Wrap the output. Specify max data line width in bytes. Use '-' for\n"
+						"    -w <arg> Wrap the output. Specify max data line width in bytes. Use '-' for\n"
 						"             default width (%d bytes).\n"
 						"    -y       Show content length.\n"
 						"    -z       Convert payload with length les than 8 bytes to decimal.\n"
@@ -621,9 +688,15 @@ int main(int argc, char **argv) {
 						"    -t       Print timezone according to OS setting (valid with -p).\n"
 						"    -e <enc> Encoding of binary payload. Available encodings: 'hex' (default),\n"
 						"             'base64'.\n"
+						"    -D <pth> Set TLV description files directory.\n"
+						"    -o       Override default description files (valid with -D).\n"
 						"    -v       TLV utility package version.\n"
+						"\n"
+						"Default description files directory:\n"
+						"  %s\n"
 						"\n",
-						DEFAULT_WRAP
+						DEFAULT_WRAP,
+						getDescriptionFileDir()
 						);
 				res = GT_OK;
 				goto cleanup;
@@ -639,9 +712,15 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	res = initDescriptions(&conf, argv[0]);
+	/* Read descriptions from files. */
+	res = loadUserDescriptions(&conf.usr_desc, usr_desc_path);
 	if (res == GT_OK) {
-		desc_free = true;
+		usr_desc_loaded = true;
+	}
+
+	if (usr_desc_loaded && !conf.override) {
+		res = checkDuplicateDescriptions(&conf);
+		if (res != GT_OK) goto cleanup;
 	}
 
 	/* If there are no input files, read from the standard in. */
@@ -675,7 +754,9 @@ int main(int argc, char **argv) {
 cleanup:
 
 	if (input != NULL) fclose(input);
-	if (desc_free) desc_cleanup(&conf.desc);
+	if (def_desc_loaded) desc_cleanup(&conf.desc);
+	if (usr_desc_loaded) desc_cleanup(&conf.usr_desc);
+	if (usr_desc_path) free(usr_desc_path);
 
 	return res;
 }

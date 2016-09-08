@@ -25,8 +25,6 @@ static int desc_get(struct desc_st *in, unsigned tag, bool create, struct desc_s
 
 	struct desc_st *ptr = NULL;
 	size_t pos;
-
-	size_t i;
 	size_t arr_len;
 
 	/* If in is NULL, do not shout at the caller, this probably means
@@ -43,11 +41,9 @@ static int desc_get(struct desc_st *in, unsigned tag, bool create, struct desc_s
 		goto cleanup;
 	}
 
-	arr_len = sizeof(in->map) / sizeof(struct desc_st *);
-
 	/* Find a spot or the correct container. */
-	for (i = 0; i < arr_len; i++) {
-		pos = ( + i) % arr_len;
+	arr_len = sizeof(in->map) / sizeof(struct desc_st *);
+	for (pos = 0; pos < arr_len; pos++) {
 		if (in->map[pos] == NULL || in->map[pos]->key == tag) {
 			break;
 		}
