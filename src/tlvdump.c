@@ -36,8 +36,9 @@ struct conf_st {
 	bool pretty_val;
 	bool pretty_key;
 	bool timezone;
-	struct desc_st usr_desc;
 	bool override;
+	struct desc_st usr_desc;
+	struct desc_st def_desc;
 	struct desc_st desc;
 	enum out_enc_en out_enc;
 };
@@ -539,10 +540,10 @@ static int checkDuplicateDescriptions(struct conf_st *conf) {
 
 	/* Cache default description tags. */
 	for (i = 0; i < size; i++) {
-		if (conf->desc.map[i] == NULL) {
+		if (conf->def_desc.map[i] == NULL) {
 			break;
 		} else {
-			cache[conf->desc.map[i]->key / 8] |= 1 << conf->desc.map[i]->key % 8;
+			cache[conf->def_desc.map[i]->key / 8] |= 1 << conf->def_desc.map[i]->key % 8;
 		}
 	}
 
@@ -561,6 +562,22 @@ static int checkDuplicateDescriptions(struct conf_st *conf) {
 	return GT_OK;
 }
 
+static size_t copyDescriptions(struct desc_st *dest_desc, struct desc_st *src_desc, size_t spos) {
+	size_t i;
+	size_t p = spos;
+
+	for (i = 0; i < (sizeof(src_desc->map) / sizeof(struct desc_st *)); i++) {
+		if (src_desc->map[i] == NULL) {
+			break;
+		} else {
+			dest_desc->map[p++] = src_desc->map[i];
+		}
+	}
+
+	return p;
+}
+
+
 int main(int argc, char **argv) {
 	int res;
 	int c;
@@ -569,11 +586,12 @@ int main(int argc, char **argv) {
 	bool def_desc_loaded = false;
 	bool usr_desc_loaded = false;
 	char *usr_desc_path = NULL;
+	size_t pos = 0;
 
 	memset(&conf, 0, sizeof(conf));
 
 	/* Read descriptions from files. */
-	res = loadDefaultDescriptions(&conf.desc, argv[0]);
+	res = loadDefaultDescriptions(&conf.def_desc, argv[0]);
 	if (res == GT_OK) {
 		def_desc_loaded = true;
 	}
@@ -712,15 +730,32 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	/* Read descriptions from files. */
-	res = loadUserDescriptions(&conf.usr_desc, usr_desc_path);
-	if (res == GT_OK) {
-		usr_desc_loaded = true;
+	if (usr_desc_path != NULL) {
+		/* Read descriptions from user files. */
+		res = loadUserDescriptions(&conf.usr_desc, usr_desc_path);
+		if (res == GT_OK) {
+			usr_desc_loaded = true;
+		}
+
+		if (usr_desc_loaded && !conf.override) {
+			res = checkDuplicateDescriptions(&conf);
+			if (res != GT_OK) goto cleanup;
+		}
 	}
 
-	if (usr_desc_loaded && !conf.override) {
-		res = checkDuplicateDescriptions(&conf);
-		if (res != GT_OK) goto cleanup;
+	/* Init descriptions buffer. */
+	/* Copy default descriptions. */
+	if (!usr_desc_loaded || (usr_desc_loaded && !conf.override)) {
+		pos = copyDescriptions(&conf.desc, &conf.def_desc, pos);
+	}
+	/* Copy user descriptions. */
+	if (usr_desc_loaded) {
+		pos = copyDescriptions(&conf.desc, &conf.usr_desc, pos);
+	}
+
+	if (pos > sizeof(conf.desc.map) / sizeof(struct desc_st *)) {
+		res = GT_BUFFER_OVERFLOW;
+		goto cleanup;
 	}
 
 	/* If there are no input files, read from the standard in. */
@@ -754,7 +789,7 @@ int main(int argc, char **argv) {
 cleanup:
 
 	if (input != NULL) fclose(input);
-	if (def_desc_loaded) desc_cleanup(&conf.desc);
+	if (def_desc_loaded) desc_cleanup(&conf.def_desc);
 	if (usr_desc_loaded) desc_cleanup(&conf.usr_desc);
 	if (usr_desc_path) free(usr_desc_path);
 
