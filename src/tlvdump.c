@@ -78,7 +78,7 @@ static uint64_t get_uint64(unsigned char *buf, size_t len) {
 
 
 #define wrap_offset(l)	printf("\n%*s", (l), "")
-#define wrap_line(p)	if (conf->wrap && line_len > 0 && line_len % (conf->wrap_width * 2) == 0 ) { wrap_offset(prefix_len); line_len = 0; } line_len += p
+#define wrap_line(p)	if (conf->wrap_width && line_len > 0 && line_len % (conf->wrap_width * 2) == 0 ) { wrap_offset(prefix_len); line_len = 0; } line_len += p
 static void print_hex(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
 	size_t i;
 	size_t line_len = 0;
@@ -227,11 +227,11 @@ static void print_imprint(unsigned char *buf, size_t len, int prefix_len, struct
 			} else {
 				printf("%02x:", buf[0]);
 			}
-			if (conf->wrap) {
+			if (conf->wrap_width) {
 				wrap_offset(prefix_len);
 			}
 			print_raw_data(buf + 1, len - 1, prefix_len, conf);
-		} else if (conf->wrap && conf->out_enc == ENCODE_HEX) {
+		} else if (conf->wrap_width && conf->out_enc == ENCODE_HEX) {
 			printf("%02x", buf[0]);
 			wrap_offset(prefix_len);
 			print_raw_data(buf + 1, len - 1, prefix_len, conf);
@@ -379,7 +379,7 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 				break;
 		}
 	} else {
-		if (type == TLV_IMPRINT && conf->wrap) {
+		if (type == TLV_IMPRINT && conf->wrap_width) {
 			print_imprint(ptr, len, prefix_len, conf);
 		} else {
 			print_raw_data(ptr, len, prefix_len, conf);
@@ -475,8 +475,34 @@ cleanup:
 	return res;
 }
 
+static int getOptionDecValue(char opt, char *arg, size_t *val, char *excstr, size_t excval) {
+	int res = GT_INVALID_ARGUMENT;
+	char *endptr = NULL;
+	long int li = strtol(arg, &endptr, 10);
+
+	if (errno == ERANGE) {
+		fprintf(stderr, "Option %c is out of range.\n", opt);
+		goto cleanup;
+	} else if (li < 0) {
+		fprintf(stderr, "Option %c cannot be negative.\n", opt);
+		goto cleanup;
+	} else if (li == 0 && endptr != NULL && *endptr != '\0') {
+		if (excstr && strcmp(endptr, excstr) == 0) {
+			li = excval;
+		} else {
+			fprintf(stderr, "Option %c must be a decimal integer.\n", opt);
+			goto cleanup;
+		}
+	}
+
+	res = GT_OK;
+	*val = li;
+cleanup:
+	return res;
+}
+
 int main(int argc, char **argv) {
-	int res;
+	int res = GT_UNKNOWN_ERROR;
 	int c;
 	FILE *input = NULL;
 	struct conf_st conf;
@@ -498,35 +524,23 @@ int main(int argc, char **argv) {
 
 	while ((c = getopt(argc, argv, "hH:d:xw:yzaspPte:v")) != -1) {
 		switch(c) {
-			case 'H':
-				conf.hdr_len = atoi(optarg);
+			case 'H': {
+				res = getOptionDecValue((char)c, optarg, &conf.hdr_len, NULL, 0);
+				if (res != GT_OK) goto cleanup;
 				break;
-			case 'd': {
-				char *endptr = NULL;
-				long int li = strtol(optarg, &endptr, 10);
-
-				res = GT_INVALID_ARGUMENT;
-				if (errno == ERANGE) {
-					fprintf(stderr, "Option d is out of range.\n");
-					goto cleanup;
-				} else if (li < 0) {
-					fprintf(stderr, "Option d cannot be negative.\n");
-					goto cleanup;
-				} else if (li == 0 && endptr != NULL && *endptr != '\0') {
-					fprintf(stderr, "Option d must be a decimal integer.\n");
-					goto cleanup;
-				}
-				res = GT_OK;
-				conf.max_depth = li;
+			case 'd':
+				res = getOptionDecValue((char)c, optarg, &conf.max_depth, NULL, 0);
+				if (res != GT_OK) goto cleanup;
 				break;
 			}
 			case 'x':
 				conf.print_off = true;
 				break;
-			case 'w':
-				conf.wrap_width = (*optarg == '-') ? DEFAULT_WRAP : atoi(optarg);
-				conf.wrap = true;
+			case 'w': {
+				res = getOptionDecValue((char)c, optarg, &conf.wrap_width, "-", DEFAULT_WRAP);
+				if (res != GT_OK) goto cleanup;
 				break;
+			}
 			case 'y':
 				conf.print_len = true;
 				break;

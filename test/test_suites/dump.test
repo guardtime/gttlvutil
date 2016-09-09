@@ -100,6 +100,41 @@ gttlvdump -w 5 test/resources/sig/ok-sig-2014-08-01.1.ksig
 .*7e48.*/
 >>>= 0
 
+# Try negative argument. 
+gttlvdump -w -5 test/resources/sig/ok-sig-2014-08-01.1.ksig
+>>>
+>>>2 
+Option w cannot be negative.
+>>>= 5
+
+# Try hex value '0f'.
+gttlvdump -w 0f test/resources/sig/ok-sig-2014-08-01.1.ksig
+>>>
+>>>2 
+Option w must be a decimal integer.
+>>>= 5
+
+# Try hex value '0x0f'.
+gttlvdump -w 0x0f test/resources/sig/ok-sig-2014-08-01.1.ksig
+>>>
+>>>2 
+Option w must be a decimal integer.
+>>>= 5
+
+# Try string 'qwerty'.
+gttlvdump -w qwerty test/resources/sig/ok-sig-2014-08-01.1.ksig
+>>>
+>>>2 
+Option w must be a decimal integer.
+>>>= 5
+
+# Try string '-qwerty'.
+gttlvdump -w -qwerty test/resources/sig/ok-sig-2014-08-01.1.ksig
+>>>
+>>>2 
+Option w must be a decimal integer.
+>>>= 5
+
 ###############################################################################
 # Tlvdump KSI signature.
 # Using '-y' option for showing content lenght.
@@ -190,15 +225,15 @@ TLV.0702.*
 ###############################################################################
 # Try to dump garbage.
 
-echo -en "\x12\x34\x56" | gttlvdump 
+echo -en "\x12\x34\x56" | gttlvdump
 >>>
->>>2 
+>>>2
 (null): Failed to parse 3 bytes.
 >>>= 0
 
 ###############################################################################
 # Test timezone expression.
-# Get current timezone. Save it to a temp file. Use the saved result to as 
+# Get current timezone. Save it to a temp file. Use the saved result to as
 # search pattern in tlvdumped stream.
 
 date +%Z > test/tmp/dump_date_timezone.txt
