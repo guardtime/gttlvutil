@@ -562,19 +562,22 @@ static int checkDuplicateDescriptions(struct conf_st *conf) {
 	return GT_OK;
 }
 
-static size_t copyDescriptions(struct desc_st *dest_desc, struct desc_st *src_desc, size_t spos) {
+static int copyDescriptions(struct desc_st *dest_desc, struct desc_st *src_desc, size_t begin, size_t *end) {
 	size_t i;
-	size_t p = spos;
+	size_t p = begin;
 
 	for (i = 0; i < (sizeof(src_desc->map) / sizeof(struct desc_st *)); i++) {
 		if (src_desc->map[i] == NULL) {
 			break;
 		} else {
+			if (p > (sizeof(dest_desc->map) / sizeof(struct desc_st *))) return GT_BUFFER_OVERFLOW;
+
 			dest_desc->map[p++] = src_desc->map[i];
 		}
 	}
 
-	return p;
+	if (end != NULL) *end = p;
+	return GT_OK;
 }
 
 
@@ -590,7 +593,7 @@ int main(int argc, char **argv) {
 
 	memset(&conf, 0, sizeof(conf));
 
-	/* Read descriptions from files. */
+	/* Read descriptions from fedault files. */
 	res = loadDefaultDescriptions(&conf.def_desc, argv[0]);
 	if (res == GT_OK) {
 		def_desc_loaded = true;
@@ -743,19 +746,16 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	/* Init descriptions buffer. */
+	/* Init general descriptions buffer. */
 	/* Copy default descriptions. */
 	if (!usr_desc_loaded || (usr_desc_loaded && !conf.override)) {
-		pos = copyDescriptions(&conf.desc, &conf.def_desc, pos);
+		res = copyDescriptions(&conf.desc, &conf.def_desc, 0, &pos);
+		if (res != GT_OK) goto cleanup;
 	}
 	/* Copy user descriptions. */
 	if (usr_desc_loaded) {
-		pos = copyDescriptions(&conf.desc, &conf.usr_desc, pos);
-	}
-
-	if (pos > sizeof(conf.desc.map) / sizeof(struct desc_st *)) {
-		res = GT_BUFFER_OVERFLOW;
-		goto cleanup;
+		res = copyDescriptions(&conf.desc, &conf.usr_desc, pos, NULL);
+		if (res != GT_OK) goto cleanup;
 	}
 
 	/* If there are no input files, read from the standard in. */
