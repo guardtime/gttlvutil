@@ -50,7 +50,7 @@ set hash_provider=CRYPTOAPI
 rem Rebuild the gttlvutils.
 
 nmake clean
-nmake /S RTL=%rtl% HASH_PROVIDER=%hash_provider% OPENSSL_DIR=%openssl_dir% LIB_TYPE=%lib_type% INSTALL_MACHINE=%install_machine%
+nmake /S RTL=%rtl% HASH_PROVIDER=%hash_provider% OPENSSL_DIR=%openssl_dir% LIB_TYPE=%lib_type% INSTALL_MACHINE=%install_machine% installer
 
 endlocal
 pause
