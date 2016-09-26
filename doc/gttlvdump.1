@@ -78,8 +78,12 @@ Max depth of nested TLV elements. After the depth is exceeded no more TLV parsin
 Display the TLV offset in bytes relative to the beginning of the file or stream. It must be noted that when constant header \fB-H\fR is used the TLV offset is displayed relative to the first byte after header.
 .\"
 .TP
-\fB-w\fR
-Wrap the output.
+\fB-w \fIarg\fR
+Wrap the output. Specify max data line width in bytes. Use '-' for default width. Extra wrapping is done on following element values:
+.RS 8
+.IP \(bu 4
+Hash - first wrapping is performed after hash algorithm regardles of the specified line width.
+.RE
 .\"
 .TP
 \fB-y\fR
