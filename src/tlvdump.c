@@ -593,7 +593,7 @@ int main(int argc, char **argv) {
 
 	memset(&conf, 0, sizeof(conf));
 
-	/* Read descriptions from fedault files. */
+	/* Read descriptions from default files. */
 	res = loadDefaultDescriptions(&conf.def_desc, argv[0]);
 	if (res == GT_OK) {
 		def_desc_loaded = true;
