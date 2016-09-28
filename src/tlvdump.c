@@ -686,6 +686,7 @@ int main(int argc, char **argv) {
 	/* Read descriptions from user files. */
 	if (usr_desc_path != NULL) {
 		struct desc_st tmp;
+		memset(&tmp, 0, sizeof(tmp));
 		/* Verify user descriptions. */
 		res = loadDescriptions(&tmp, usr_desc_path, false);
 		desc_cleanup(&tmp);

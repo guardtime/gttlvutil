@@ -51,7 +51,7 @@ TLV\[0123\]:Dummy PDU:.*
 >>>= 0
 
 ###############################################################################
-# Use TLV file with dummy data and KSI TLV element.
+# Use TLV file with dummy data and KSI TLV element. 
 # Set -p and -P flags for pretty print keys and values.
 
 GTTLVUNDUMP test/resources/tlv/dummy_and_known_pdu.txt | GTTLVDUMP -pP

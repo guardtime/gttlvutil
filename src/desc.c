@@ -11,9 +11,9 @@ void desc_cleanup(struct desc_st *desc) {
 		if (desc->val != NULL) {
 			free(desc->val);
 			desc->val = NULL;
-			desc->key = 0;
-			desc->type = 0;
 		}
+		desc->key = 0;
+		desc->type = 0;
 		for (i = 0; i < sizeof(desc->map) / sizeof(struct desc_st *); i++) {
 			if (desc->map[i] != NULL) {
 				desc_cleanup(desc->map[i]);
