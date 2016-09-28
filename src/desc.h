@@ -1,6 +1,8 @@
 #ifndef DESC_H_
 #define DESC_H_
 
+#include "common.h"
+
 enum {
 	/** Composite payload. */
 	TLV_COMPOSITE,
@@ -19,7 +21,7 @@ enum {
 	/** Imprint value. */
 	TLV_IMPRINT,
 	/** Composite value, that is not parsable. */
-	TLV_NO_COMPOSITE,	
+	TLV_NO_COMPOSITE,
 };
 
 /**
@@ -43,7 +45,7 @@ struct desc_st {
 /**
  * Initialize the description with the contents of the file.
  */
-int desc_add_file(struct desc_st *desc, const char *descFile);
+int desc_add_file(struct desc_st *desc, const char *descFile, bool override);
 
 /**
  * Find the given key in the description.
@@ -52,7 +54,7 @@ int desc_find(struct desc_st *in, unsigned tag, struct desc_st **out);
 
 /**
  * Pefrorms a cleanup of the object, but won't free it.
- */	
+ */
 void desc_cleanup(struct desc_st *desc);
-	
+
 #endif

@@ -36,9 +36,8 @@ struct conf_st {
 	bool pretty_val;
 	bool pretty_key;
 	bool timezone;
-	bool override;
-	struct desc_st usr_desc;
-	struct desc_st def_desc;
+	bool override_def;
+	bool ignore_def;
 	struct desc_st desc;
 	enum out_enc_en out_enc;
 };
@@ -439,12 +438,10 @@ cleanup:
 	return res;
 }
 
-static int read_desc_dir(struct desc_st *desc, const char *dir_name) {
+static int read_desc_dir(struct desc_st *desc, const char *dir_name, bool override) {
 	int res = GT_UNKNOWN_ERROR;
 	DIRECTORY *dir = NULL;
 	ENTITY *ent;
-
-	memset(desc, 0, sizeof(struct desc_st));
 
 	if (DIRECTORY_open(dir_name, &dir) != DIR_OK) {
 		fprintf(stderr, "%s:Unable to access description directory.\n", dir_name);
@@ -464,7 +461,7 @@ static int read_desc_dir(struct desc_st *desc, const char *dir_name) {
 
 			snprintf(buf, sizeof(buf), "%s/%s", dir_name, name);
 
-			res = desc_add_file(desc, buf);
+			res = desc_add_file(desc, buf, override);
 			if (res != GT_OK) {
 				fprintf(stderr, "%s/%s: Unable to read description file.\n", dir_name, name);
 			}
@@ -478,107 +475,37 @@ cleanup:
 	return res;
 }
 
-static int loadDefaultDescriptions(struct desc_st *desc, char *arg0) {
-	int res = GT_UNKNOWN_ERROR;
-	bool loaded = false;
+static void initDefaultDescriptionFileDir(char *arg0) {
+	bool set = false;
 
 	if (strlen(DATA_DIR)) {
 		setDescriptionFileDir(DATA_DIR);
-
-		/* Initialize the description structure. */
-		res = read_desc_dir(desc, getDescriptionFileDir());
-		if (res != GT_OK) {
-			fprintf(stderr, "Unable to read default description directory '%s'.\n", getDescriptionFileDir());
-		} else {
-			loaded = true;
-		}
+		set = true;
 	}
 
 	/* If the description files have not been found in package directory,
 	 * fallback to the executable dir. */
-	if (!loaded) {
+	if (!set) {
 		char buf[PATH_SIZE];
 
 		if(DIRECTORY_getMyPath(buf, sizeof(buf), arg0) != GT_OK) {
 			fprintf(stderr, "Unable to get path to gttlvdump.\n");
 		}
 		setDescriptionFileDir(buf);
-
-		/* Initialize the description structure. */
-		res = read_desc_dir(desc, getDescriptionFileDir());
-		if (res != GT_OK) {
-			fprintf(stderr, "Unable to read default description directory '%s'.\n", getDescriptionFileDir());
-		}
 	}
-
-	return res;
 }
 
-static int loadUserDescriptions(struct desc_st *desc, const char *path) {
+static int loadDescriptions(struct desc_st *desc, const char *path, bool override) {
 	int res = GT_UNKNOWN_ERROR;
 
 	/* Read user description files. */
-	res = read_desc_dir(desc, path);
+	res = read_desc_dir(desc, path, override);
 	if (res != GT_OK) {
-		fprintf(stderr, "Unable to read user description directory '%s'.\n", path);
+		fprintf(stderr, "Unable to load descriptions from '%s'.\n", path);
 	}
 
 	return res;
 }
-
-static int checkDuplicateDescriptions(struct conf_st *conf) {
-	size_t i;
-	size_t size;
-	unsigned char cache[0xffff/8];
-
-	if (conf == NULL) {
-		return GT_INVALID_ARGUMENT;
-	}
-
-	size = sizeof(conf->desc.map) / sizeof(struct desc_st *);
-
-	/* Cache default description tags. */
-	for (i = 0; i < size; i++) {
-		if (conf->def_desc.map[i] == NULL) {
-			break;
-		} else {
-			cache[conf->def_desc.map[i]->key / 8] |= 1 << conf->def_desc.map[i]->key % 8;
-		}
-	}
-
-	/* Check for duplicates. */
-	for (i = 0; i < size; i++) {
-		if (conf->usr_desc.map[i] == NULL) {
-			break;
-		} else {
-			if (cache[conf->usr_desc.map[i]->key / 8] & (1 << conf->usr_desc.map[i]->key % 8)) {
-				fprintf(stderr, "Duplicate in description files: tag=%04x\n", conf->usr_desc.map[i]->key);
-				return GT_DUPLICATE_ERROR;
-			}
-		}
-	}
-
-	return GT_OK;
-}
-
-static int copyDescriptions(struct desc_st *dest_desc, struct desc_st *src_desc, size_t begin, size_t *end) {
-	size_t i;
-	size_t p = begin;
-
-	for (i = 0; i < (sizeof(src_desc->map) / sizeof(struct desc_st *)); i++) {
-		if (src_desc->map[i] == NULL) {
-			break;
-		} else {
-			if (p > (sizeof(dest_desc->map) / sizeof(struct desc_st *))) return GT_BUFFER_OVERFLOW;
-
-			dest_desc->map[p++] = src_desc->map[i];
-		}
-	}
-
-	if (end != NULL) *end = p;
-	return GT_OK;
-}
-
 
 static int getOptionDecValue(char opt, char *arg, size_t *val, char *excstr, size_t excval) {
 	int res = GT_INVALID_ARGUMENT;
@@ -611,20 +538,14 @@ int main(int argc, char **argv) {
 	int c;
 	FILE *input = NULL;
 	struct conf_st conf;
-	bool def_desc_loaded = false;
-	bool usr_desc_loaded = false;
+	bool desc_loaded = false;
 	char *usr_desc_path = NULL;
-	size_t pos = 0;
 
 	memset(&conf, 0, sizeof(conf));
 
-	/* Read descriptions from default files. */
-	res = loadDefaultDescriptions(&conf.def_desc, argv[0]);
-	if (res == GT_OK) {
-		def_desc_loaded = true;
-	}
+	initDefaultDescriptionFileDir(argv[0]);
 
-	while ((c = getopt(argc, argv, "hH:d:xw:yzaspPte:vD:o")) != -1) {
+	while ((c = getopt(argc, argv, "hH:d:xw:yzaspPte:vD:oi")) != -1) {
 		switch(c) {
 			case 'H': {
 				res = getOptionDecValue((char)c, optarg, &conf.hdr_len, NULL, 0);
@@ -699,7 +620,11 @@ int main(int argc, char **argv) {
 				strcpy(usr_desc_path, optarg);
 				break;
 			case 'o':
-				conf.override = true;
+				conf.override_def = true;
+				break;
+			case 'i':
+				conf.ignore_def = true;
+				conf.override_def = false;
 				break;
 
 			case 'h':
@@ -723,7 +648,8 @@ int main(int argc, char **argv) {
 						"    -e <enc> Encoding of binary payload. Available encodings: 'hex' (default),\n"
 						"             'base64'.\n"
 						"    -D <pth> Set TLV description files directory.\n"
-						"    -o       Override default description files (valid with -D).\n"
+						"    -o       Override default descriptions (valid with -D). Has no effect with -i.\n"
+						"    -i       Ignore default descriptions (valid with -D).\n"
 						"    -v       TLV utility package version.\n"
 						"\n"
 						"Default description files directory:\n"
@@ -746,29 +672,34 @@ int main(int argc, char **argv) {
 		}
 	}
 
+	/* Read descriptions from default files. */
+	if (!conf.ignore_def) {
+		res = loadDescriptions(&conf.desc, getDescriptionFileDir(), false);
+		if (res != GT_OK) {
+			/* As there was an error in loading data, clear all descriptions. */
+			desc_cleanup(&conf.desc);
+		} else {
+			desc_loaded = true;
+		}
+	}
+
+	/* Read descriptions from user files. */
 	if (usr_desc_path != NULL) {
-		/* Read descriptions from user files. */
-		res = loadUserDescriptions(&conf.usr_desc, usr_desc_path);
+		struct desc_st tmp;
+		/* Verify user descriptions. */
+		res = loadDescriptions(&tmp, usr_desc_path, false);
+		desc_cleanup(&tmp);
+		/* If there were no issues, load the descriptions into common buffer. */
 		if (res == GT_OK) {
-			usr_desc_loaded = true;
-		}
+			res = loadDescriptions(&conf.desc, usr_desc_path, conf.override_def);
+			if (res != GT_OK) {
+				/* As there was an error in loading data, clear all descriptions. */
+				desc_cleanup(&conf.desc);
+			} else {
 
-		if (usr_desc_loaded && !conf.override) {
-			res = checkDuplicateDescriptions(&conf);
-			if (res != GT_OK) goto cleanup;
+				desc_loaded = true;
+			}
 		}
-	}
-
-	/* Init general descriptions buffer. */
-	/* Copy default descriptions. */
-	if (!usr_desc_loaded || (usr_desc_loaded && !conf.override)) {
-		res = copyDescriptions(&conf.desc, &conf.def_desc, 0, &pos);
-		if (res != GT_OK) goto cleanup;
-	}
-	/* Copy user descriptions. */
-	if (usr_desc_loaded) {
-		res = copyDescriptions(&conf.desc, &conf.usr_desc, pos, NULL);
-		if (res != GT_OK) goto cleanup;
 	}
 
 	/* If there are no input files, read from the standard in. */
@@ -802,8 +733,7 @@ int main(int argc, char **argv) {
 cleanup:
 
 	if (input != NULL) fclose(input);
-	if (def_desc_loaded) desc_cleanup(&conf.def_desc);
-	if (usr_desc_loaded) desc_cleanup(&conf.usr_desc);
+	if (desc_loaded) desc_cleanup(&conf.desc);
 	if (usr_desc_path) free(usr_desc_path);
 
 	return res;
