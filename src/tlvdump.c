@@ -150,7 +150,7 @@ static int get_payload_type(unsigned char *buf, size_t buf_len, struct conf_st *
 			/* Make sure the content is actually parsable. */
 			res = GT_FTLV_memReadN(ptr, len, NULL, 0, NULL);
 			if (res != GT_OK) {
-				type = TLV_NO_COMPOSITE;
+				type = TLV_NOT_A_COMPOSITE;
 				goto cleanup;
 			}
 		}
@@ -320,7 +320,7 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 
 	limited = conf->max_depth != 0 && level + 1 >= (int)conf->max_depth;
 	type = get_payload_type(ptr, len, conf, desc);
-	if (!limited && type == TLV_NO_COMPOSITE && len != 0) {
+	if (!limited && type == TLV_NOT_A_COMPOSITE && len != 0) {
 		printf("%*s### NOT A COMPOSITE TLV ###\n", level * INDENT_LEN, "");
 	}
 
@@ -364,7 +364,7 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 			ptr += consumed;
 			len -= consumed;
 		}
-	} else if (type != TLV_RAW && type != TLV_NO_COMPOSITE && conf->pretty_val && !limited) {
+	} else if (type != TLV_RAW && type != TLV_NOT_A_COMPOSITE && conf->pretty_val && !limited) {
 		switch (type) {
 			case TLV_INT:
 				print_int(ptr, len, prefix_len, conf);
@@ -614,7 +614,7 @@ int main(int argc, char **argv) {
 			case 'D':
 				usr_desc_path = calloc(PATH_SIZE, sizeof(char));
 				if (!usr_desc_path) {
-					res = GT_BUFFER_OVERFLOW;
+					res = GT_OUT_OF_MEMORY;
 					goto cleanup;
 				}
 				strcpy(usr_desc_path, optarg);

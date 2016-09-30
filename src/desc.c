@@ -60,11 +60,6 @@ static int desc_get(struct desc_st *in, unsigned tag, bool create, struct desc_s
 
 	/* If it was uninitialized, initialize. */
 	if (in->map[pos] == NULL && create) {
-		if (in->map[pos] != NULL) {
-			res = GT_BUFFER_OVERFLOW;
-			goto cleanup;
-		}
-
 		ptr = calloc(sizeof(struct desc_st), 1);
 		if (ptr == NULL) {
 			res = GT_OUT_OF_MEMORY;
@@ -131,7 +126,7 @@ static int store_nested(struct desc_st *map_in, char *key, int type, char *val, 
 				res = GT_DUPLICATE_ERROR;
 				goto cleanup;
 			}
-			/* Reset the map for givven tag. */
+			/* Reset the map for given tag. */
 			desc_cleanup(map);
 			res = desc_get(map_in, tag, true, &map, &isNew);
 			if (res != GT_OK) goto cleanup;
@@ -204,7 +199,7 @@ static int store_line(struct desc_st *map_in, char *key, char *ts, char *val, bo
 				res = GT_DUPLICATE_ERROR;
 				goto cleanup;
 			}
-			/* Reset the map for givven tag. */
+			/* Reset the map for given tag. */
 			desc_cleanup(map);
 			res = desc_get(map_in, tag, true, &map, &isNew);
 			if (res != GT_OK) goto cleanup;

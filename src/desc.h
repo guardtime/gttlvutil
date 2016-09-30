@@ -21,7 +21,7 @@ enum {
 	/** Imprint value. */
 	TLV_IMPRINT,
 	/** Composite value, that is not parsable. */
-	TLV_NO_COMPOSITE,
+	TLV_NOT_A_COMPOSITE,
 };
 
 /**

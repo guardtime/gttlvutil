@@ -51,6 +51,19 @@ TLV\[0123\]:Dummy PDU:.*
 >>>= 0
 
 ###############################################################################
+# Load test description files with '-D'.
+# Use TLV file with dummy data and KSI TLV element.
+# Set -p and -P flags for pretty print keys and values.
+# Set -o flag to override default descriptions.
+# Set -i flag to ignore default descriptions (-o should have no effect).
+
+GTTLVUNDUMP test/resources/tlv/dummy_and_known_pdu.txt | GTTLVDUMP -D test/resources/desc -pP -o -i
+>>> /TLV\[0200\]:.*
+TLV\[0123\]:Dummy PDU:.*
+  TLV\[1f\]: Dummy INT: 26/
+>>>= 0
+
+###############################################################################
 # Use TLV file with dummy data and KSI TLV element. 
 # Set -p and -P flags for pretty print keys and values.
 
@@ -91,7 +104,7 @@ GTTLVDUMP test/resources/sig/ok-sig-2014-08-01.1.ksig -D test/resources/desc/mod
 
 GTTLVDUMP test/resources/sig/ok-sig-2014-08-01.1.ksig -D test/resources/desc/duplicate_in_file -pP -i
 >>> /TLV\[0800\]:.*/
->>>2 /.*duplicate_in_file\/ksi.desc:57 - duplicate description.*/
+>>>2 /.*duplicate_in_file\/ksi.desc:22 - duplicate description.*/
 >>>= 0
 
 ###############################################################################
