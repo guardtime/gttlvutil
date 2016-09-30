@@ -19,49 +19,53 @@
 # Guardtime Inc.
 #
 
-# Remove test temporary directory.  
-rm -rf test/tmp 2> /dev/null
+# Temporary directory to be used for executing shell tests.
+TEST_TMP=test/tmp
 
-# Create test temporary directory.
-mkdir -p test/tmp
+# Original test suites directory.
+ORIG_TEST_SUITES=test/test_suites
+# Execution test suites directory.
+# The orignal test suites are copied the the tmp directory, where the executable names are modified.
+EXEC_TEST_SUITES=$TEST_TMP/test_suites
 
-# If tlv utils are available in project directory then use those, 
+# Just in case cleanup before start to execute tests.
+rm -rf $TEST_TMP 2> /dev/null
+
+# Create temporary test directory.
+mkdir -p $TEST_TMP
+
+# If tlv utils are available in project directory then use those,
 # otherwise use the ones installed on the machine.
-if [ -f src/gttlvgrep ] && 
-   [ -f src/gttlvwrap ] && 
-   [ -f src/gttlvdump ] && 
+if [ -f src/gttlvgrep ] &&
+   [ -f src/gttlvwrap ] &&
+   [ -f src/gttlvdump ] &&
    [ -f src/gttlvundump ]; then
-  TLVGREP="src/gttlvgrep"
-  TLVWRAP="src/gttlvwrap"
-  TLVDUMP="src/gttlvdump"
-  TLVUNDUMP="src/gttlvundump"
+  TLVGREP_CMD="src/gttlvgrep"
+  TLVWRAP_CMD="src/gttlvwrap"
+  TLVDUMP_CMD="src/gttlvdump"
+  TLVUNDUMP_CMD="src/gttlvundump"
 else
-  TLVGREP="gttlvgrep"
-  TLVWRAP="gttlvwrap"
-  TLVDUMP="gttlvdump"
-  TLVUNDUMP="gttlvundump"
+  TLVGREP_CMD="gttlvgrep"
+  TLVWRAP_CMD="gttlvwrap"
+  TLVDUMP_CMD="gttlvdump"
+  TLVUNDUMP_CMD="gttlvundump"
 fi
 
-# Copy test suites to the tmp folder.
-cp -r test/test_suites/ test/tmp/test_suites/
+# Copy the original test suites to the temporary execution folder.
+cp -r $ORIG_TEST_SUITES $EXEC_TEST_SUITES
 
 # Replace util names.
-sed -i -- "s|GTTLVGREP|$TLVGREP|g" test/tmp/test_suites/*.test
-sed -i -- "s|GTTLVWRAP|$TLVWRAP|g" test/tmp/test_suites/*.test
-sed -i -- "s|GTTLVDUMP|$TLVDUMP|g" test/tmp/test_suites/*.test
-sed -i -- "s|GTTLVUNDUMP|$TLVUNDUMP|g" test/tmp/test_suites/*.test
-
-# Gather all test suites.
-for f in test/tmp/test_suites/*.test; do
-  TEST_SUITES="$TEST_SUITES $f"
-done
+sed -i -- "s|GTTLVGREP|$TLVGREP_CMD|g"     $EXEC_TEST_SUITES/*.test
+sed -i -- "s|GTTLVWRAP|$TLVWRAP_CMD|g"     $EXEC_TEST_SUITES/*.test
+sed -i -- "s|GTTLVDUMP|$TLVDUMP_CMD|g"     $EXEC_TEST_SUITES/*.test
+sed -i -- "s|GTTLVUNDUMP|$TLVUNDUMP_CMD|g" $EXEC_TEST_SUITES/*.test
 
 # Excecute automated tests.
-shelltest -c $TEST_SUITES -- -j1
- 
+shelltest -c $EXEC_TEST_SUITES -- -j1
+# Get execution exit code.
 exit_code=$?
 
-# Cleanup.  
-rm -rf test/tmp 2> /dev/null
+# Cleanup.
+rm -rf $TEST_TMP 2> /dev/null
 
 exit $exit_code
