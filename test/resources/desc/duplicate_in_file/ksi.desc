@@ -1,0 +1,23 @@
+
+0801.07			*			Left link
+0801.07.01		INT			Level correction
+0801.07.02		IMPRINT		Sibling hash
+0801.07.03		STR			Legacy id
+0801.07.04		*			Metadata
+0801.07.04.01	STR			Client id
+0801.07.04.02	STR			Machine id
+0801.07.04.03	INT			Sequence nr
+0801.07.04.04	UTIME		Request time
+0801.07.04.1E	STR			Padding
+
+0801.08			*			Right link
+0801.08.01		INT			Level correction
+0801.08.02		IMPRINT		Sibling hash
+0801.08.03		STR			Legacy id
+0801.08.04		*			Metadata
+0801.08.04.01	STR			Client id
+0801.08.04.02	STR			Machine id
+0801.08.04.03	INT			Sequence nr
+0801.08.04.04	UTIME		Request time
+0801.07.04.1E	STR			Padding
+

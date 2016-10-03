@@ -71,7 +71,7 @@ Constant header length in bytes from the beginning of the file or byte stream th
 .\"
 .TP
 \fB-d \fIint\fR
-Max depth of nested TLV elements. After the depth is exceeded no more TLV parsing is done and the value is printed as binary payload. Use 0 to disable filtering by level (default behaviour). See parameter \fB-e\fR to determine the format of the binary payload. 
+Max depth of nested TLV elements. After the depth is exceeded no more TLV parsing is done and the value is printed as binary payload. Use 0 to disable filtering by level (default behaviour). See parameter \fB-e\fR to determine the format of the binary payload.
 .\"
 .TP
 \fB-x\fR
@@ -116,16 +116,28 @@ String - printed as string between double quotes (\fB"\fR). Characters \fB\\\fR 
 .IP \(bu 4
 Time - printed as "(<\fIint\fR>) <\fIYYYY\fR>-<\fIMM\fR>-<\fIDD\fR> <\fIhh\fR>:<\fImm\fR>:<\fIss\fR> <\fITime Zone\fR>" where int is number of seconds since 1970-01-01  00:00:00  UTC as decimal number.
 .IP \(bu 4
-Hash - printed as <\fIalg\fR>:<\fIhash in hex\fR> where <\fIalg\fR> is hash algorithm followed by the hash value in hex. 
+Hash - printed as <\fIalg\fR>:<\fIhash in hex\fR> where <\fIalg\fR> is hash algorithm followed by the hash value in hex.
 .RE
 .\"
 .TP
 \fB-t\fR
-Print time in local timezone. Is valid with -p.
+Print time in local timezone. Is valid with \fB-p\fR.
 .\"
 .TP
 \fB-e \fIenc\fR
 Encoding of binary payload. Available encodings: 'hex' (default), 'base64'
+.\"
+.TP
+\fB-D \fIpth\fR
+Set TLV description files directory. Description files will be loaded additionally to the default files. Only files with \fI*.desc\fR extention are loaded.
+.\"
+.TP
+\fB-o\fR
+Override default TLV description files. If set, the default descriptions will be overridden by user descriptions in case of a duplicate entry. Option is valid with \fB-D\fR and has no effect with \fB-i\fR.
+.\"
+.TP
+\fB-i\fR
+Ignore default TLV description files. If set, only description files provided with \fB-D\fR will be loaded.
 .\"
 .TP
 \fB-v\fR
@@ -135,8 +147,8 @@ TLV utility package version.
 .SH FILES
 .\"
 .TP
-\fI/usr/share/gttlvutil/*.desc\fR - description files that define known TLV elements. See \fBtlv-desc\fR(5) for more details.
-.LP 
+\fI/usr/share/gttlvutil/*.desc\fR - default description files that define known TLV elements. See \fBtlv-desc\fR(5) for more details.
+.LP
 .\"
 .SH EXAMPLES
 .\"

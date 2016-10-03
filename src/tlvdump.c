@@ -18,6 +18,7 @@
 
 #define INDENT_LEN 2
 #define DEFAULT_WRAP 32
+#define PATH_SIZE 2048
 
 enum out_enc_en { ENCODE_HEX, ENCODE_BASE64 };
 
@@ -35,6 +36,8 @@ struct conf_st {
 	bool pretty_val;
 	bool pretty_key;
 	bool timezone;
+	bool override_def;
+	bool ignore_def;
 	struct desc_st desc;
 	enum out_enc_en out_enc;
 };
@@ -43,7 +46,7 @@ static char *hash_alg[] = {
 	"sha-1", "sha2-256", "ripemd-160", "sha2-224", "sha2-384", "sha2-512", "ripemd-256", "sha3-224", "sha3-256", "sha3-512", "sm3"
 };
 
-static char descriptionDir[2048];
+static char descriptionDir[PATH_SIZE];
 
 static const char *getDescriptionFileDir(void) {
 	if (descriptionDir[0] == '\0') {
@@ -147,7 +150,7 @@ static int get_payload_type(unsigned char *buf, size_t buf_len, struct conf_st *
 			/* Make sure the content is actually parsable. */
 			res = GT_FTLV_memReadN(ptr, len, NULL, 0, NULL);
 			if (res != GT_OK) {
-				type = TLV_NO_COMPOSITE;
+				type = TLV_UNKNOWN;
 				goto cleanup;
 			}
 		}
@@ -317,8 +320,8 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 
 	limited = conf->max_depth != 0 && level + 1 >= (int)conf->max_depth;
 	type = get_payload_type(ptr, len, conf, desc);
-	if (!limited && type == TLV_NO_COMPOSITE && len != 0) {
-		printf("%*s### NOT A COMPOSITE TLV ###\n", level * INDENT_LEN, "");
+	if (!limited && type == TLV_UNKNOWN && len != 0) {
+		printf("%*s### NOT PARSEABLE TLV ###\n", level * INDENT_LEN, "");
 	}
 
 
@@ -361,7 +364,7 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 			ptr += consumed;
 			len -= consumed;
 		}
-	} else if (type != TLV_RAW && type != TLV_NO_COMPOSITE && conf->pretty_val && !limited) {
+	} else if (type != TLV_RAW && type != TLV_UNKNOWN && conf->pretty_val && !limited) {
 		switch (type) {
 			case TLV_INT:
 				print_int(ptr, len, prefix_len, conf);
@@ -435,19 +438,16 @@ cleanup:
 	return res;
 }
 
-static int read_desc_dir(struct desc_st *desc, const char *dir_name) {
+static int read_desc_dir(struct desc_st *desc, const char *dir_name, bool override) {
 	int res = GT_UNKNOWN_ERROR;
 	DIRECTORY *dir = NULL;
 	ENTITY *ent;
 
-	memset(desc, 0, sizeof(struct desc_st));
-
 	if (DIRECTORY_open(dir_name, &dir) != DIR_OK) {
 		fprintf(stderr, "%s:Unable to access description directory.\n", dir_name);
-		res = GT_OK;
+		res = GT_IO_ERROR;
 		goto cleanup;
 	}
-
 
 	while (DIRECTORY_getNextEntity(dir, &ent) == DIR_OK) {
 		size_t len;
@@ -457,11 +457,11 @@ static int read_desc_dir(struct desc_st *desc, const char *dir_name) {
 		len = strlen(name);
 
 		if (len > 5 && !strcmp(name + len - 5, ".desc")) {
-			char buf[1024];
+			char buf[PATH_SIZE];
 
-			snprintf(buf, sizeof(buf), "%s/%s", getDescriptionFileDir(), name);
+			snprintf(buf, sizeof(buf), "%s/%s", dir_name, name);
 
-			res = desc_add_file(desc, buf);
+			res = desc_add_file(desc, buf, override);
 			if (res != GT_OK) {
 				fprintf(stderr, "%s/%s: Unable to read description file.\n", dir_name, name);
 			}
@@ -471,6 +471,38 @@ static int read_desc_dir(struct desc_st *desc, const char *dir_name) {
 cleanup:
 
 	DIRECTORY_close(dir);
+
+	return res;
+}
+
+static void initDefaultDescriptionFileDir(char *arg0) {
+	bool set = false;
+
+	if (strlen(DATA_DIR)) {
+		setDescriptionFileDir(DATA_DIR);
+		set = true;
+	}
+
+	/* If the description files have not been found in package directory,
+	 * fallback to the executable dir. */
+	if (!set) {
+		char buf[PATH_SIZE];
+
+		if(DIRECTORY_getMyPath(buf, sizeof(buf), arg0) != GT_OK) {
+			fprintf(stderr, "Unable to get path to gttlvdump.\n");
+		}
+		setDescriptionFileDir(buf);
+	}
+}
+
+static int loadDescriptions(struct desc_st *desc, const char *path, bool override) {
+	int res = GT_UNKNOWN_ERROR;
+
+	/* Read user description files. */
+	res = read_desc_dir(desc, path, override);
+	if (res != GT_OK) {
+		fprintf(stderr, "Unable to load descriptions from '%s'.\n", path);
+	}
 
 	return res;
 }
@@ -506,23 +538,14 @@ int main(int argc, char **argv) {
 	int c;
 	FILE *input = NULL;
 	struct conf_st conf;
-	bool desc_free = false;
-
-#ifdef DATA_DIR
-	setDescriptionFileDir(DATA_DIR);
-#else
-	char buf[1024];
-
-	if(DIRECTORY_getMyPath(buf, sizeof(buf)) != GT_OK) {
-		fprintf(stderr, "Unable to get path to gttlvdump.\n");
-	}
-
-	setDescriptionFileDir(buf);
-#endif
+	bool desc_loaded = false;
+	char *usr_desc_path = NULL;
 
 	memset(&conf, 0, sizeof(conf));
 
-	while ((c = getopt(argc, argv, "hH:d:xw:yzaspPte:v")) != -1) {
+	initDefaultDescriptionFileDir(argv[0]);
+
+	while ((c = getopt(argc, argv, "hH:d:xw:yzaspPte:vD:oi")) != -1) {
 		switch(c) {
 			case 'H': {
 				res = getOptionDecValue((char)c, optarg, &conf.hdr_len, NULL, 0);
@@ -588,6 +611,21 @@ int main(int argc, char **argv) {
 				}
 				break;
 			}
+			case 'D':
+				usr_desc_path = calloc(PATH_SIZE, sizeof(char));
+				if (!usr_desc_path) {
+					res = GT_OUT_OF_MEMORY;
+					goto cleanup;
+				}
+				strcpy(usr_desc_path, optarg);
+				break;
+			case 'o':
+				conf.override_def = true;
+				break;
+			case 'i':
+				conf.ignore_def = true;
+				conf.override_def = false;
+				break;
 
 			case 'h':
 				printf("Usage:\n"
@@ -598,7 +636,7 @@ int main(int argc, char **argv) {
 						"    -H <num> Constant header length.\n"
 						"    -d <num> Max depth of nested elements. Use 0 to disable filtering by level.\n"
 						"    -x       Display file offset for every TLV.\n"
-						"    -w <num> Wrap the output. Specify max data line width in bytes. Use '-' for\n"
+						"    -w <arg> Wrap the output. Specify max data line width in bytes. Use '-' for\n"
 						"             default width (%d bytes).\n"
 						"    -y       Show content length.\n"
 						"    -z       Convert payload with length les than 8 bytes to decimal.\n"
@@ -609,9 +647,16 @@ int main(int argc, char **argv) {
 						"    -t       Print timezone according to OS setting (valid with -p).\n"
 						"    -e <enc> Encoding of binary payload. Available encodings: 'hex' (default),\n"
 						"             'base64'.\n"
+						"    -D <pth> Set TLV description files directory.\n"
+						"    -o       Override default descriptions (valid with -D). Has no effect with -i.\n"
+						"    -i       Ignore default descriptions (valid with -D).\n"
 						"    -v       TLV utility package version.\n"
+						"\n"
+						"Default description files directory:\n"
+						"  %s\n"
 						"\n",
-						DEFAULT_WRAP
+						DEFAULT_WRAP,
+						getDescriptionFileDir()
 						);
 				res = GT_OK;
 				goto cleanup;
@@ -627,12 +672,35 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	/* Initialize the description structure. */
-	res = read_desc_dir(&conf.desc, getDescriptionFileDir());
-	if (res != GT_OK) {
-		fprintf(stderr, "Unable to read description directory '%s'.\n", getDescriptionFileDir());
-	} else {
-		desc_free = true;
+	/* Read descriptions from default files. */
+	if (!conf.ignore_def) {
+		res = loadDescriptions(&conf.desc, getDescriptionFileDir(), false);
+		if (res != GT_OK) {
+			/* As there was an error in loading data, clear all descriptions. */
+			desc_cleanup(&conf.desc);
+		} else {
+			desc_loaded = true;
+		}
+	}
+
+	/* Read descriptions from user files. */
+	if (usr_desc_path != NULL) {
+		struct desc_st tmp;
+		memset(&tmp, 0, sizeof(tmp));
+		/* Verify user descriptions. */
+		res = loadDescriptions(&tmp, usr_desc_path, false);
+		desc_cleanup(&tmp);
+		/* If there were no issues, load the descriptions into common buffer. */
+		if (res == GT_OK) {
+			res = loadDescriptions(&conf.desc, usr_desc_path, conf.override_def);
+			if (res != GT_OK) {
+				/* As there was an error in loading data, clear all descriptions. */
+				desc_cleanup(&conf.desc);
+			} else {
+
+				desc_loaded = true;
+			}
+		}
 	}
 
 	/* If there are no input files, read from the standard in. */
@@ -666,7 +734,8 @@ int main(int argc, char **argv) {
 cleanup:
 
 	if (input != NULL) fclose(input);
-	if (desc_free) desc_cleanup(&conf.desc);
+	if (desc_loaded) desc_cleanup(&conf.desc);
+	if (usr_desc_path) free(usr_desc_path);
 
 	return res;
 }

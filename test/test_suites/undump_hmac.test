@@ -24,13 +24,13 @@
 # (approach v1).
 
 # Verify the result by tlvgreping HMAC from resulting stream.
-gttlvundump test/resources/hmac/extend_response-hmac_func_v1.txt | gttlvgrep 300.1f
+GTTLVUNDUMP test/resources/hmac/extend_response-hmac_func_v1.txt | GTTLVGREP 300.1f
 >>>
 010458a036efa3a44ca482cab675738873efef6b13479e0b555ce025d3a9972257
 >>>= 0
 
 # Compare to the original binary file.
-gttlvundump test/resources/hmac/extend_response-hmac_func_v1.txt | diff test/resources/tlv/test2-extend_response-reqId_1.tlv -
+GTTLVUNDUMP test/resources/hmac/extend_response-hmac_func_v1.txt | diff test/resources/tlv/test2-extend_response-reqId_1.tlv -
 >>>
 >>>= 0
 
@@ -39,13 +39,13 @@ gttlvundump test/resources/hmac/extend_response-hmac_func_v1.txt | diff test/res
 # (approach v2).
 
 # Verify the result by tlvgreping HMAC from resulting stream.
-gttlvundump test/resources/hmac/extend_response-hmac_func_v2.txt | gttlvgrep 300.1f
+GTTLVUNDUMP test/resources/hmac/extend_response-hmac_func_v2.txt | GTTLVGREP 300.1f
 >>>
 011e9d919d262eb8f466b63b692ac49dc84630f78ccfc445a76ae500c0173557d0
 >>>= 0
 
 # Compare to the original binary file.
-gttlvundump test/resources/hmac/extend_response-hmac_func_v2.txt | diff test/resources/tlv/test2-extend_response-reqId_1-hmac_v2.tlv -
+GTTLVUNDUMP test/resources/hmac/extend_response-hmac_func_v2.txt | diff test/resources/tlv/test2-extend_response-reqId_1-hmac_v2.tlv -
 >>>
 >>>= 0
 
@@ -53,7 +53,7 @@ gttlvundump test/resources/hmac/extend_response-hmac_func_v2.txt | diff test/res
 # Convert extend response file with multiple responses which includes HMAC
 # calculation function (approach v2).
 
-gttlvundump test/resources/hmac/extend_response-multiple-hmac_func-mixed_ver.txt | gttlvgrep 300.1f
+GTTLVUNDUMP test/resources/hmac/extend_response-multiple-hmac_func-mixed_ver.txt | GTTLVGREP 300.1f
 >>>
 010458a036efa3a44ca482cab675738873efef6b13479e0b555ce025d3a9972257
 0110a5da5f9e2e6ed81c2620db1f2295fb5925d44d577d014a23490a742c114cb2
@@ -63,7 +63,7 @@ gttlvundump test/resources/hmac/extend_response-multiple-hmac_func-mixed_ver.txt
 # Convert extend request file HMAC calculation function (approach v1).
 # HMAC tag (1f) is not last.
 
-gttlvundump test/resources/hmac/extend_request-hmac_is_not_last-hmac_func_v1.txt | gttlvdump
+GTTLVUNDUMP test/resources/hmac/extend_request-hmac_is_not_last-hmac_func_v1.txt | GTTLVDUMP
 >>> /TLV.0300.*
 .*TLV.01.*
 .*TLV.01.*616e6f6e00.*
@@ -79,14 +79,14 @@ gttlvundump test/resources/hmac/extend_request-hmac_is_not_last-hmac_func_v1.txt
 # HMAC tag (1f) is not last.
 
 # When using approach v2 HMAC should be the last, otherwise an error is triggered.
-gttlvundump test/resources/hmac/extend_request-hmac_is_not_last-hmac_func_v2.txt
+GTTLVUNDUMP test/resources/hmac/extend_request-hmac_is_not_last-hmac_func_v2.txt
 >>>
 >>>2 /.*:4 - HMAC TLV is not last in PDU.
 .*:4 - Failed to calculate HMAC./
 >>>= 3
 
 # Verify that it is working with the same PDU when HMAC last.
-gttlvundump test/resources/hmac/extend_request-hmac_is_last-hmac_func_v2.txt | gttlvdump
+GTTLVUNDUMP test/resources/hmac/extend_request-hmac_is_last-hmac_func_v2.txt | GTTLVDUMP
 >>> /TLV.0300.*
 .*TLV.01.*
 .*TLV.01.*616e6f6e00.*
@@ -101,7 +101,7 @@ gttlvundump test/resources/hmac/extend_request-hmac_is_last-hmac_func_v2.txt | g
 # Convert extend request file HMAC calculation function (approach v2).
 # HMAC tag (1f) indent level is 2.
 
-gttlvundump test/resources/hmac/extend_request-hmac_is_last-indent_level_2-hmac_func_v2.txt
+GTTLVUNDUMP test/resources/hmac/extend_request-hmac_is_last-indent_level_2-hmac_func_v2.txt
 >>>
 >>>2 /.*HMAC TLV is not first level PDU child.*
 .*Failed to calculate HMAC./
@@ -111,34 +111,34 @@ gttlvundump test/resources/hmac/extend_request-hmac_is_last-indent_level_2-hmac_
 # Test supported hash algorithms. Verify with KSI algorithm ID.
 
 # Algorithm SHA1. KSI id=00. Digest lenght 160b.
-printf "TLV[123]:\n  TLV[1f]:\$HMAC(v2|sha1|anon)" | gttlvundump | gttlvdump -y | grep -o "TLV.1f.. (L = 21) 00"
+printf "TLV[123]:\n  TLV[1f]:\$HMAC(v2|sha1|anon)" | GTTLVUNDUMP | GTTLVDUMP -y | grep -o "TLV.1f.. (L = 21) 00"
 >>>/.*TLV.1f.*L = 21. 00.*/
 >>>= 0
 
 # Algorithm SHA2-256. KSI id=01. Digest lenght 256b.
-printf "TLV[123]:\n  TLV[1f]:\$HMAC(v2|sha256|anon)" | gttlvundump | gttlvdump -y | grep -o "TLV.1f.. (L = 33) 01"
+printf "TLV[123]:\n  TLV[1f]:\$HMAC(v2|sha256|anon)" | GTTLVUNDUMP | GTTLVDUMP -y | grep -o "TLV.1f.. (L = 33) 01"
 >>>/.*TLV.1f.*L = 33. 01.*/
 >>>= 0
 
 # Algorithm RIPEMD-160. KSI id=02. Digest lenght 160b.
-printf "TLV[123]:\n  TLV[1f]:\$HMAC(v2|rmd160|anon)" | gttlvundump | gttlvdump -y | grep -o "TLV.1f.. (L = 21) 02"
+printf "TLV[123]:\n  TLV[1f]:\$HMAC(v2|rmd160|anon)" | GTTLVUNDUMP | GTTLVDUMP -y | grep -o "TLV.1f.. (L = 21) 02"
 >>>/.*TLV.1f.*L = 21. 02.*/
 >>>= 0
 
 # Algorithm SHA2-384. KSI id=04. Digest lenght 384b.
-printf "TLV[123]:\n  TLV[1f]:\$HMAC(v2|sha384|anon)" | gttlvundump | gttlvdump -y | grep -o "TLV.1f.. (L = 49) 04"
+printf "TLV[123]:\n  TLV[1f]:\$HMAC(v2|sha384|anon)" | GTTLVUNDUMP | GTTLVDUMP -y | grep -o "TLV.1f.. (L = 49) 04"
 >>>/.*TLV.1f.*L = 49. 04.*/
 >>>= 0
 
 # Algorithm SHA2-512. KSI id=05. Digest lenght 512b.
-printf "TLV[123]:\n  TLV[1f]:\$HMAC(v2|sha512|anon)" | gttlvundump | gttlvdump -y | grep -o "TLV.1f.. (L = 65) 05"
+printf "TLV[123]:\n  TLV[1f]:\$HMAC(v2|sha512|anon)" | GTTLVUNDUMP | GTTLVDUMP -y | grep -o "TLV.1f.. (L = 65) 05"
 >>>/.*TLV.1f.*L = 65. 05.*/
 >>>= 0
 
 ###############################################################################
 # Test unsupported hash algorithm (SHA2-224).
 
-printf "TLV[123]:\n  TLV[1f]:\$HMAC(v2|sha224|anon)" | gttlvundump
+printf "TLV[123]:\n  TLV[1f]:\$HMAC(v2|sha224|anon)" | GTTLVUNDUMP
 >>>
 >>>2 /.*Unable to get hash algorithm id./
 >>>= 8
@@ -146,28 +146,28 @@ printf "TLV[123]:\n  TLV[1f]:\$HMAC(v2|sha224|anon)" | gttlvundump
 ###############################################################################
 # Wrong calculation version.
 
-(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v3|sha256|anon)") | gttlvundump
+(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v3|sha256|anon)") | GTTLVUNDUMP
 >>>2 /.*Error in HMAC function call definition./
 >>>= 8
 
 ###############################################################################
 # Unavailable pattern.
 
-(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v1|sha256|anon|800)") | gttlvundump
+(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v1|sha256|anon|800)") | GTTLVUNDUMP
 >>>2 /.*Failed to calculate HMAC./
 >>>= 3
 
 ###############################################################################
 # Function script should start with '$' sign.
 
-(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\HMAC(v1|sha256|anon|300.01,302)") | gttlvundump
+(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\HMAC(v1|sha256|anon|300.01,302)") | GTTLVUNDUMP
 >>>2 /.*Unexpected character./
 >>>= 8
 
 ###############################################################################
 # Unsupported function script.
 
-(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$DUMMY(param)") | gttlvundump
+(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$DUMMY(param)") | GTTLVUNDUMP
 >>>2 /.*Unknown function script./
 >>>= 8
 
@@ -175,33 +175,33 @@ printf "TLV[123]:\n  TLV[1f]:\$HMAC(v2|sha224|anon)" | gttlvundump
 # Test HMAC function script parameters for calculation v1.
 
 # Only version is provided.
-(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v1)") | gttlvundump
+(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v1)") | GTTLVUNDUMP
 >>>2 /.*Error in HMAC function call definition./
 >>>= 8
 
 # Version and algorithm are provided.
-(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v1|sha256)") | gttlvundump
+(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v1|sha256)") | GTTLVUNDUMP
 >>>2 /.*Error in HMAC function call definition./
 >>>= 8
 
 # Version, algorithm and key are provided.
-(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v1|sha256|anon)") | gttlvundump
+(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v1|sha256|anon)") | GTTLVUNDUMP
 >>>2 /.*Error in HMAC function call definition./
 >>>= 8
 
 # All needed parameters are provided.
-(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v1|sha256|anon|300.01,302)") | gttlvundump | gttlvgrep 300.1f
+(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v1|sha256|anon|300.01,302)") | GTTLVUNDUMP | GTTLVGREP 300.1f
 >>>
 010458a036efa3a44ca482cab675738873efef6b13479e0b555ce025d3a9972257
 >>>= 0
 
 # No extra parameters are allowed.
-(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v1|sha256|anon|300.01,302|Extra|Params)") | gttlvundump
+(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v1|sha256|anon|300.01,302|Extra|Params)") | GTTLVUNDUMP
 >>>2 /.*Error in HMAC function call definition./
 >>>= 8
 
 # Test invalid pattern
-(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v1|sha256|anon|invalid.pattern)") | gttlvundump | gttlvgrep 300.1f
+(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v1|sha256|anon|invalid.pattern)") | GTTLVUNDUMP | GTTLVGREP 300.1f
 >>>2 /.*Invalid pattern: 'invalid.pattern'.*
 .*Failed to grep pattern.*
 .*Failed to calculate HMAC./
@@ -212,28 +212,28 @@ printf "TLV[123]:\n  TLV[1f]:\$HMAC(v2|sha224|anon)" | gttlvundump
 # Test HMAC function script parameters for calculation v2.
 
 # Only version is provided.
-(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v2)") | gttlvundump
+(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v2)") | GTTLVUNDUMP
 >>>2 /.*Error in HMAC function call definition./
 >>>= 8
 
 # Version and algorithm are provided.
-(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v2|sha256)") | gttlvundump
+(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v2|sha256)") | GTTLVUNDUMP
 >>>2 /.*Error in HMAC function call definition./
 >>>= 8
 
 # All needed parameters are provided.
-(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v2|sha256|anon)") | gttlvundump | gttlvgrep 300.1f
+(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v2|sha256|anon)") | GTTLVUNDUMP | GTTLVGREP 300.1f
 >>>
 011e9d919d262eb8f466b63b692ac49dc84630f78ccfc445a76ae500c0173557d0
 >>>= 0
 
 # No extra parameters are allowed.
-(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v2|sha256|anon|300.01,302)") | gttlvundump
+(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v2|sha256|anon|300.01,302)") | GTTLVUNDUMP
 >>>2 /.*Error in HMAC function call definition./
 >>>= 8
 
 # No extra parameters are allowed.
-(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v2|sha256|anon|Extra|Params)") | gttlvundump
+(cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v2|sha256|anon|Extra|Params)") | GTTLVUNDUMP
 >>>2 /.*Error in HMAC function call definition./
 >>>= 8
 

@@ -22,6 +22,29 @@ AC_TYPE_UINT8_T
 # Add more compile time warnings
 CFLAGS+=" -Wall"
 
+AC_ARG_WITH([data-dir],  
+  [AC_HELP_STRING([--with-data-dir=PATH], 
+                  [path to directory containing desc files. Use '-' to search the files from the directory where executable is located.])], 
+  [case "${withval}" in
+     -)
+       # Search desc files from the same directory where executable is located.
+       ;;
+     *)
+       # Search desc files from the specified path.
+       AC_SUBST(DESC_DATA_DIR, "$withval")
+       use_datadir=true
+       ;;
+   esac;
+  ], 
+  [# No path is specified, search desc files from the default system directory. 
+   AC_SUBST(DESC_DATA_DIR, "pkgdatadir")
+   use_pkgdatadir=true
+   use_datadir=true
+  ]
+)
+AM_CONDITIONAL([USE_DATA_DIR], [test x$use_datadir = xtrue])
+AM_CONDITIONAL([USE_PKG_DATA_DIR], [test x$use_pkgdatadir = xtrue])
+
 AC_CONFIG_FILES([GNUmakefile src/GNUmakefile])
 AC_OUTPUT
 

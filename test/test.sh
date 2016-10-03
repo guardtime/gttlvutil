@@ -19,25 +19,53 @@
 # Guardtime Inc.
 #
 
-# Remove test temporary directory.  
-rm -rf test/tmp 2> /dev/null
+# Temporary directory to be used for executing shell tests.
+TEST_TMP=test/tmp
 
-# Create test temporary directory.
-mkdir -p test/tmp
+# Original test suites directory.
+ORIG_TEST_SUITES=test/test_suites
+# Execution test suites directory.
+# The orignal test suites are copied the the tmp directory, where the executable names are modified.
+EXEC_TEST_SUITES=$TEST_TMP/test_suites
 
-# Run test suites.
-shelltest -c \
-	test/test_suites/dump.test \
-	test/test_suites/undump.test \
-	test/test_suites/grep.test \
-	test/test_suites/wrap.test \
-	test/test_suites/integration.test \
-	test/test_suites/undump_hmac.test \
--- -j1
+# Just in case cleanup before start to execute tests.
+rm -rf $TEST_TMP 2> /dev/null
 
+# Create temporary test directory.
+mkdir -p $TEST_TMP
+
+# If tlv utils are available in project directory then use those,
+# otherwise use the ones installed on the machine.
+if [ -f src/gttlvgrep ] &&
+   [ -f src/gttlvwrap ] &&
+   [ -f src/gttlvdump ] &&
+   [ -f src/gttlvundump ]; then
+  TLVGREP_CMD="src/gttlvgrep"
+  TLVWRAP_CMD="src/gttlvwrap"
+  TLVDUMP_CMD="src/gttlvdump"
+  TLVUNDUMP_CMD="src/gttlvundump"
+else
+  TLVGREP_CMD="gttlvgrep"
+  TLVWRAP_CMD="gttlvwrap"
+  TLVDUMP_CMD="gttlvdump"
+  TLVUNDUMP_CMD="gttlvundump"
+fi
+
+# Copy the original test suites to the temporary execution folder.
+cp -r $ORIG_TEST_SUITES $EXEC_TEST_SUITES
+
+# Replace util names.
+sed -i -- "s|GTTLVGREP|$TLVGREP_CMD|g"     $EXEC_TEST_SUITES/*.test
+sed -i -- "s|GTTLVWRAP|$TLVWRAP_CMD|g"     $EXEC_TEST_SUITES/*.test
+sed -i -- "s|GTTLVDUMP|$TLVDUMP_CMD|g"     $EXEC_TEST_SUITES/*.test
+sed -i -- "s|GTTLVUNDUMP|$TLVUNDUMP_CMD|g" $EXEC_TEST_SUITES/*.test
+
+# Excecute automated tests.
+shelltest -c $EXEC_TEST_SUITES -- -j1
+# Get execution exit code.
 exit_code=$?
 
-# Cleanup.  
-rm -rf test/tmp 2> /dev/null
+# Cleanup.
+rm -rf $TEST_TMP 2> /dev/null
 
 exit $exit_code
