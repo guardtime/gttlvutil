@@ -63,7 +63,7 @@ void printHelp(FILE *f) {
 		"Options:\n"
 		"  -L         Set the TLV non-critical flag.\n"
 		"  -F         Set the TLV forward flag.\n"
-		"  -t <tag>   Set the TLV tag.\n"
+		"  -t <tag>   Set the TLV tag (type).\n"
 		"  -i <fn>    Input file.\n"
 		"  -o <fn>    Output file.\n"
 		"  -h         Print this help.\n"
@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
 	int forward = 0;
 	FILE *in = NULL;
 	FILE *out = NULL;
-	int type = 0;
+	int type = -1;
 	char *tail = NULL;
 
 	while ((c = getopt(argc, argv, "LFt:i:o:hv")) != -1) {
@@ -131,6 +131,12 @@ int main(int argc, char **argv) {
 				res = GT_INVALID_CMD_PARAM;
 				goto cleanup;
 		}
+	}
+
+	if (type < 0) {
+		fprintf(stderr, "Tlv tag (-t) must be specified.\n");
+		res = GT_INVALID_FORMAT;
+		goto cleanup;
 	}
 
 	res = encode((unsigned)type, lenient, forward, in, out);
