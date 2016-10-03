@@ -86,7 +86,7 @@ Binary file (standard input) matches
 ###############################################################################
 # Wrap without the specified tag.
 
-src/gttlvwrap -i VERSION
+gttlvwrap -i VERSION
 >>>2
 Tlv tag (-t) must be specified.
 >>>= 6
@@ -94,28 +94,28 @@ Tlv tag (-t) must be specified.
 ###############################################################################
 # Wrap with type out of the range 1.
 
-src/gttlvwrap -i VERSION -t -6
+gttlvwrap -i VERSION -t -6
 >>>2 /(.*Tag value out of range.*)/
 >>>= 6
 
 ###############################################################################
 # Wrap with type out of the range 2.
 
-src/gttlvwrap -i VERSION -t 2000
+gttlvwrap -i VERSION -t 2000
 >>>2 /(.*Tag value out of range.*)/
 >>>= 6
 
 ###############################################################################
 # Wrap with invalid type 1.
 
-src/gttlvwrap -i VERSION -t ppp
+gttlvwrap -i VERSION -t ppp
 >>>2 /(.*Bad tag value.*)(.*ppp.*)/
 >>>= 6
 
 ###############################################################################
 # Wrap with invalid type 2.
 
-src/gttlvwrap -i VERSION -t 1p
+gttlvwrap -i VERSION -t 1p
 >>>2 /(.*Bad tag value.*)(.*1p.*)/
 >>>= 6
 
