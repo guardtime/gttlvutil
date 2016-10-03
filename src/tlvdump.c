@@ -282,7 +282,7 @@ static void print_time(unsigned char *buf, size_t len, int prefix_len, int type,
 			if (conf->timezone) {
 				strftime(tmp + len, sizeof(tmp) - len, " %Z", tm_info);
 			} else {
-				snprintf(tmp + len, sizeof(tmp) - len, " GMT+00");
+				snprintf(tmp + len, sizeof(tmp) - len, " UTC+00");
 			}
 		}
 		printf("(%llu) %s\n", (unsigned long long)t, tmp);
