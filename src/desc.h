@@ -20,8 +20,8 @@ enum {
 	TLV_UTIME,
 	/** Imprint value. */
 	TLV_IMPRINT,
-	/** Composite value, that is not parsable. */
-	TLV_NOT_A_COMPOSITE,
+	/** A value, that is not parsable. */
+	TLV_UNKNOWN
 };
 
 /**
