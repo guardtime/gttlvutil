@@ -1,73 +1,56 @@
 .TH GTTLVUNDUMP 1
 .\"
-.\"
-.\"
 .SH NAME
-\fBgttlvundump \fR- A tool for constructing TLV file from gttlvdump style input.
-.\"
+\fBgttlvundump\fR - A tool for constructing TLV file from human-readable input (see \fIgttlvdump\fR(1)).
 .\"
 .SH SYNOPSIS
-.\"
-.HP 4
-\fBgttlvundump \fR[\fB-h\fR] \fR[\fB-v\fR] [\fItlvfile\fR]...
-.LP
-.\"
+\fBgttlvundump [-h][-v][\fIfile\fR]
 .\"
 .SH DESCRIPTION
-.\"
-gttlvundump is a tool that constructs a binary TLV file from gttlvdump style input. Input is read from \fIstdin \fRif input file is not specified. When multiple input files are specified the result is concatenated starting from the first (left-most) file. The output is dumped to the \fIstdout\fR.
+\fBgttlvundump\fR is a tool that constructs a binary TLV file from input in human-readable format defined by \fBgttlvdump\fR. If input file is not specified, input is read from \fIstdin\fR. When multiple input files are specified, the result is concatenated starting from the first (left-most) file. It must be noted that only default output format of \fBgttlvdump\fR is accepted as input. The output is written to the \fIstdout\fR.
 .LP
-See \fBgttlvdump\fR(1) to learn about the expected format. It must be noted that only basic output format of \fBgttlvdump\fR is accepted as input.
-.LP
-It is possible to use functions in TLV files. For detailed description of supported functions see \fBFUNCTIONS\fR section. To use a function it has to be preceeded with '$' sign, eg. \fI$FUNC(arg)\fR. Function arguments are delimited with '|' sign.
-.br
-.\"
+It is possible to use functions for composing TLV files. For detailed description of supported functions see \fBFUNCTIONS\fR section. To use a function it has to be preceded by '\fB$\fR' sign, i.e. \fB$FUNC\fR(\fIarg\fR). Function arguments are delimited with '\fB|\fR' sign.
 .\"
 .SH OPTIONS
-.\"
 .TP
 \fB-h\fR
-Prints help text to \fIstdout\fR.
+Print help text.
 .\"
 .TP
 \fB-v\fR
-TLV utility package version.
-.\"
+Print TLV utility version.
 .\"
 .SH FUNCTIONS
-.\"
 .TP
 \fBHMAC(\fIversion\fR|\fIalgorithm\fR|\fIkey\fR|\fIpattern\fB)\fR
-Calculate HMAC value on a PDU.
+Compute HMAC value on a set of TLV elements.
 .\"
 .RS
 .TP
 \fIversion\fR
-PDU HMAC calculation version. Valid versions:
+HMAC computation version. Valid versions:
 .br
-\fIv1\fR - computation is performed over the concatenation of header and payload TLVs.
+\fIv1\fR - computation is performed for each TLV element over the concatenation of their header and value.
 .br
-\fIv2\fR - computation is performed over the TLV header of the PDU, the complete header TLV, complete payload TLVs in the order in which they appear within the PDU, and the TLV header and the hash function ID of the MAC element itself.
+\fIv2\fR - computation is performed for the whole set of TLV elements over the TLV set header, each TLV element header and value in the order in which they appear within the TLV file, and the header and the hash function ID of the MAC element itself.
 .\"
 .TP
 \fIalgorithm\fR
-Hash algorithm to be used for calculation. Use \fB-h\fR to get the list of supported hash algorithms.
+Hash algorithm to be used for computation. Use \fB-h\fR to get the list of supported hash algorithms.
 .\"
 .TP
 \fIkey\fR
-Secret cryptographic key.
+Secret cryptographic key for computing HMAC.
 .\"
 .TP
 \fIpattern\fR
-TLV pattern describing TLVs to be included into calculation (valid with \fIv1\fR). Pattern format as defined by gttlvgrep.
+TLV pattern describing TLVs to be included into computation (valid with \fIv1\fR). Pattern format as defined by \fBgttlvgrep\fR.
 .RE
 .\"
-.\"
 .SH EXAMPLES
-.\"
-.TP 3
+.TP 2
 \fB1
-\fRGenerate a TLV file from the given input file and dump the result with gttlvdump:
+\fRGenerate a TLV file from the given input file and dump the result with \fBgttlvdump\fR:
 .LP
 .RS 4
 File \fItest.tlv\fR contains following TLV structure description.
@@ -76,25 +59,24 @@ TLV[1000]:
   TLV[01]:
     TLV[01]:0a
     TLV[01]:0b
-
-.HP 4
-\fBgttlvundump \fItest.tlv \fR| \fBgttlvdump\fR
+.LP
+\fBgttlvundump \fItest.tlv \fR| gttlvdump
 .RE
 .\"
-.TP 3
+.TP 2
 \fB2
-\fRTo concatenate two TLV's described in a.tlv and b.tlv and dump the result with gttlvdump: 
+\fRTo concatenate two TLVs described in \fIa.tlvdump\fR and \fIb.tlvdump\fR and print the result in human-readable fromat:
 .LP
 .RS 4
-.HP 4
-\fBgttlvundump \fIa.tlv \fIb.tlv \fR| \fBgttlvdump\fR
+\fBgttlvundump \fIa.tlv \fIb.tlv \fR| gttlvdump
 .RE
-.TP 3
+.\"
+.TP 2
 \fB3
-\fRTo calculate HMAC value on a PDU:
+\fRTo calculate HMAC value on a set of TLVs:
 .LP
 .RS 4
-1. PDU \fIv1\fR HMAC calculation.
+1. \fIv1\fR HMAC calculation.
   TLV[0300]:
     TLV[01]:
       TLV[01]:616E6F6E00
@@ -104,7 +86,7 @@ TLV[1000]:
       TLV[03]:54D9D6E7
     TLV[1f]:\fI$HMAC(v1|sha256|anon|300.01,301)\fR
 .LP
-2. PDU \fIv2\fR HMAC calculation.
+2. \fIv2\fR HMAC calculation.
   TLV[0300]:
     TLV[01]:
       TLV[01]:616E6F6E00
@@ -114,12 +96,9 @@ TLV[1000]:
       TLV[03]:54D9D6E7
     TLV[1f]:\fI$HMAC(v2|sha256|anon)\fR
 .RE
-.LP
 .\"
 .SH AUTHOR
-.LP
 Guardtime AS, http://www.guardtime.com/
-.LP
+.\"
 .SH SEE ALSO
-.LP
 \fBgttlvdump\fR(1), \fBgttlvgrep\fR(1), \fBgttlvwrap\fR(1), \fBtlv\fR(5), \fBtlv-desc\fR(5)
