@@ -7,7 +7,7 @@
 \fBgttlvgrep [-h][-v][options] pattern [\fItlvfile\fB]\fR
 .\"
 .SH DESCRIPTION
-\fBgttlvgrep\fR searches TLVs matching the given pattern and formats the output to \fIstdout\fR. By default only TLV value is dumped, and by default it is in hex format. See options \fB-n\fR and \fB-i\fR to make the output more human-readable or use parameter \fB-r\fR instead to write the TLVs in binary. Use flag \fB-e\fR to dump consistent TLV structure with type, length, and value.
+\fBgttlvgrep\fR searches TLVs matching the given pattern and formats the output to \fIstdout\fR. If the input file is not specified, the input is read from \fIstdin\fR. By default only TLV value is dumped, and by default it is in hex format. See options \fB-n\fR and \fB-i\fR to make the output more human-readable or use parameter \fB-r\fR instead to write the TLVs in binary. Use flag \fB-e\fR to dump consistent TLV structure with type, length, and value.
 .LP
 The pattern of path specifies the TLV types to search for. The hierarchy of nested TLVs can be expressed by separating each level with a dot (\fB.\fR). For example, pattern '\fI800.801\fR' will search for TLV of type \fI801\fR nested inside TLV of type \fI800\fR. Multiple TLV types can be specified at each level by separating them with comma (\fB,\fR). For example, pattern '\fI800.801.07,08\fR' will search for both TLV type \fI07\fR and \fI08\fR nested inside \fI801\fR, nested in \fI800\fR. In case there are multiple instances of the same TLV type, a \fI0\fR\-based index can be used after the TLV type to return the specific instance only. For example, '\fI800.801[1].07,08\fR' will return the TLV types \fI07\fR and \fI08\fR that are nested inside the second instance of TLV type \fI801\fR inside TLV \fI800\fR.
 .\"
