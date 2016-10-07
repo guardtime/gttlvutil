@@ -1,10 +1,10 @@
 .TH GTTLVUNDUMP 1
 .\"
 .SH NAME
-\fBgttlvundump\fR - A tool for constructing TLV file from human-readable input (see \fIgttlvdump\fR(1)).
+\fBgttlvundump\fR - A tool for constructing TLV file from human-readable input (see \fBgttlvdump\fR(1)).
 .\"
 .SH SYNOPSIS
-\fBgttlvundump [-h][-v][\fIfile\fB]\fR
+\fBgttlvundump [-h][-v][\fIfile\fB]\fR ...
 .\"
 .SH DESCRIPTION
 \fBgttlvundump\fR is a tool that constructs a binary TLV file from input in human-readable format defined by \fBgttlvdump\fR. If input file is not specified, input is read from \fIstdin\fR. When multiple input files are specified, the result is concatenated starting from the first (left-most) file. It must be noted that only default output format of \fBgttlvdump\fR is accepted as input. The output is written to the \fIstdout\fR.

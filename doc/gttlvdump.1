@@ -1,13 +1,14 @@
 .TH GTTLVDUMP 1
 .\"
 .SH NAME
-\fBgttlvdump \fR- A tool to for displaying TLV encoded data.
+\fBgttlvdump \fR- A tool for displaying TLV encoded data.
 .\"
 .SH SYNOPSIS
 \fBgttlvdump [-h][-v][options][\fItlvfile\fB]\fR
 .\"
 .SH DESCRIPTION
 \fBgttlvdump\fR is a tool that dumps TLV (see \fBtlv\fR(5)) encoded files in human-readable format to \fIstdout\fR. If the input file is not specified, the input is read from \fIstdin\fR.
+Note that default output format of \fBgttlvdump\fR can be used as input for \fBgttlvundump\fR.
 .LP
 In the output, every TLV begins with string 'TLV' followed by the description of the TLV header between the square brackets '\fB[\fR' and '\fB]\fR'. TLV header contains the type of the TLV in hex and, if set, the Non-Critical flag (\fBN\fR) and Forward Unknown flag (\fBF\fR).
 .LP
@@ -43,7 +44,7 @@ Print help text.
 .\"
 .TP
 \fB-H \fIint\fR
-Ignore specified number of bytes in the beginning of input while TLV parsing. The skipped part is printed in hex followed by the decoded TLV.
+Ignore specified number of bytes in the beginning of the input while TLV parsing. The skipped part is printed in hex followed by the decoded TLV.
 .\"
 .TP
 \fB-d \fIint\fR
@@ -55,7 +56,7 @@ Display the TLV offset in bytes relative to the beginning of the file or stream.
 .\"
 .TP
 \fB-w \fIarg\fR
-Wrap the output. Specify maximum line length in bytes. Use '-' for default length. Extra wrapping is done on following element values:
+Wrap the output. Specify maximum line length in bytes. Use '-' for default length. Exceptional element value:
 .RS 8
 .IP \(bu 4
 Hash - first wrapping is performed after hash algorithm regardless of the specified line length.
@@ -71,7 +72,7 @@ Show the decimal value for TLV value less than or equal to 8 bytes.
 .\"
 .TP
 \fB-s\fR
-Strict types - do not parse unknown TLVs elements.
+Strict types - do not parse unknown TLV elements.
 .\"
 .TP
 \fB-a\fR
@@ -108,7 +109,7 @@ Output format of binary value. Available: 'hex', 'base64'. If \fB-e\fR is not se
 Print TLV utility version.
 .\"
 .SH FILES
-\fI/usr/share/gttlvutil/*.desc\fR - description files that define known TLV elements. See \fBtlv-desc\fR(5) for more details..\"
+\fI/usr/share/gttlvutil/*.desc\fR - description files that define known TLV elements. See \fBtlv-desc\fR(5) for more details.
 .\"
 .SH EXAMPLES
 .TP 2
