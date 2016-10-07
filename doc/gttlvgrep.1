@@ -4,7 +4,7 @@
 \fBgttlvgrep\fR - A tool for dumping TLVs matching the given pattern.
 .\"
 .SH SYNOPSIS
-\fBgttlvgrep [-h][-v][options] pattern [\fItlvfile\fB]\fR ...
+\fBgttlvgrep [-h] [-v] [options] pattern [\fItlvfile...\fB]\fR
 .\"
 .SH DESCRIPTION
 \fBgttlvgrep\fR searches TLVs matching the given pattern and formats the output to \fIstdout\fR. If the input file(s) is not specified, the input is read from \fIstdin\fR. By default only TLV value is dumped, and by default it is in hex format. See options \fB-n\fR and \fB-i\fR to make the output more human-readable or use parameter \fB-r\fR instead to write the TLVs in binary. Use flag \fB-e\fR to dump consistent TLV structure with type, length, and value.
