@@ -1,83 +1,65 @@
 .TH TLV 5
 .\"
-.\"
-.\"
 .SH NAME
-\fBTLV \fR- type-length-value data encoding scheme.
-.\"
+\fBTLV\fR - type-length-value data encoding scheme.
 .\"
 .SH DESCRIPTION
+\fBTLV\fR is the data encoding scheme for most of KSI (Keyless Signature Infrastructure) data structures. The TLV scheme is used to encode both the KSI data structures and also protocol data units (PDUs) for transferring them between the entities during the signature generation process.
 .LP
-TLV is data encoding format for most of KSI (Keyless Signature Infrastructure) data structures. The TLV scheme is used to encode both the KSI data structures and also protocol data units (PDUs) for transferring them between the entities during the signature generation process.
-.LP
-.\"
 .\"
 .SH ENCODING
-The values are octet strings of given lengths that carry information to be interpreted as specified by the types. The value part of an encoded object may contain nested TLV objects. See \fB Figure 1\fR.
+The  values  are  octet strings of given length that carry information to be interpreted as specified by the types. The value part of an encoded object may contain nested TLV objects:
+.LP
+.RS 6
+[T][L][
+.RS 6
+[T][L][
+.RS 6
+[T][L][V]
+.br
+[T][L][V]
+.RE
+]
+.br
+[T][L][V]
+.br
+[T][L][V]
+.RE
+]
+.RE
 .LP
 .\"
-.RS 6
-[T][L][V]{
-.RS 6
-[T][L][V]{
-.RS 6
-[T][L][V]
-.br
-[T][L][V]
-.RE
-}
-.br
-[T][L][V]
-.br
-[T][L][V]
-.RE
-}
-.RE
-.LP
-.\"
-\fBFigure 1:\fR TLV nesting.
-.LP
 For space efficiency, two TLV encodings are used:
 .LP
 .IP \(bu 4
-A 16-bit TLV (TLV16) encodes a 13-bit type and 16-bit length (and can thus contain at most 65535 octets
-of data in the value part).
+A 16-bit TLV (TLV16) encodes a 13-bit type and 16-bit length (and can thus contain at most 65535 octets of data in the value part).
 .IP \(bu 4
 An 8-bit TLV (TLV8) encodes a 5-bit type and 8-bit length (at most 255 octets of value data).
 .LP
-.\"
-TLV8 and TLV16 are distinguished by the `16-Bit' flag in the first octet of the type field. See \fB Figure 2\fR. Smaller objects are encoded as TLV8 for lower overhead. A TLV8 type has local significance and identifies the encapsulated structure in the context where it is used. A TLV16 type < 256 still has local significance, but may be used to encode data that needs 16-bit length. A TLV16 type >= 256 has global significance.
+TLV8 and TLV16 are distinguished by the '16-Bit' flag in the first octet of the type field. Smaller objects are encoded as TLV8 for lower overhead. A TLV8 type has local significance and identifies the encapsulated structure in the context where it is used. A TLV16 type < 256 still has local significance, but may be used to encode data that needs 16-bit length. A TLV16 type >= 256 has global significance. significance.
 .LP
-Unknown type is defined as a TLV object whose encoding size (length) can be extracted but whose internal structure cannot be decoded. A decoder encountering such an object has the ability to skip it but not to act on it in any other but a predetermined way. Two flags are used to tell parsers how to handle unknown types: 
+The bit-layout of 8-bit and 16-bit TLV, where the left-most bit, the '16-Bit' flag is the most significant bit:
 .LP
-.IP \(bu 4
-\fBN\fR - \fINon-Critical flag\fR. If N=0 in an object and the type is unknown to a parser, it is a critical error and the results of any further computations with the object must be considered undefined. If N=1, then a warning message may be generated, but computations with the object should continue and the value field should be treated as unstructured binary data of given length.
-.IP \(bu 4
-\fBF\fR - \fIForward Unknown flag\fR. Used to clarify permissible actions with unknown data in case it is noncritical. If F=0, then the unknown data object is skipped as if it was never encountered. If F=1, the data is used as an unstructured binary stream in the context of ongoing operation, defined for each object explicitly. Usually it is passed on to next step of computation as is. The F-flag has no meaning and defines no action if the data is critical (N=0).
-.LP
-In the \fBFigure 2\fR below the bit-layout of 8-bit and 16-bit TLV is described where the left-most bit, the 16-Bit flag is the most significant bit.
-.LP
-.\"
-.\"
-.\"
 .RS 6
-[0][N][F][Type:5][Length:8][Value:0-255]
-.br
-[1][N][F][Type:13][Length:16][Value:0-65535]
+ [\fI0\fR][\fBN\fR][\fBF\fR][Type:\fI5\fR][Length:\fI8\fR][Value:\fI0-255\fR]
+ [\fI1\fR][\fBN\fR][\fBF\fR][Type:\fI13\fR][Length:\fI16\fR][Value:\fI0-65535\fR]
 .RE
 .LP
-.\"
-\fBFigure 2:\fR 8-bit and 16-bit TLV.
+Here the '\fBN\fR' and '\fBF\fR' flags are used to indicate how to react to unknown TLV types. Unknown type is defined as a TLV object whose encoding size (length) can be extracted but whose internal structure cannot be decoded. A decoder encountering such an object has the ability to skip it but not to act on it in any other but a predetermined way. The two flags used to tell parsers how to handle unknown types are defined as:
 .LP
-.\"
+.IP \(bu 4
+\fBN\fR - \fINon-Critical flag\fR. If \fBN\fR=\fI0\fR in an object and the type is unknown to a parser, it is a critical error and the results of any further computations with the object must be considered undefined. If \fBN\fR=\fI1\fR, then a warning message may be generated, but computations with the object should continue and the value field should be treated as unstructured binary data of given length.
+.IP \(bu 4
+\fBF\fR - \fIForward Unknown flag\fR. Used to clarify permissible actions with unknown data in case it is non-critical. If \fBF\fR=\fI0\fR, then the unknown data object is skipped as if it was never encountered. If \fBF\fR=\fI1\fR, the data is used as an unstructured binary stream in the context of ongoing operation, defined for each object explicitly. Usually it is passed on to next step of computation as is. The \fBF\fR-flag has no meaning and defines no action if the data is critical (\fBN\fR=\fI0\fR).
+.LP
 .\"
 .SH EXAMPLES
 .\"
-In the following examples all values are interpreted in ascii ('T'),  hex (0x01) or binary (10110) where the left-most bit is the most significant bit.
+In the following examples all values are interpreted in ascii ('T'),  hex (\fI0x01\fR) or binary (\fI10110\fR) where the left-most bit is the most significant bit.
 .\"
 .TP 2
 \fB1
-\fRA string "KSI" encoded in TLV format where type=0x01, N=1 and F=0:
+\fRA string "KSI" encoded in TLV format where type=\fI0x01\fR, \fBN\fR=\fI1\fR and \fBF\fR=\fI0\fR:
 .LP
 .RS 4
 [0][1][0][0x01][0x04]['K']['S']['I']['\\0'] -->
@@ -87,7 +69,7 @@ In the following examples all values are interpreted in ascii ('T'),  hex (0x01)
 .\"
 .TP 2
 \fB2
-\fRA TLV from example nr. 1 is nested inside a parent TLV where type=0x100, N=0 and F=0:
+\fRA TLV from example No. 1 is nested inside a parent TLV where type=\fI0x100\fR, \fBN\fR=\fI0\fR and \fBF\fR=\fI0\fR:
 .LP
 .RS 4
 [1][0][0][0x100][0x06]\fB[\fR[0][1][0][0x01][0x04]['K']['S']['I']['\\0']\fB]\fR -->
