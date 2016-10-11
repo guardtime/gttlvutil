@@ -58,7 +58,7 @@ static int parseHdr(const unsigned char *hdr, size_t hdrLen, struct fast_tlv_s *
 	}
 
 	t->hdr_len = hdrLen;
-	t->is_nc = (hdr[0] & GT_TLV_MASK_LENIENT) != 0;
+	t->is_nc = (hdr[0] & GT_TLV_MASK_NON_CRITICAL) != 0;
 	t->is_fwd = (hdr[0] & GT_TLV_MASK_FORWARD) != 0;
 
 	/* Set the force flag to indicate TLV that could be TLV8,
