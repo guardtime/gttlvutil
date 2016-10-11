@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
 	while ((c = getopt(argc, argv, "LNFt:i:o:hv")) != -1) {
 		switch (c) {
 			case 'L':
-				fprintf(stderr, "Warning: -L is deprecated, use -N instead for Non-Critical flag.");
+				fprintf(stderr, "Warning: -L is deprecated, use -N instead for Non-Critical flag.\n");
 			case 'N':
 				lenient = 1;
 				break;
