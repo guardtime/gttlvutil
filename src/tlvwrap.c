@@ -59,15 +59,15 @@ cleanup:
 void printHelp(FILE *f) {
 	fprintf(f,
 		"Usage:\n"
-		"  gttlvwrap <options>\n\n"
+		"  gttlvwrap [-h] [-v] [options] -t type [-i input] [-o output]\n\n"
 		"Options:\n"
-		"  -N         Set the TLV non-critical flag.\n"
-		"  -F         Set the TLV forward flag.\n"
-		"  -t <tag>   Set the TLV tag (type).\n"
-		"  -i <fn>    Input file.\n"
-		"  -o <fn>    Output file.\n"
-		"  -h         Print this help.\n"
-		"  -v         TLV utility package version.\n"
+		"  -h         Print help text.\n"
+		"  -t type    TLV type in hex.\n"
+		"  -N         Set the TLV Non-Critical flag.\n"
+		"  -F         Set the TLV Forward Unknown Flag.\n"
+		"  -i file    Input file that is going to be wrapped with TLV header.\n"
+		"  -o file    Output file for generated TLV.\n"
+		"  -v         Print TLV utility version.\n"
 		"\n");
 }
 
