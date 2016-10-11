@@ -61,7 +61,7 @@ void printHelp(FILE *f) {
 		"Usage:\n"
 		"  gttlvwrap <options>\n\n"
 		"Options:\n"
-		"  -L         Set the TLV non-critical flag.\n"
+		"  -N         Set the TLV non-critical flag.\n"
 		"  -F         Set the TLV forward flag.\n"
 		"  -t <tag>   Set the TLV tag (type).\n"
 		"  -i <fn>    Input file.\n"
@@ -81,9 +81,11 @@ int main(int argc, char **argv) {
 	int type = -1;
 	char *tail = NULL;
 
-	while ((c = getopt(argc, argv, "LFt:i:o:hv")) != -1) {
+	while ((c = getopt(argc, argv, "LNFt:i:o:hv")) != -1) {
 		switch (c) {
 			case 'L':
+				fprintf(stderr, "Warning: -L is deprecated, use -N instead for Non-Critical flag.");
+			case 'N':
 				lenient = 1;
 				break;
 			case 'F':
