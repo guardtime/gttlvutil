@@ -18,7 +18,7 @@ extern "C" {
 #endif
 
 #define GT_TLV_MASK_TLV16 0x80u
-#define GT_TLV_MASK_LENIENT 0x40u
+#define GT_TLV_MASK_NON_CRITICAL 0x40u
 #define GT_TLV_MASK_FORWARD 0x20u
 
 #define GT_TLV_MASK_TLV8_TYPE 0x1fu
