@@ -1,10 +1,20 @@
 gttlvdumpdir=$(pkgdatadir)
 AM_CFLAGS=-g -O0 -DDATA_DIR="\"$(gttlvdumpdir)\""
 
+man_MANS = \
+../doc/gttlvdump.1\
+../doc/gttlvgrep.1\
+../doc/gttlvundump.1\
+../doc/gttlvwrap.1\
+../doc/tlv-desc.5\
+../doc/tlv.5
+
+dist_doc_DATA = ../Changelog
+EXTRA_DIST = $(man_MANS) $(dist_doc_DATA)
 bin_PROGRAMS=gttlvdump gttlvgrep gttlvwrap gttlvundump
 
 dist_gttlvdump_DATA=logsig.desc ksi.desc ksie.desc
 gttlvdump_SOURCES=common.h tlvdump.c fast_tlv.h fast_tlv.c desc.h desc.c dir.c dir.h
 gttlvwrap_SOURCES=common.h tlvwrap.c
-gttlvgrep_SOURCES=tlvgrep.c fast_tlv.h fast_tlv.c common.h
-gttlvundump_SOURCES=tlvundump.c common.h
+gttlvgrep_SOURCES=tlvgrep.c fast_tlv.h fast_tlv.c common.h grep_tlv.h grep_tlv.c
+gttlvundump_SOURCES=tlvundump.c common.h fast_tlv.h fast_tlv.c hash.h hash.c hmac.h hmac_openssl.c grep_tlv.h grep_tlv.c

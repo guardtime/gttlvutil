@@ -272,7 +272,7 @@ int desc_add_file(struct desc_st *desc, const char *descFile) {
 		res = read_line(f, desc);
 		if (res != GT_OK) {
 			if (res == GT_INVALID_FORMAT) {
-				fprintf(stderr, "%s:%llu - invalid format\n", descFile, (unsigned long long)ln);
+				fprintf(stderr, "%s:%llu - invalid format.\n", descFile, (unsigned long long)ln);
 			} else {
 				goto cleanup;
 			}

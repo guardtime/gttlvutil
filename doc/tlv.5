@@ -1,0 +1,88 @@
+.TH TLV 5
+.\"
+.SH NAME
+\fBTLV\fR - type-length-value data encoding scheme.
+.\"
+.SH DESCRIPTION
+\fBTLV\fR is the data encoding scheme for most of KSI (Keyless Signature Infrastructure) data structures. The TLV scheme is used to encode both the KSI data structures and also protocol data units (PDUs) for transferring them between the entities during the signature generation process.
+.LP
+.\"
+.SH ENCODING
+The  values  are  octet strings of given length that carry information to be interpreted as specified by the types. The value part of an encoded object may contain nested TLV objects:
+.LP
+.RS 6
+[T][L][
+.RS 6
+[T][L][
+.RS 6
+[T][L][V]
+.br
+[T][L][V]
+.RE
+]
+.br
+[T][L][V]
+.br
+[T][L][V]
+.RE
+]
+.RE
+.LP
+.\"
+For space efficiency, two TLV encodings are used:
+.LP
+.IP \(bu 4
+A 16-bit TLV (TLV16) encodes a 13-bit type and 16-bit length (and can thus contain at most 65535 octets of data in the value part).
+.IP \(bu 4
+An 8-bit TLV (TLV8) encodes a 5-bit type and 8-bit length (at most 255 octets of value data).
+.LP
+TLV8 and TLV16 are distinguished by the '16-Bit' flag in the first octet of the type field. Smaller objects are encoded as TLV8 for lower overhead. A TLV8 type has local significance and identifies the encapsulated structure in the context where it is used. A TLV16 type < 256 still has local significance, but may be used to encode data that needs 16-bit length. A TLV16 type >= 256 has global significance. significance.
+.LP
+The bit-layout of 8-bit and 16-bit TLV, where the left-most bit, the '16-Bit' flag is the most significant bit:
+.LP
+.RS 6
+ [\fI0\fR][\fBN\fR][\fBF\fR][Type:\fI5\fR][Length:\fI8\fR][Value:\fI0-255\fR]
+ [\fI1\fR][\fBN\fR][\fBF\fR][Type:\fI13\fR][Length:\fI16\fR][Value:\fI0-65535\fR]
+.RE
+.LP
+Here the '\fBN\fR' and '\fBF\fR' flags are used to indicate how to react to unknown TLV types. Unknown type is defined as a TLV object whose encoding size (length) can be extracted but whose internal structure cannot be decoded. A decoder encountering such an object has the ability to skip it but not to act on it in any other but a predetermined way. The two flags used to tell parsers how to handle unknown types are defined as:
+.LP
+.IP \(bu 4
+\fBN\fR - \fINon-Critical flag\fR. If \fBN\fR=\fI0\fR in an object and the type is unknown to a parser, it is a critical error and the results of any further computations with the object must be considered undefined. If \fBN\fR=\fI1\fR, then a warning message may be generated, but computations with the object should continue and the value field should be treated as unstructured binary data of given length.
+.IP \(bu 4
+\fBF\fR - \fIForward Unknown flag\fR. Used to clarify permissible actions with unknown data in case it is non-critical. If \fBF\fR=\fI0\fR, then the unknown data object is skipped as if it was never encountered. If \fBF\fR=\fI1\fR, the data is used as an unstructured binary stream in the context of ongoing operation, defined for each object explicitly. Usually it is passed on to next step of computation as is. The \fBF\fR-flag has no meaning and defines no action if the data is critical (\fBN\fR=\fI0\fR).
+.LP
+.\"
+.SH EXAMPLES
+.\"
+In the following examples all values are interpreted in ascii ('T'),  hex (\fI0x01\fR) or binary (\fI10110\fR) where the left-most bit is the most significant bit.
+.\"
+.TP 2
+\fB1
+\fRA string "KSI" encoded in TLV format where type=\fI0x01\fR, \fBN\fR=\fI1\fR and \fBF\fR=\fI0\fR:
+.LP
+.RS 4
+[0][1][0][0x01][0x04]['K']['S']['I']['\\0'] -->
+.br
+[0100 0001][0000 0100][0100 1011][0101 0011][0100 1001][0000 0000]
+.RE
+.\"
+.TP 2
+\fB2
+\fRA TLV from example No. 1 is nested inside a parent TLV where type=\fI0x100\fR, \fBN\fR=\fI0\fR and \fBF\fR=\fI0\fR:
+.LP
+.RS 4
+[1][0][0][0x100][0x06]\fB[\fR[0][1][0][0x01][0x04]['K']['S']['I']['\\0']\fB]\fR -->
+.br
+[1000 0001][0000 0000][0000 0000][0000 0110][0100 0001][0000 0100][0100 1011][0101 0011][0100 1001][0000 0000]
+.RE
+.\"
+.\"
+.SH AUTHOR
+Guardtime AS, http://www.guardtime.com/
+.\"
+.\"
+.SH SEE ALSO
+.\"
+
+\fBgttlvdump\fR(1), \fBgttlvgrep\fR(1), \fBgttlvundump\fR(1), \fBgttlvwrap\fR(1) \fBtlv-desc\fR(5)

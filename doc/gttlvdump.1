@@ -1,0 +1,143 @@
+.TH GTTLVDUMP 1
+.\"
+.SH NAME
+\fBgttlvdump \fR- A tool for displaying TLV encoded data.
+.\"
+.SH SYNOPSIS
+\fBgttlvdump [-h] [-v] [options] [\fItlvfile\fB]\fR
+.\"
+.SH DESCRIPTION
+\fBgttlvdump\fR is a tool that dumps TLV (see \fBtlv\fR(5)) encoded files in human-readable format to \fIstdout\fR. If the input file is not specified, the input is read from \fIstdin\fR.
+Note that default output format of \fBgttlvdump\fR can be used as input for \fBgttlvundump\fR.
+.LP
+In the output, every TLV begins with string 'TLV' followed by the description of the TLV header between the square brackets '\fB[\fR' and '\fB]\fR'. TLV header contains the type of the TLV in hex and, if set, the Non-Critical flag (\fBN\fR) and Forward Unknown flag (\fBF\fR).
+.LP
+With additional parameters, the way the TLV is displayed can be altered and some extra information can be shown. For example, using options \fB-a\fR (name as annotation), \fB-p\fR (value), \fB-P\fR (name next to value), \fB-x\fR (offset), \fB-y\fR (length), the output would look like this:
+.LP
+.RS 4
+# Name.
+.br
+offset: TLV[type, F, N]: (L = length) Name: Value
+.RE
+.LP
+Or, in case of nested TLVs:
+.LP
+.RS 4     
+# Name.
+.br
+offset: TLV[type, F, N]: (L = length) Name:
+.RE
+.RS 10
+# Name.
+.RE
+.RS 4
+offset:	   TLV[type, F, N]: (L = length) Name: Value
+.RE
+.LP
+Some parameters depend on known TLV elements (\fB-s\fR, \fB-a\fR, \fB-P\fR, \fB-p\fR). Known TLV elements are specified in TLV description files (see section \fBFILES\fR and \fBtlv-desc\fR(5) to read more about TLV description file).
+.LP
+.\"
+.SH OPTIONS
+.TP
+\fB-h\fR
+Print help text.
+.\"
+.TP
+\fB-H \fIint\fR
+Ignore specified number of bytes in the beginning of the input while TLV parsing. The skipped part is printed in hex followed by the decoded TLV.
+.\"
+.TP
+\fB-d \fIint\fR
+Max depth of nested TLV elements to parse. After the depth is exceeded no more TLV parsing is done and the value is printed as binary value. See parameter \fB-e\fR to determine the format of the binary value.
+.\"
+.TP
+\fB-x\fR
+Display the TLV offset in bytes relative to the beginning of the file or stream. It must be noted that when \fB-H\fR is used, the TLV offset is displayed relative to the first byte after skipped bytes.
+.\"
+.TP
+\fB-w \fIarg\fR
+Wrap the output. Specify maximum line length in bytes. Use '-' for default length. Exceptional element value:
+.RS 8
+.IP \(bu 4
+Hash - first wrapping is performed after hash algorithm regardless of the specified line length.
+.RE
+.\"
+.TP
+\fB-y\fR
+Show the length of TLV value in bytes.
+.\"
+.TP
+\fB-z\fR
+Show the decimal value for TLV value less than or equal to 8 bytes.
+.\"
+.TP
+\fB-s\fR
+Strict types - do not parse unknown TLV elements.
+.\"
+.TP
+\fB-a\fR
+Annotate known TLV elements with their names. This output format is in accordance with \fBgttlvundump\fR input format.
+.\"
+.TP
+\fB-P\fR
+Print known TLV element names. Similar to \fB-a\fR, but not compatible with \fBgttlvundump\fR input format.
+.\"
+.TP
+\fB-p\fR
+Format known TLV element values according to the data type. If set, will override \fB-z\fR. Known types are:
+.RS 8
+.IP \(bu 4
+Integer - printed as decimal value.
+.IP \(bu 4
+String - printed as string between double quotes (\fB"\fR). Characters \fB\\\fR and \fB"\fR are printed as \fB\\\\\fR and \fB\\"\fR accordingly. Non-printable characters are printed as \fB\\\fR<\fIint\fR> where <\fIint\fR> is the byte value in decimal.
+.IP \(bu 4
+Time - printed as "(<\fIint\fR>) <\fIYYYY\fR>-<\fIMM\fR>-<\fIDD\fR> <\fIhh\fR>:<\fImm\fR>:<\fIss\fR> <\fITime Zone\fR>" where <\fIint\fR> has a value of number of seconds since 1970-01-01 00:00:00 UTC as decimal number.
+.IP \(bu 4
+Hash - printed as <\fIalg\fR>:<\fIhash in hex\fR> where <\fIalg\fR> is the hash algorithm and <\fIhash in hex\fR> is the hash value in hex.
+.RE
+.\"
+.TP
+\fB-t\fR
+Print time in local timezone. Is valid with \fB-p\fR.
+.\"
+.TP
+\fB-e \fIenc\fR
+Output format of binary value. Available: 'hex', 'base64'. If \fB-e\fR is not set, ’hex’ is used.
+.\"
+.TP
+\fB-v\fR
+Print TLV utility version.
+.\"
+.SH FILES
+\fI/usr/share/gttlvutil/*.desc\fR - description files that define known TLV elements. See \fBtlv-desc\fR(5) for more details.
+.\"
+.SH EXAMPLES
+.TP 2
+\fB1
+\fRTo dump KSI publications file "\fIpubfile\fR", the "KSIPUBLF" in the beginning of the file must be ignored:
+.LP
+.RS 4
+\fBgttlvdump -H\fR \fI8 pubfile\fR
+.RE
+.\"
+.TP 2
+\fB2
+\fRTo dump KSI signature with all known TLVs described by the name and values according to their data type:
+.LP
+.RS 4
+\fBgttlvdump -pP \fIsigfile\fR
+.RE
+.\"
+.TP 2
+\fB3
+\fRTo dump only one layer of nested TLVs and print the lower level TLVs as binary value:
+.LP
+.RS 4
+\fBgttlvdump -d \fI2 tlvfile\fR
+.RE
+.\"
+.SH AUTHOR
+Guardtime AS, http://www.guardtime.com/
+.\"
+.SH SEE ALSO
+\fBgttlvgrep\fR(1), \fBgttlvundump\fR(1), \fBgttlvwrap\fR(1), \fBtlv\fR(5), \fBtlv-desc\fR(5)

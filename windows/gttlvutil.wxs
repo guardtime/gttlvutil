@@ -46,6 +46,10 @@
                                 ProcessorArchitecture="$(var.platform)">
                             </File>
                             <File 
+                                Id="ksie_desc"
+                                Source="..\src\ksie.desc">
+                            </File>
+                            <File
                                 Id="ksi_desc"
                                 Source="..\src\ksi.desc">
                             </File>

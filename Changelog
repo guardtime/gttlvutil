@@ -1,8 +1,23 @@
+Version 1.0
+
+2016-10-13 1.0.264
+
+* FEATURE: Added HMAC calculation handling to gttlvundump.
+* IMPROVEMENT: Added a parameter to -w for wrapping the long byte strings to a specified width.
+* IMPROVEMENT: Default time format is set to GMT+00. To express time in local timezone use -t option.
+* IMPROVEMENT: Added automated tests.
+* IMPROVEMENT: Man pages gttlvdump(1), gttlvgrep(1), gttlvundump(1), gttlvwrap(1), tlv(5) and tlv-desc(5) added to the project.
+* IMPROVEMENT: Help format changed.
+* BUGFIX: Hex strings must contain even number of characters.
+* BUGFIX: Typos fixed.
+* BUGFIX: Windows installer contains missing file ksie.desc.
+
+
 Version 0.3
 
 * IMPROVEMENT: The gttlvwrap accepts only hex as tag values.
 * BUGFIX: An empty composite element is no longer reported as not a composite element.
-* FEATURE: Added gttlvundump
+* FEATURE: Added gttlvundump.
 * FEATURE: Included gttlvwrap into main build.
 * IMPROVEMENT: Added help to gttlvwrap.
 * BUGFIX: Added parse verification to known composite tags.

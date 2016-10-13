@@ -1,0 +1,72 @@
+.TH GTTLVGREP 1
+.\"
+.SH NAME
+\fBgttlvgrep\fR - A tool for dumping TLVs matching the given pattern.
+.\"
+.SH SYNOPSIS
+\fBgttlvgrep [-h] [-v] [options] pattern [\fItlvfile...\fB]\fR
+.\"
+.SH DESCRIPTION
+\fBgttlvgrep\fR searches TLVs matching the given pattern and formats the output to \fIstdout\fR. If the input file(s) is not specified, the input is read from \fIstdin\fR. By default only TLV value is dumped, and by default it is in hex format. See options \fB-n\fR and \fB-i\fR to make the output more human-readable or use parameter \fB-r\fR instead to write the TLVs in binary. Use flag \fB-e\fR to dump consistent TLV structure with type, length, and value.
+.LP
+The pattern of path specifies the TLV types to search for. The hierarchy of nested TLVs can be expressed by separating each level with a dot (\fB.\fR). For example, pattern '\fI800.801\fR' will search for TLV of type \fI801\fR nested inside TLV of type \fI800\fR. Multiple TLV types can be specified at each level by separating them with comma (\fB,\fR). For example, pattern '\fI800.801.07,08\fR' will search for both TLV type \fI07\fR and \fI08\fR nested inside \fI801\fR, nested in \fI800\fR. In case there are multiple instances of the same TLV type, a \fI0\fR\-based index can be used after the TLV type to return the specific instance only. For example, '\fI800.801[1].07,08\fR' will return the TLV types \fI07\fR and \fI08\fR that are nested inside the second instance of TLV type \fI801\fR inside TLV \fI800\fR.
+.\"
+.SH OPTIONS
+.TP
+\fB-h\fR
+Print help text.
+.\"
+.TP
+\fB-H \fIint\fR
+Ignore specified number of bytes in the beginning of the input.
+.\"
+.TP
+\fB-e\fR
+Print TLV type and length in addition to value.
+.\"
+.TP
+\fB-r\fR
+Print raw TLV (binary). Will cancel options \fB-n\fR and \fB-i\fR.
+.\"
+.TP
+\fB-n\fR
+Print path of TLV type in human-readable format (e.g. \fI800.801.07\fR). Has no effect with option \fB-r\fR.
+.\"
+.TP
+\fB-i\fR
+Print index of the TLV element in the context of its nesting TLV. Has no effect without option \fB-n\fR.
+.\"
+.TP
+\fB-v\fR
+Print TLV utility version.
+.\"
+.SH EXAMPLES
+.TP 2
+\fB1
+\fRTo extract first verification certificate from the KSI publications file '\fIpubfile\fR', the 'KSIPUBLF' must be ignored in the beginning of the file. Only value of the TLV is printed in binary:
+.LP
+.RS 4
+\fBgttlvgrep -H \fI8 \fB-r \fI702[0].02 pubfile \fR> \fItest/ksi-verify.crt\fR
+.RE
+.\"
+.TP 2
+\fB2
+\fRTo dump TLV from \fIfile.tlv\fR and verify the correctness of the result, the entire TLV including type and length must be printed:
+.LP
+.RS 4
+\fBgttlvgrep -re \fI1000[0] file.tlv\fR | gttlvdump -pP
+.RE
+\"
+.TP 2
+\fB3
+\fRTo dump all the hash chain links (left \fI07\fR and right \fI08\fR) in the second aggregation chain from KSI signature \fItest.ksig\fR in human-readable format:
+.LP
+.RS 4
+\fBgttlvgrep -ni \fI800.801[1].07,08 test.ksig\fR
+.RE
+.\"
+.SH AUTHOR
+Guardtime AS, http://www.guardtime.com/
+.\"
+.SH SEE ALSO
+\fBgttlvdump\fR(1), \fBgttlvundump\fR(1), \fBgttlvwrap\fR(1), \fBtlv\fR(5), \fBtlv-desc\fR(5)

@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <time.h>
 #include <ctype.h>
+#include <errno.h>
 #include "fast_tlv.h"
 #include "desc.h"
 #include "common.h"
@@ -16,6 +17,7 @@
 #endif
 
 #define INDENT_LEN 2
+#define DEFAULT_WRAP 32
 
 enum out_enc_en { ENCODE_HEX, ENCODE_BASE64 };
 
@@ -25,12 +27,14 @@ struct conf_st {
 	size_t max_depth;
 	bool print_off;
 	bool wrap;
+	size_t wrap_width;
 	bool print_len;
 	bool convert;
 	bool use_desc;
 	bool type_strict;
 	bool pretty_val;
 	bool pretty_key;
+	bool timezone;
 	struct desc_st desc;
 	enum out_enc_en out_enc;
 };
@@ -72,7 +76,9 @@ static uint64_t get_uint64(unsigned char *buf, size_t len) {
 	return val;
 }
 
-#define wrap_line(p) if (conf->wrap && line_len > 0 && line_len % 64 == 0 ) { printf("\n%*s", prefix_len, ""); len = 0; } line_len += p
+
+#define wrap_offset(l)	printf("\n%*s", (l), "")
+#define wrap_line(p)	if (conf->wrap_width && line_len > 0 && line_len % (conf->wrap_width * 2) == 0 ) { wrap_offset(prefix_len); line_len = 0; } line_len += p
 static void print_hex(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
 	size_t i;
 	size_t line_len = 0;
@@ -118,8 +124,6 @@ static void print_base64(unsigned char *buf, size_t len, int prefix_len, struct 
 	}
 	putchar('\n');
 }
-
-
 
 static void print_raw_data(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
 	switch (conf->out_enc) {
@@ -217,8 +221,19 @@ static void print_str(unsigned char *buf, size_t len, size_t prefix_len, struct 
 
 static void print_imprint(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
 	if (len > 0) {
-		if (buf[0] < sizeof(hash_alg) / sizeof(char *)) {
-			printf("%s:", hash_alg[buf[0]]);
+		if (conf->pretty_val) {
+			if (buf[0] < sizeof(hash_alg) / sizeof(char *)) {
+				printf("%s:", hash_alg[buf[0]]);
+			} else {
+				printf("%02x:", buf[0]);
+			}
+			if (conf->wrap_width) {
+				wrap_offset(prefix_len);
+			}
+			print_raw_data(buf + 1, len - 1, prefix_len, conf);
+		} else if (conf->wrap_width && conf->out_enc == ENCODE_HEX) {
+			printf("%02x", buf[0]);
+			wrap_offset(prefix_len);
 			print_raw_data(buf + 1, len - 1, prefix_len, conf);
 		} else {
 			print_raw_data(buf, len, prefix_len, conf);
@@ -258,13 +273,17 @@ static void print_time(unsigned char *buf, size_t len, int prefix_len, int type,
 		if (seconds >= 0xffffffff) {
 			fprintf(stderr, "Invalid time value.\n");
 		} else {
-			tm_info = gmtime(&seconds);
+			tm_info = (conf->timezone) ? localtime(&seconds) : gmtime(&seconds);
 			len = strftime(tmp, sizeof(tmp), "%Y-%m-%d %H:%M:%S", tm_info);
 			if (fract[0] != '\0') {
 				len += snprintf(tmp + len, sizeof(tmp) - len, ".%s", fract);
 			}
 
-			strftime(tmp + len, sizeof(tmp) - len, " %Z", tm_info);
+			if (conf->timezone) {
+				strftime(tmp + len, sizeof(tmp) - len, " %Z", tm_info);
+			} else {
+				snprintf(tmp + len, sizeof(tmp) - len, " UTC+00");
+			}
 		}
 		printf("(%llu) %s\n", (unsigned long long)t, tmp);
 	}
@@ -360,13 +379,17 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 				break;
 		}
 	} else {
-		print_raw_data(ptr, len, prefix_len, conf);
+		if (type == TLV_IMPRINT && conf->wrap_width) {
+			print_imprint(ptr, len, prefix_len, conf);
+		} else {
+			print_raw_data(ptr, len, prefix_len, conf);
+		}
 	}
 }
 
 static int read_from(FILE *f, struct conf_st *conf) {
 	int res;
-	char *header = NULL;
+	unsigned char *header = NULL;
 	GT_FTLV t;
 	unsigned char buf[0xffff + 4];
 	size_t len;
@@ -393,7 +416,7 @@ static int read_from(FILE *f, struct conf_st *conf) {
 		res = GT_FTLV_fileRead(f, buf, sizeof(buf), &len, &t);
 		if (res != GT_OK) {
 			if (len == 0) break;
-			fprintf(stderr, "%s: Failed to parse %llu bytes\n", conf->file_name, (unsigned long long) len);
+			fprintf(stderr, "%s: Failed to parse %llu bytes.\n", conf->file_name, (unsigned long long) len);
 			break;
 		}
 
@@ -440,7 +463,7 @@ static int read_desc_dir(struct desc_st *desc, const char *dir_name) {
 
 			res = desc_add_file(desc, buf);
 			if (res != GT_OK) {
-				fprintf(stderr, "%s/%s: Unable to read description file\n", dir_name, name);
+				fprintf(stderr, "%s/%s: Unable to read description file.\n", dir_name, name);
 			}
 		}
 	}
@@ -452,8 +475,34 @@ cleanup:
 	return res;
 }
 
+static int getOptionDecValue(char opt, char *arg, size_t *val, char *excstr, size_t excval) {
+	int res = GT_INVALID_ARGUMENT;
+	char *endptr = NULL;
+	long int li = strtol(arg, &endptr, 10);
+
+	if (errno == ERANGE) {
+		fprintf(stderr, "Option %c is out of range.\n", opt);
+		goto cleanup;
+	} else if (li < 0) {
+		fprintf(stderr, "Option %c cannot be negative.\n", opt);
+		goto cleanup;
+	} else if (li == 0 && endptr != NULL && *endptr != '\0') {
+		if (excstr && strcmp(endptr, excstr) == 0) {
+			li = excval;
+		} else {
+			fprintf(stderr, "Option %c must be a decimal integer.\n", opt);
+			goto cleanup;
+		}
+	}
+
+	res = GT_OK;
+	*val = li;
+cleanup:
+	return res;
+}
+
 int main(int argc, char **argv) {
-	int res;
+	int res = GT_UNKNOWN_ERROR;
 	int c;
 	FILE *input = NULL;
 	struct conf_st conf;
@@ -473,39 +522,25 @@ int main(int argc, char **argv) {
 
 	memset(&conf, 0, sizeof(conf));
 
-	while ((c = getopt(argc, argv, "hH:d:xwyzaspPe:v")) != -1) {
+	while ((c = getopt(argc, argv, "hH:d:xw:yzaspPte:v")) != -1) {
 		switch(c) {
-			case 'H':
-				conf.hdr_len = atoi(optarg);
+			case 'H': {
+				res = getOptionDecValue((char)c, optarg, &conf.hdr_len, NULL, 0);
+				if (res != GT_OK) goto cleanup;
 				break;
-			case 'h':
-				printf("Usage:\n"
-						"  gttlvdump [-h] [options] tlvfile\n"
-						"    -h       This help message\n"
-						"    -H num   Constant header lenght.\n"
-						"    -d num   Max depth of nested elements\n"
-						"    -x       Display file offset for every TLV\n"
-						"    -w       Wrap the output.\n"
-						"    -y       Show content length.\n"
-						"    -z       Convert payload with length les than 8 bytes to decimal.\n"
-						"    -a       Annotate known KSI elements.\n"
-						"    -s       Strict types - do not parse TLV's with unknown types.\n"
-						"    -p       Pretty print values.\n"
-						"    -P       Pretty print keys.\n"
-						"    -e enc   Encoding of binary payload. Available encodings: 'hex' (default), 'base64'\n"
-						"    -v       TLV utility package version.\n"
-				);
-				res = GT_OK;
-				goto cleanup;
 			case 'd':
-				conf.max_depth = atoi(optarg);
+				res = getOptionDecValue((char)c, optarg, &conf.max_depth, NULL, 0);
+				if (res != GT_OK) goto cleanup;
 				break;
+			}
 			case 'x':
 				conf.print_off = true;
 				break;
-			case 'w':
-				conf.wrap = true;
+			case 'w': {
+				res = getOptionDecValue((char)c, optarg, &conf.wrap_width, "-", DEFAULT_WRAP);
+				if (res != GT_OK) goto cleanup;
 				break;
+			}
 			case 'y':
 				conf.print_len = true;
 				break;
@@ -523,6 +558,9 @@ int main(int argc, char **argv) {
 				break;
 			case 'P':
 				conf.pretty_key = true;
+				break;
+			case 't':
+				conf.timezone = true;
 				break;
 			case 'e': {
 				struct {
@@ -545,18 +583,47 @@ int main(int argc, char **argv) {
 					++i;
 				}
 				if (enc_map[i].alias == NULL) {
-					fprintf(stderr, "Unknown encoding '%s', defaulting to 'hex'\n", optarg);
+					fprintf(stderr, "Unknown encoding '%s', defaulting to 'hex'.\n", optarg);
 					conf.out_enc = ENCODE_HEX;
 				}
 				break;
 			}
+
+			case 'h':
+				printf("Usage:\n"
+						"  gttlvdump [-h] [-v] [options] tlvfile\n"
+						"\n"
+						"Options:\n"
+						"    -h       This help text.\n"
+						"    -H int   Ignore specified number of bytes in the beginning of input while\n"
+						"             parsing TLV.\n"
+						"    -d int   Max depth of nested TLV elements to parse.\n"
+						"    -x       Display the TLV offset in bytes.\n"
+						"    -w arg   Wrap the output. Specify maximum line length in bytes. Use '-' for\n"
+						"             default width (%d bytes).\n"
+						"    -y       Show the length of the TLV value in bytes.\n"
+						"    -z       Show the decimal value for TLV value less than or equal to 8 bytes.\n"
+						"    -s       Strict types - do not parse unknown TLVs elements.\n"
+						"    -a       Annotate known TLV elements with their names.\n"
+						"    -P       Print known TLV element names.\n"
+						"    -p       Format known TLV element values according to the data type (will\n"
+						"             override -z).\n"
+						"    -t       Print time in local timezone (valid with -p).\n"
+						"    -e enc   Output format of binary value. Available: 'hex', 'base64'.\n"
+						"    -v       Print TLV utility version..\n"
+						"\n",
+						DEFAULT_WRAP
+						);
+				res = GT_OK;
+				goto cleanup;
 			case 'v':
 				printf("%s\n", TLV_UTIL_VERSION_STRING);
 				res = GT_OK;
 				goto cleanup;
 				break;
 			default:
-				fprintf(stderr, "Unknown parameter, try -h.");
+				fprintf(stderr, "Unknown parameter, try -h.\n");
+				res = GT_INVALID_CMD_PARAM;
 				goto cleanup;
 		}
 	}
@@ -572,7 +639,7 @@ int main(int argc, char **argv) {
 	/* If there are no input files, read from the standard in. */
 	if (optind >= argc) {
 #ifdef _WIN32
-		_setmode(_fileno(stdin), _O_BINARY);
+		_setmode(_fileno(stdin), _O_TEXT);
 #endif
 		res = read_from(stdin, &conf);
 		if (res != GT_OK) goto cleanup;
@@ -586,7 +653,8 @@ int main(int argc, char **argv) {
 			input = fopen(conf.file_name, "rb");
 			if (input == NULL) {
 				fprintf(stderr, "%s: Unable to open file.\n", argv[optind + i]);
-				continue;
+				res = GT_IO_ERROR;
+				goto cleanup;
 			}
 
 			res = read_from(input, &conf);
@@ -601,6 +669,5 @@ cleanup:
 	if (input != NULL) fclose(input);
 	if (desc_free) desc_cleanup(&conf.desc);
 
-
-	return 0;
+	return res;
 }
