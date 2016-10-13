@@ -107,7 +107,7 @@ TLV[0123]:01
 ###############################################################################
 # Create dummy TLV element and set non-critical flag. Tlvdump to stdout.
 
-echo -en "\01" | GTTLVWRAP -t 0x0123 -L | GTTLVDUMP
+echo -en "\01" | GTTLVWRAP -t 0x0123 -N | GTTLVDUMP
 >>>
 TLV[0123,N]:01
 >>>= 0

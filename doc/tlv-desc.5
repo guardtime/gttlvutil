@@ -1,70 +1,62 @@
 .TH TLV-DESC 5
 .\"
-.\"
-.\"
 .SH NAME
-\fBDESC \fR- TLV description file.
+\fBTLV-DESC\fR - TLV description file.
 .\"
 .\"
 .SH DESCRIPTION
 .LP
-TLV description (see \fBtlv\fR(5)) file that specifies TLV type, payload type and name. TLV description file is used by programs under gttlvutil packages.
+In the TLV description (see \fBtlv\fR(5)) file the known TLV types are described by assigning them human-readable names and format to use when printing their values. TLV description file is used by programs included in \fBgttlvutil\fR package to improve the readability of the output.
 .LP
-.\"
 .\"
 .SH FORMAT
-.\"
-TLV description file contains TLV descriptions line by line. Each line has columns separated by tab characters. Each line has following format:
+TLV description file contains TLV descriptions line by line, and each line has the following format:
 .LP
 .RS 4
-<\fItype\fR>  <\fIpayload type\fR>  <\fIname\fR>
+<\fIparen type\fR>.<\fIchild type\fR>	<\fIvalue format\fR>	<\fIname\fR>
 .RE
+.LP
+Here the <\fIparent type\fR> and <\fIchild type\fR> specify the types of the parent and child (nested) TLVs, while the description applies to the latter.
+.LP
+The <\fIvalue format\fR> specifies how the TLV value should be formatted when printed. Known value formats are:
+.LP
+.IP \(bu 4
+\fBRAW\fR - Formatted as octet string.
+.IP \(bu 4
+\fBINT\fR - Formatted as unsigned integer.
+.IP \(bu 4
+\fBSTR\fR - Formatted as string.
+.IP \(bu 4
+\fBIMPRINT\fR - Formatted as hash value imprint (hash algorithm + hash value).
+.IP \(bu 4
+\fBTIME\fR - Formatted as time (number of seconds since 1970-01-01 00:00:00 UTC).
+.IP \(bu 4
+\fB*\fR - Formatted as parent of nested TLVs.
+.LP
+The <\fIname\fR> is a string which indicates the human-readable name for the type of this TLV.
 .\"
-.LP
-\fBType\fR specifies the TLV and its parent(s) type value in hex separated by dot character '\fB.\fR'. Left TLV is the parent and right one is its child (a nested TLV).
-.LP
-\fBPayload type\fR specifies how the TLV should be parsed and displayed. Payload type can have the following values:
-.LP
-.IP \(bu 4
-\fBRAW\fR - Payload is interpreted as octet string.
-.IP \(bu 4
-\fBINT\fR - Payload is interpreted as unsigned integer.
-.IP \(bu 4
-\fBSTR\fR - Payload is interpreted as string.
-.IP \(bu 4
-\fBIMPRINT\fR - Payload is interpreted as hash value imprint (hash algorithm + hash value).
-.IP \(bu 4
-\fBTIME\fR - Payload is interpreted as time (number of seconds since 1970-01-01 00:00:00 UTC).
-.IP \(bu 4
-\fB*\fR - Payload is interpreted as parent of nested TLVs.
-.LP
-\fBName\fR is a string describing the TLV.
-
-
 .SH EXAMPLES
-.\"
-.\"
 .TP 2
 \fB1
-\fRExample of a TLV description for parent TLV 0x1000 that contains nested TLVs:
+\fRExample of a TLV description for parent TLV \fI0x1000\fR that contains nested TLVs:
 .LP
 .RS 4
-1000        *       Parent TLV
+\fI1000\fR	\fB*\fR		Parent TLV
 .br
-1000.01     INT     ID
+\fI1000.01\fR	\fBINT\fR	ID
 .br
-1000.02     STRING  Name
+\fI1000.02\fR	\fBSTRING\fR	Name
 .br
-1000.03     RAW     Binary data
+\fI1000.03\fR	\fBRAW\fR	Binary data
 .br
-1000.1100   *       Nested TLV
+\fI1000.1100\fR	\fB*\fR		Nested TLV
 .br
 .LP
-1100.01   INT       ID
+\fI1100.01\fR	\fBINT\fR	ID
 .br
-1100.02   RAW       Binary data
+\fI1100.02\fR	\fBRAW\fR	Binary data
 .LP
-
+.\"
 .SH AUTHOR
 Guardtime AS, http://www.guardtime.com/
 .\"

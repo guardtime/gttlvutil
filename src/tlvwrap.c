@@ -5,7 +5,7 @@
 
 #include "common.h"
 
-int encode(unsigned int type, int lenient, int forward, FILE *in, FILE *out) {
+int encode(unsigned int type, int non_critical, int forward, FILE *in, FILE *out) {
 	int res = GT_UNKNOWN_ERROR;
 	unsigned char buf[0xffff];
 	unsigned char hdr[4];
@@ -29,7 +29,7 @@ int encode(unsigned int type, int lenient, int forward, FILE *in, FILE *out) {
 
 		/* TLV 18? */
 		if (type > 0x1f || len > 0xff) {
-			*hdr = 0x80 | (lenient * 0x40) | (forward * 0x20) | (type >> 8);
+			*hdr = 0x80 | (non_critical * 0x40) | (forward * 0x20) | (type >> 8);
 			*(hdr + 1) = type & 0xff;
 			*(hdr + 2) = (unsigned char)(len >> 8);
 			*(hdr + 3) = len & 0xff;
@@ -37,7 +37,7 @@ int encode(unsigned int type, int lenient, int forward, FILE *in, FILE *out) {
 				fprintf(stderr, "Failed to write to stream.");
 			}
 		} else {
-			*hdr = 0x00 | (lenient * 0x40) | (forward * 0x20) | (type);
+			*hdr = 0x00 | (non_critical * 0x40) | (forward * 0x20) | (type);
 			*(hdr + 1) = len & 0xff;
 			if (fwrite(hdr, 1, 2, out) != 2) {
 				fprintf(stderr, "Failed to write to stream.");
@@ -59,32 +59,34 @@ cleanup:
 void printHelp(FILE *f) {
 	fprintf(f,
 		"Usage:\n"
-		"  gttlvwrap <options>\n\n"
+		"  gttlvwrap [-h] [-v] [options] -t type [-i input] [-o output]\n\n"
 		"Options:\n"
-		"  -L         Set the TLV non-critical flag.\n"
-		"  -F         Set the TLV forward flag.\n"
-		"  -t <tag>   Set the TLV tag (type).\n"
-		"  -i <fn>    Input file.\n"
-		"  -o <fn>    Output file.\n"
-		"  -h         Print this help.\n"
-		"  -v         TLV utility package version.\n"
+		"  -h         Print help text.\n"
+		"  -t type    TLV type in hex.\n"
+		"  -N         Set the TLV Non-Critical flag.\n"
+		"  -F         Set the TLV Forward Unknown Flag.\n"
+		"  -i file    Input file that is going to be wrapped with TLV header.\n"
+		"  -o file    Output file for generated TLV.\n"
+		"  -v         Print TLV utility version.\n"
 		"\n");
 }
 
 int main(int argc, char **argv) {
 	int res = GT_UNKNOWN_ERROR;
 	int c;
-	int lenient = 0;
+	int non_critical = 0;
 	int forward = 0;
 	FILE *in = NULL;
 	FILE *out = NULL;
 	int type = -1;
 	char *tail = NULL;
 
-	while ((c = getopt(argc, argv, "LFt:i:o:hv")) != -1) {
+	while ((c = getopt(argc, argv, "LNFt:i:o:hv")) != -1) {
 		switch (c) {
 			case 'L':
-				lenient = 1;
+				fprintf(stderr, "Warning: -L is deprecated, use -N instead for Non-Critical flag.\n");
+			case 'N':
+				non_critical = 1;
 				break;
 			case 'F':
 				forward = 1;
@@ -139,7 +141,7 @@ int main(int argc, char **argv) {
 		goto cleanup;
 	}
 
-	res = encode((unsigned)type, lenient, forward, in, out);
+	res = encode((unsigned)type, non_critical, forward, in, out);
 
 cleanup:
 
