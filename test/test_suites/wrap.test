@@ -28,7 +28,7 @@ GTTLVWRAP -h
 
 # Version
 GTTLVWRAP -v | grep -f VERSION
->>> /^gttlvutil.([0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2})$/
+>>> /^gttlvutil.([0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,4})$/
 >>>= 0
 
 # Invalid parameter.
@@ -78,7 +78,7 @@ diff test/resources/tlv/ok_aggr_err_response-1.tlv test/tmp/wrap_ok_aggr_err_res
 ###############################################################################
 # Wrap tlvutil package varsion number around a dummy tag.
 
-GTTLVWRAP -t 0123 -i VERSION | grep -E "([0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2})$"
+GTTLVWRAP -t 0123 -i VERSION | grep -E "([0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,4})$"
 >>>
 Binary file (standard input) matches
 >>>= 0

@@ -28,7 +28,7 @@ GTTLVDUMP -h
 
 # Version
 GTTLVDUMP -v | grep -f VERSION
->>> /^gttlvutil.[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$/
+>>> /^gttlvutil.[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,4}$/
 >>>= 0
 
 # Invalid parameter.
