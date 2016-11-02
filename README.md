@@ -16,6 +16,14 @@ The following utils are provided:
 * gttlvwrap - wraps given data into TLV data structure.
 * gttlvgrep - extracts TLV value, that is described via TLV type pattern, from TLV binary data.
 
+gttlvdump is using description files (found under 'src/*.desc') for pretty printing and formating TLV elements. 
+Depending on the used build configuration and installation of gttlvutil package, the default description 
+files are loaded:
+* from installed location on the machine (eg. '/usr/share/gttlvutil').
+* from within the directory where executable files are located.
+* from location defined in build configuration (see '--with-data-dir' option).
+In order to use user defined description files check out gttlvdump -D, -o, -i flags.
+For more information about TLV desctiption files see man tlv-desc(5).
 
 
 

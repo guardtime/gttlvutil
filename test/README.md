@@ -5,9 +5,17 @@ Additionally, the dependences and brief overview of files related to the
 tests will be described.
 
 Tests can be run with gttlvutil package installed on the machine, or within
-the project directory. On unix platform executables are located in src. If 
+the project directory. On unix platform executables are located in 'src'. If
 the executables are present in the project directory then the tests are run
 with the corresponding binaries, otherwise the installed binaries are used.
+
+gttlvdump is using description files (found under 'src/*.desc') for pretty
+printing and formating TLV elements. Depending on the used build configuration
+and installation of gttlvutil package, the default description files are loaded:
+* from installed location on the machine (eg. '/usr/share/gttlvutil').
+* from within the directory where executable files are located.
+* from location defined in build configuration (see '--with-data-dir' option).
+In order to use user defined description files check out gttlvdump -D, -o, -i flags.
 
 
 
@@ -47,8 +55,7 @@ found in `test` folder to ensure that test environment is configured
 properly. The exit code is 0 on success and 1 on failure.
 
 To run tests on RHEL/CentOS:
- 
+
 ```
   test/test.sh
 ```
- 
