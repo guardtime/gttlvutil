@@ -22,7 +22,9 @@ files are loaded:
 * from installed location on the machine (eg. '/usr/share/gttlvutil').
 * from within the directory where executable files are located.
 * from location defined in build configuration (see '--with-data-dir' option).
+
 In order to use user defined description files check out gttlvdump -D, -o, -i flags.
+
 For more information about TLV desctiption files see man tlv-desc(5).
 
 
