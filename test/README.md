@@ -5,10 +5,15 @@ Additionally, the dependences and brief overview of files related to the
 tests will be described.
 
 Tests can be run with gttlvutil package installed on the machine, or within
-the project directory. On unix platform executables are located in src. If 
+the project directory. On unix platform executables are located in 'src'. If
 the executables are present in the project directory then the tests are run
 with the corresponding binaries, otherwise the installed binaries are used.
 
+Unit tests are using default description files. In case the project has 
+built without explicit setup of '--with-data-dir' option:
+- via rebuild.sh script, then the files are loaded from 'src' directory. 
+- via rebuild-rpm.sh script, then the files are loaded from default system 
+directory (eg. /usr/share/gttlvutil).
 
 
 
@@ -47,8 +52,7 @@ found in `test` folder to ensure that test environment is configured
 properly. The exit code is 0 on success and 1 on failure.
 
 To run tests on RHEL/CentOS:
- 
+
 ```
   test/test.sh
 ```
- 
