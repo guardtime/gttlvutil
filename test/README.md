@@ -9,15 +9,11 @@ the project directory. On unix platform executables are located in 'src'. If
 the executables are present in the project directory then the tests are run
 with the corresponding binaries, otherwise the installed binaries are used.
 
-gttlvdump is using description files (found under 'src/*.desc') for pretty
-printing and formating TLV elements. Depending on the used build configuration
-and installation of gttlvutil package, the default description files are loaded:
-* from installed location on the machine (eg. '/usr/share/gttlvutil').
-* from within the directory where executable files are located.
-* from location defined in build configuration (see '--with-data-dir' option).
-
-In order to use user defined description files check out gttlvdump -D, -o, -i flags.
-
+Unit tests are using default description files. In case the project has 
+built without explicit setup of '--with-data-dir' option:
+- via rebuild.sh script, then the files are loaded from 'src' directory. 
+- via rebuild-rpm.sh script, then the files are loaded from default system 
+directory (eg. /usr/share/gttlvutil).
 
 
 
