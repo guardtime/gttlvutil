@@ -648,7 +648,13 @@ int main(int argc, char **argv) {
 						"             override -z).\n"
 						"    -t       Print time in local timezone (valid with -p).\n"
 						"    -e enc   Output format of binary value. Available: 'hex', 'base64'.\n"
+						"    -D <pth> Set TLV description files directory.\n"
+						"    -o       Override default descriptions (valid with -D). Has no effect with -i.\n"
+						"    -i       Ignore default descriptions (valid with -D).\n"
 						"    -v       Print TLV utility version..\n"
+						"\n"
+						"Default description files directory:\n"
+						"  %s\n"
 						"\n",
 						DEFAULT_WRAP,
 						getDescriptionFileDir()
