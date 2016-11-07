@@ -122,7 +122,7 @@ int  GT_grepTlv(GT_GrepTlvConf *conf, char *pattern, char *prefix, int *map, uns
 					}
 				}
 
-				if (!term) {
+				if (!term && !(list && idx)) {
 					unsigned char *ptr = buf + t->hdr_len;
 					size_t len = t->dat_len;
 					GT_FTLV n;
