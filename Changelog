@@ -1,4 +1,5 @@
 * BUGFIX: Setting gttlvdump stdin mode to binary.
+* BUGFIX: Metadata padding TLV type in right link fixed (ksi.desc 0801.08.04.1E).
 * IMPROVEMENT: Added -D for specifying description file directory.
 * IMPROVEMENT: Added -o for overriding default description files.
 * IMPROVEMENT: Added -i for ignoring default description files.
