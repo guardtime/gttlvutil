@@ -30,4 +30,5 @@ cp redhat/gttlvutil.spec $BUILD_DIR/SPECS/ && \
 cp gttlvutil-*.tar.gz $BUILD_DIR/SOURCES/ && \
 rpmbuild -ba $BUILD_DIR/SPECS/gttlvutil.spec && \
 cp $BUILD_DIR/RPMS/*/gttlvutil-*.rpm . && \
-cp $BUILD_DIR/SRPMS/gttlvutil-*.rpm .
+cp $BUILD_DIR/SRPMS/gttlvutil-*.rpm . && \
+chmod -v 644 *.rpm
