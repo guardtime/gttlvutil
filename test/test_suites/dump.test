@@ -244,4 +244,44 @@ GTTLVDUMP -pt test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv | grep 
 >>>= 0
 
 ###############################################################################
+# Tlvdump aggregation request with PDU v2.
 
+GTTLVDUMP -pP test/resources/tlv/aggr-reguest-v2.tlv
+>>>  /.*220.*Aggregation request PDU.*([^$]|[
+])*01.*PDU header*([^$]|[
+])*02.*Aggregation request*([^$]|[
+])*1f.*HMAC/
+>>>= 0
+
+###############################################################################
+# Tlvdump aggregation response with PDU v2.
+
+GTTLVDUMP -pP test/resources/tlv/aggr-response-v2.tlv
+>>>  /.*221.*Aggregation response PDU.*([^$]|[
+])*01.*PDU header*([^$]|[
+])*02.*Aggregation response*([^$]|[
+])*1f.*HMAC/
+>>>= 0
+
+
+###############################################################################
+# Tlvdump extend request with PDU v2.
+
+GTTLVDUMP -pP test/resources/tlv/ext-request-v2.tlv
+>>>  /.*320.*Extension request PDU.*([^$]|[
+])*01.*PDU header*([^$]|[
+])*02.*Extension request*([^$]|[
+])*1f.*HMAC/
+>>>= 0
+
+###############################################################################
+# Tlvdump extend response with PDU v2.
+
+GTTLVDUMP -pP test/resources/tlv/ext-response-v2.tlv
+>>>  /.*321.*Extension response PDU.*([^$]|[
+])*01.*PDU header*([^$]|[
+])*02.*Extension response*([^$]|[
+])*1f.*HMAC/
+>>>= 0
+
+###############################################################################
