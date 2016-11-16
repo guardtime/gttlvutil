@@ -1,10 +1,14 @@
-* BUGFIX: Grep is grepping invalid content.
-* BUGFIX: Setting gttlvdump stdin mode to binary.
-* BUGFIX: Fixed description for metadata padding TLV type in right link (0801.08.04.1E).
+Version 1.1
+
+2016-11-16 1.1.331
+
 * IMPROVEMENT: Support for KSIAP and KSIEP PDU version 2.
 * IMPROVEMENT: Added -D for specifying description file directory.
 * IMPROVEMENT: Added -o for overriding default description files.
 * IMPROVEMENT: Added -i for ignoring default description files.
+* BUGFIX: Grep is grepping invalid content.
+* BUGFIX: Setting gttlvdump stdin mode to binary.
+* BUGFIX: Fixed description for metadata padding TLV type in right link (0801.08.04.1E).
 
 Version 1.0
 
