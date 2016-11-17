@@ -23,7 +23,7 @@
 # Using converted KSI signature text file stream as input to dump. 
 # Using '-P' option for printing tag names. 
 
-gttlvundump test/resources/sig/ok-sig-2014-08-01.1.ksig.txt | gttlvdump -P
+GTTLVUNDUMP test/resources/sig/ok-sig-2014-08-01.1.ksig.txt | GTTLVDUMP -P
 >>>  /TLV.0800.*Uni-signature PDU.*
 .*TLV.0805.*Calendar auth record.*
 .*TLV.10,F.*Published data.*
@@ -35,10 +35,10 @@ gttlvundump test/resources/sig/ok-sig-2014-08-01.1.ksig.txt | gttlvdump -P
 # Save converted KSI signature text file to a binary file. Use the binary file 
 # as input to dump. Using '-P' option for printing tag names. 
 
-gttlvundump test/resources/sig/ok-sig-2014-08-01.1.ksig.txt > test/tmp/undump_ok-sig-2014-08-01.ksig
+GTTLVUNDUMP test/resources/sig/ok-sig-2014-08-01.1.ksig.txt > test/tmp/undump_ok-sig-2014-08-01.ksig
 >>>= 0
 
-gttlvdump -P test/tmp/undump_ok-sig-2014-08-01.ksig
+GTTLVDUMP -P test/tmp/undump_ok-sig-2014-08-01.ksig
 >>>  /TLV.0800.*Uni-signature PDU.*
 .*TLV.0805.*Calendar auth record.*
 .*TLV.10,F.*Published data.*
@@ -50,7 +50,7 @@ gttlvdump -P test/tmp/undump_ok-sig-2014-08-01.ksig
 # Using stream KSI signature stream from undump, grep publication time from 
 # calendar authentication record.
 
-gttlvundump test/resources/sig/ok-sig-2014-08-01.1.ksig.txt | gttlvgrep 800.805.10.02
+GTTLVUNDUMP test/resources/sig/ok-sig-2014-08-01.1.ksig.txt | GTTLVGREP 800.805.10.02
 >>>
 53dc2a00
 >>>= 0
@@ -59,10 +59,10 @@ gttlvundump test/resources/sig/ok-sig-2014-08-01.1.ksig.txt | gttlvgrep 800.805.
 # Save converted KSI signature binary file to a text file. Use stream, conterted 
 # from text file, as input to dump. Using '-P' option for printing tag names. 
 
-gttlvdump test/resources/sig/ok-sig-2014-08-01.1.ksig > test/tmp/dump_ok-sig-2014-08-01.txt
+GTTLVDUMP test/resources/sig/ok-sig-2014-08-01.1.ksig > test/tmp/dump_ok-sig-2014-08-01.txt
 >>>= 0
 
-gttlvundump test/tmp/dump_ok-sig-2014-08-01.txt | gttlvdump -P
+GTTLVUNDUMP test/tmp/dump_ok-sig-2014-08-01.txt | GTTLVDUMP -P
 >>>  /TLV.0800.*Uni-signature PDU.*
 .*TLV.0805.*Calendar auth record.*
 .*TLV.10,F.*Published data.*
@@ -74,7 +74,7 @@ gttlvundump test/tmp/dump_ok-sig-2014-08-01.txt | gttlvdump -P
 # Using converted stream from tlvundump for tlvgreping calendar hash chain 
 # publication time tlv.
 
-gttlvundump test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv.txt | gttlvgrep 300.302.802.01
+GTTLVUNDUMP test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv.txt | GTTLVGREP 300.302.802.01
 >>>
 53740380
 >>>= 0
@@ -83,7 +83,7 @@ gttlvundump test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv.txt | gtt
 # Using converted stream from tlvundump for tlvgreping calendar hash chain 
 # publication time tlv (binary representarion). Stream the resulting tlv to tlvdump.
 
-gttlvundump test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv.txt | gttlvgrep 300.302.802.01 -re | gttlvdump
+GTTLVUNDUMP test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv.txt | GTTLVGREP 300.302.802.01 -re | GTTLVDUMP
 >>>
 TLV[01]: 53740380
 >>>= 0
@@ -91,7 +91,7 @@ TLV[01]: 53740380
 ###############################################################################
 # Create a dummy TLV element with tag 0x0123. Tlvdump to stdout.
 
-echo -en "\01" | gttlvwrap -t 0x0123 | gttlvdump
+echo -en "\01" | GTTLVWRAP -t 0x0123 | GTTLVDUMP
 >>>
 TLV[0123]:01
 >>>= 0
@@ -99,7 +99,7 @@ TLV[0123]:01
 ###############################################################################
 # Create a dummy TLV element with tag 0123. Tlvdump to stdout.
 
-echo -en "\01" | gttlvwrap -t 0123 | gttlvdump
+echo -en "\01" | GTTLVWRAP -t 0123 | GTTLVDUMP
 >>>
 TLV[0123]:01
 >>>= 0
@@ -107,7 +107,7 @@ TLV[0123]:01
 ###############################################################################
 # Create dummy TLV element and set non-critical flag. Tlvdump to stdout.
 
-echo -en "\01" | gttlvwrap -t 0x0123 -N | gttlvdump
+echo -en "\01" | GTTLVWRAP -t 0x0123 -N | GTTLVDUMP
 >>>
 TLV[0123,N]:01
 >>>= 0
@@ -115,7 +115,7 @@ TLV[0123,N]:01
 ###############################################################################
 # Create dummy TLV element and set forward flag. Tlvdump to stdout.
 
-echo -en "\01" | gttlvwrap -t 0x0123 -F | gttlvdump
+echo -en "\01" | GTTLVWRAP -t 0x0123 -F | GTTLVDUMP
 >>>
 TLV[0123,F]:01
 >>>= 0
@@ -124,11 +124,11 @@ TLV[0123,F]:01
 # Create an aggregation error response. Write the response to file. Compare the
 # the result to the original tlvdumped file.
 
-((echo -en "\x61\x6e\x6f\x6e\x00" | gttlvwrap -t 01; echo -en "\x54\xca\x47\xb5" | gttlvwrap -t 02; echo -en "\x01" | gttlvwrap -t 03) | gttlvwrap -t 01; (echo -en "" | gttlvwrap -t 01; echo -en "\x01\x03" | gttlvwrap -t 04; (echo -n "The request contained invalid payload"; echo -en "\x00") | gttlvwrap -t 05) | gttlvwrap -t 0202;(echo -en "\x01\xc4\xaa\xaf\xf7\x9b\xab\x91\x37\xd2\xc1\xd8\xc4\x3e\x4f\xcd\x09\xc3\xbc\xe2\x8e\x19\x07\x9b\xe3\x6b\xb0\xd2\x11\x86\x4e\x2a\x3e") | gttlvwrap -t 1f) | gttlvwrap -t 0200 | gttlvdump > test/tmp/wrap_dump_ok_req_err.txt
+((echo -en "\x61\x6e\x6f\x6e\x00" | GTTLVWRAP -t 01; echo -en "\x54\xca\x47\xb5" | GTTLVWRAP -t 02; echo -en "\x01" | GTTLVWRAP -t 03) | GTTLVWRAP -t 01; (echo -en "" | GTTLVWRAP -t 01; echo -en "\x01\x03" | GTTLVWRAP -t 04; (echo -n "The request contained invalid payload"; echo -en "\x00") | GTTLVWRAP -t 05) | GTTLVWRAP -t 0202;(echo -en "\x01\xc4\xaa\xaf\xf7\x9b\xab\x91\x37\xd2\xc1\xd8\xc4\x3e\x4f\xcd\x09\xc3\xbc\xe2\x8e\x19\x07\x9b\xe3\x6b\xb0\xd2\x11\x86\x4e\x2a\x3e") | GTTLVWRAP -t 1f) | GTTLVWRAP -t 0200 | GTTLVDUMP > test/tmp/wrap_dump_ok_req_err.txt
 >>>
 >>>= 0
 
-gttlvdump test/resources/tlv/ok_aggr_err_response-1.tlv > test/tmp/dump_ok_aggr_err_response-1.tlv.txt
+GTTLVDUMP test/resources/tlv/ok_aggr_err_response-1.tlv > test/tmp/dump_ok_aggr_err_response-1.tlv.txt
 >>>
 >>>= 0
 
@@ -139,7 +139,7 @@ diff test/tmp/wrap_dump_ok_req_err.txt test/tmp/dump_ok_aggr_err_response-1.tlv.
 ###############################################################################
 # Compare converted stream (dump->undump) to original binary file. Using pipe.
 
-gttlvdump test/resources/sig/ok-sig-2014-08-01.1.ksig | gttlvundump | diff test/resources/sig/ok-sig-2014-08-01.1.ksig -
+GTTLVDUMP test/resources/sig/ok-sig-2014-08-01.1.ksig | GTTLVUNDUMP | diff test/resources/sig/ok-sig-2014-08-01.1.ksig -
 >>>
 >>>= 0
 
@@ -147,11 +147,11 @@ gttlvdump test/resources/sig/ok-sig-2014-08-01.1.ksig | gttlvundump | diff test/
 # Compare converted files (dump->undump) to original binary file. 
 # Save intermediate outputs from dump and undump.
 
-gttlvdump test/resources/sig/ok-sig-2014-08-01.1.ksig > test/tmp/dump_ok-sig-2014-08-01.1.txt
+GTTLVDUMP test/resources/sig/ok-sig-2014-08-01.1.ksig > test/tmp/dump_ok-sig-2014-08-01.1.txt
 >>>
 >>>= 0
 
-gttlvundump test/tmp/dump_ok-sig-2014-08-01.1.txt > test/tmp/undump_ok-sig-2014-08-01.1.txt.ksig
+GTTLVUNDUMP test/tmp/dump_ok-sig-2014-08-01.1.txt > test/tmp/undump_ok-sig-2014-08-01.1.txt.ksig
 >>>
 >>>= 0
 
@@ -162,7 +162,7 @@ diff test/resources/sig/ok-sig-2014-08-01.1.ksig test/tmp/undump_ok-sig-2014-08-
 ###############################################################################
 # Compare converted stream (undump->dump) to original text file.
 
-gttlvundump test/resources/sig/ok-sig-2014-08-01.1.ksig.txt | gttlvdump | diff test/resources/sig/ok-sig-2014-08-01.1.ksig.txt -
+GTTLVUNDUMP test/resources/sig/ok-sig-2014-08-01.1.ksig.txt | GTTLVDUMP | diff test/resources/sig/ok-sig-2014-08-01.1.ksig.txt -
 >>>
 >>>= 0
 
@@ -170,11 +170,11 @@ gttlvundump test/resources/sig/ok-sig-2014-08-01.1.ksig.txt | gttlvdump | diff t
 # Compare converted files (undump->dump) to original text file. 
 # Save intermediate outputs from dump and undump.
 
-gttlvundump test/resources/sig/ok-sig-2014-08-01.1.ksig.txt > test/tmp/undump_ok-sig-2014-08-01.1.ksig
+GTTLVUNDUMP test/resources/sig/ok-sig-2014-08-01.1.ksig.txt > test/tmp/undump_ok-sig-2014-08-01.1.ksig
 >>>
 >>>= 0
 
-gttlvdump test/tmp/undump_ok-sig-2014-08-01.1.ksig > test/tmp/dump_ok-sig-2014-08-01.1.ksig.txt
+GTTLVDUMP test/tmp/undump_ok-sig-2014-08-01.1.ksig > test/tmp/dump_ok-sig-2014-08-01.1.ksig.txt
 >>>
 >>>= 0
 
@@ -186,7 +186,7 @@ diff test/resources/sig/ok-sig-2014-08-01.1.ksig.txt test/tmp/dump_ok-sig-2014-0
 # Compare converted stream (dump->undump->dump) to text representation of the 
 # original binary file.
 
-gttlvdump test/resources/sig/ok-sig-2014-08-01.1.ksig | gttlvundump | gttlvdump | diff test/resources/sig/ok-sig-2014-08-01.1.ksig.txt -
+GTTLVDUMP test/resources/sig/ok-sig-2014-08-01.1.ksig | GTTLVUNDUMP | GTTLVDUMP | diff test/resources/sig/ok-sig-2014-08-01.1.ksig.txt -
 >>>
 >>>= 0
 
@@ -194,7 +194,7 @@ gttlvdump test/resources/sig/ok-sig-2014-08-01.1.ksig | gttlvundump | gttlvdump 
 # Compare converted stream (undump->dump->undump) to binary representation of 
 # the original text file.
 
-gttlvundump test/resources/sig/ok-sig-2014-08-01.1.ksig.txt | gttlvdump | gttlvundump | diff test/resources/sig/ok-sig-2014-08-01.1.ksig -
+GTTLVUNDUMP test/resources/sig/ok-sig-2014-08-01.1.ksig.txt | GTTLVDUMP | GTTLVUNDUMP | diff test/resources/sig/ok-sig-2014-08-01.1.ksig -
 >>>
 >>>= 0
 
@@ -204,14 +204,14 @@ gttlvundump test/resources/sig/ok-sig-2014-08-01.1.ksig.txt | gttlvdump | gttlvu
 # Using '-a' option forc annotating known KSI elements. Tlvundump should ignore
 # the annotations.
 
-gttlvdump -a test/resources/sig/ok-sig-2014-08-01.1.ksig | gttlvundump | gttlvdump | diff test/resources/sig/ok-sig-2014-08-01.1.ksig.txt -
+GTTLVDUMP -a test/resources/sig/ok-sig-2014-08-01.1.ksig | GTTLVUNDUMP | GTTLVDUMP | diff test/resources/sig/ok-sig-2014-08-01.1.ksig.txt -
 >>>
 >>>= 0
 
 ###############################################################################
 # Create a multi response binary stream. Compare it to the original file.
 
-gttlvundump test/resources/tlv/test2-extend_response-reqId_1.txt test/resources/tlv/test2-extend_response-reqId_2.txt | diff test/resources/tlv/test2-extend_response-multiple.tlv -
+GTTLVUNDUMP test/resources/tlv/test2-extend_response-reqId_1.txt test/resources/tlv/test2-extend_response-reqId_2.txt | diff test/resources/tlv/test2-extend_response-multiple.tlv -
 >>>
 >>>= 0
 
@@ -222,11 +222,11 @@ gttlvundump test/resources/tlv/test2-extend_response-reqId_1.txt test/resources/
 # The file content is used as pattern for searching the pablication hash in 
 # dumped stream.
 
-gttlvgrep -r 800.805.10.04 test/resources/sig/ok-sig-2014-08-01.1.ksig | base64 > test/tmp/grep_base64_pattern.txt
+GTTLVGREP -r 800.805.10.04 test/resources/sig/ok-sig-2014-08-01.1.ksig | base64 > test/tmp/grep_base64_pattern.txt
 >>>
 >>>= 0
 
-gttlvdump -e 64 test/resources/sig/ok-sig-2014-08-01.1.ksig | grep -of test/tmp/grep_base64_pattern.txt
+GTTLVDUMP -e 64 test/resources/sig/ok-sig-2014-08-01.1.ksig | grep -of test/tmp/grep_base64_pattern.txt
 >>>
 AeT8CFPKyzyIjuTS+EMIOssagi5gQDpq9xZ/cNDKju5h
 >>>= 0
@@ -237,7 +237,7 @@ AeT8CFPKyzyIjuTS+EMIOssagi5gQDpq9xZ/cNDKju5h
 # TLV[0123]:
 #  TLV[01]: 717765727479
 
-(echo -n "qwerty" | gttlvwrap -t 01) | gttlvwrap -t 123 | gttlvdump -s
+(echo -n "qwerty" | GTTLVWRAP -t 01) | GTTLVWRAP -t 123 | GTTLVDUMP -s
 >>>
 TLV[0123]:0106717765727479
 >>>= 0

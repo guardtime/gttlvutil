@@ -1,0 +1,77 @@
+
+
+0800			*			>>>>Uni-signature PDU
+0801		 	*			>>>>Aggregation chain
+0801.02			TIME		>>>>Aggregation Time
+0801.03			INT			>>>>Chain index
+0801.04			RAW			>>>>Input data
+0801.05			IMPRINT		>>>>Input hash
+0801.06			INT			>>>>Aggregation algorithm
+
+0801.07			*			>>>>Left link
+0801.07.01		INT			>>>>Level correction
+0801.07.02		IMPRINT		>>>>Sibling hash
+0801.07.03		STR			>>>>Legacy id
+0801.07.04		*			>>>>Metadata
+0801.07.04.01	STR			>>>>Client id
+0801.07.04.02	STR			>>>>Machine id
+0801.07.04.03	INT			>>>>Sequence nr
+0801.07.04.04	UTIME		>>>>Request time
+0801.07.04.1E	STR			>>>>Padding
+
+0801.08			*			>>>>Right link
+0801.08.01		INT			>>>>Level correction
+0801.08.02		IMPRINT		>>>>Sibling hash
+0801.08.03		STR			>>>>Legacy id
+0801.08.04		*			>>>>Metadata
+0801.08.04.01	STR			>>>>Client id
+0801.08.04.02	STR			>>>>Machine id
+0801.08.04.03	INT			>>>>Sequence nr
+0801.08.04.04	UTIME		>>>>Request time
+0801.08.04.1E	STR			>>>>Padding
+
+0802			*			>>>>Calendar chain
+0802.01			TIME		>>>>Publication time
+0802.02			TIME		>>>>Aggregation time
+0802.05			IMPRINT		>>>>Input hash
+0802.07			IMPRINT		>>>>Left link
+0802.08			IMPRINT		>>>>Right link
+
+0803			*			>>>>Publication record
+0803.10			*			>>>>Published data
+0803.10.02		TIME		>>>>Published time
+0803.10.04		IMPRINT		>>>>Published hash
+0803.09			STR			>>>>Publication reference
+0803.0a			STR			>>>>Publication repository URI
+
+0804 			*			>>>>Aggregation auth record
+0804.02			TIME		>>>>Aggregation time
+0804.03			INT			>>>>Chain index
+0804.05			IMPRINT		>>>>Input hash
+0804.0b			*			>>>>Signed data
+0804.0b.01		STR			>>>>Signature type
+0804.0b.02		RAW			>>>>Signature value
+0804.0b.03		RAW			>>>>Certificate id
+0804.0b.04		STR			>>>>Certificate repository URI
+
+0805			*			>>>>Calendar auth record
+0805.10			*			>>>>Published data
+0805.10.02		TIME		>>>>Published time
+0805.10.04		IMPRINT		>>>>Published hash
+0805.0b			*			>>>>Signature data
+0805.0b.01		STR			>>>>Signature type
+0805.0b.02		RAW			>>>>Signature value
+0805.0b.03		RAW			>>>>Certificate id
+0805.0b.04		STR			>>>>Cert repository URI
+
+0806			*			>>>>RFC3161 compatibility record
+0806.02			TIME		>>>>Aggregation time
+0806.03			INT			>>>>Chain index
+0806.05			IMPRINT		>>>>Input hash
+0806.10			RAW			>>>>TST info prefix
+0806.11			RAW			>>>>TST info suffix
+0806.12			INT			>>>>TST info hash algorithm
+0806.13			RAW			>>>>Signed attributes prefix
+0806.14			RAW			>>>>Signed attributes suffix
+0806.15			INT			>>>>Signed attributed hash algorithm
+

@@ -21,26 +21,26 @@
 # Test user interface.
 
 # Help
-gttlvwrap -h
+GTTLVWRAP -h
 >>> /Usage:.*
 .*gttlvwrap.*/
 >>>= 0
 
 # Version
-gttlvwrap -v | grep -f VERSION
->>> /^gttlvutil.([0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2})$/
+GTTLVWRAP -v | grep -f VERSION
+>>> /^gttlvutil.([0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,4})$/
 >>>= 0
 
 # Invalid parameter.
-gttlvwrap -V 
+GTTLVWRAP -V 
 >>>
 >>>2
-gttlvwrap: invalid option -- 'V'
+GTTLVWRAP: invalid option -- 'V'
 Unknown parameter, try -h.
 >>>= 1
 
 # Missing file.
-gttlvwrap -i test/tmp/missing/file
+GTTLVWRAP -i test/tmp/missing/file
 >>>
 >>>2
 Unable to open input file 'test/tmp/missing/file'.
@@ -59,7 +59,7 @@ Unable to open input file 'test/tmp/missing/file'.
 #     TLV[05]: 546865207265717565737420636f6e7461696e656420696e76616c6964207061796c6f616400
 #   TLV[1f]: 01c4aaaff79bab9137d2c1d8c43e4fcd09c3bce28e19079be36bb0d211864e2a3e
 
-((echo -en "\x61\x6e\x6f\x6e\x00" | gttlvwrap -t 01; echo -en "\x54\xca\x47\xb5" | gttlvwrap -t 02; echo -en "\x01" | gttlvwrap -t 03) | gttlvwrap -t 01; (echo -en "" | gttlvwrap -t 01; echo -en "\x01\x03" | gttlvwrap -t 04; (echo -n "The request contained invalid payload"; echo -en "\x00") | gttlvwrap -t 05) | gttlvwrap -t 0202; (echo -en "\x01\xc4\xaa\xaf\xf7\x9b\xab\x91\x37\xd2\xc1\xd8\xc4\x3e\x4f\xcd\x09\xc3\xbc\xe2\x8e\x19\x07\x9b\xe3\x6b\xb0\xd2\x11\x86\x4e\x2a\x3e") | gttlvwrap -t 1f) | gttlvwrap -t 0200 | diff test/resources/tlv/ok_aggr_err_response-1.tlv -
+((echo -en "\x61\x6e\x6f\x6e\x00" | GTTLVWRAP -t 01; echo -en "\x54\xca\x47\xb5" | GTTLVWRAP -t 02; echo -en "\x01" | GTTLVWRAP -t 03) | GTTLVWRAP -t 01; (echo -en "" | GTTLVWRAP -t 01; echo -en "\x01\x03" | GTTLVWRAP -t 04; (echo -n "The request contained invalid payload"; echo -en "\x00") | GTTLVWRAP -t 05) | GTTLVWRAP -t 0202; (echo -en "\x01\xc4\xaa\xaf\xf7\x9b\xab\x91\x37\xd2\xc1\xd8\xc4\x3e\x4f\xcd\x09\xc3\xbc\xe2\x8e\x19\x07\x9b\xe3\x6b\xb0\xd2\x11\x86\x4e\x2a\x3e") | GTTLVWRAP -t 1f) | GTTLVWRAP -t 0200 | diff test/resources/tlv/ok_aggr_err_response-1.tlv -
 >>> 
 >>>= 0
 
@@ -67,7 +67,7 @@ Unable to open input file 'test/tmp/missing/file'.
 # Create an aggregation error response (see above test case). Save the resulting 
 # steam to a temporary file and compare it to the original file.
 
-((echo -en "\x61\x6e\x6f\x6e\x00" | gttlvwrap -t 01; echo -en "\x54\xca\x47\xb5" | gttlvwrap -t 02; echo -en "\x01" | gttlvwrap -t 03) | gttlvwrap -t 01; (echo -en "" | gttlvwrap -t 01; echo -en "\x01\x03" | gttlvwrap -t 04; (echo -n "The request contained invalid payload"; echo -en "\00") | gttlvwrap -t 05) | gttlvwrap -t 0202; (echo -en "\x01\xc4\xaa\xaf\xf7\x9b\xab\x91\x37\xd2\xc1\xd8\xc4\x3e\x4f\xcd\x09\xc3\xbc\xe2\x8e\x19\x07\x9b\xe3\x6b\xb0\xd2\x11\x86\x4e\x2a\x3e") | gttlvwrap -t 1f) | gttlvwrap -t 0200 -o test/tmp/wrap_ok_aggr_err_response.tlv
+((echo -en "\x61\x6e\x6f\x6e\x00" | GTTLVWRAP -t 01; echo -en "\x54\xca\x47\xb5" | GTTLVWRAP -t 02; echo -en "\x01" | GTTLVWRAP -t 03) | GTTLVWRAP -t 01; (echo -en "" | GTTLVWRAP -t 01; echo -en "\x01\x03" | GTTLVWRAP -t 04; (echo -n "The request contained invalid payload"; echo -en "\00") | GTTLVWRAP -t 05) | GTTLVWRAP -t 0202; (echo -en "\x01\xc4\xaa\xaf\xf7\x9b\xab\x91\x37\xd2\xc1\xd8\xc4\x3e\x4f\xcd\x09\xc3\xbc\xe2\x8e\x19\x07\x9b\xe3\x6b\xb0\xd2\x11\x86\x4e\x2a\x3e") | GTTLVWRAP -t 1f) | GTTLVWRAP -t 0200 -o test/tmp/wrap_ok_aggr_err_response.tlv
 >>> 
 >>>= 0
 
@@ -78,7 +78,7 @@ diff test/resources/tlv/ok_aggr_err_response-1.tlv test/tmp/wrap_ok_aggr_err_res
 ###############################################################################
 # Wrap tlvutil package varsion number around a dummy tag.
 
-gttlvwrap -t 0123 -i VERSION | grep -E "([0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2})$"
+GTTLVWRAP -t 0123 -i VERSION | grep -E "([0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,4})$"
 >>>
 Binary file (standard input) matches
 >>>= 0
@@ -86,7 +86,7 @@ Binary file (standard input) matches
 ###############################################################################
 # Wrap without the specified tag.
 
-gttlvwrap -i VERSION
+GTTLVWRAP -i VERSION
 >>>2
 Tlv tag (-t) must be specified.
 >>>= 6
@@ -94,28 +94,28 @@ Tlv tag (-t) must be specified.
 ###############################################################################
 # Wrap with type out of the range 1.
 
-gttlvwrap -i VERSION -t -6
+GTTLVWRAP -i VERSION -t -6
 >>>2 /(.*Tag value out of range.*)/
 >>>= 6
 
 ###############################################################################
 # Wrap with type out of the range 2.
 
-gttlvwrap -i VERSION -t 2000
+GTTLVWRAP -i VERSION -t 2000
 >>>2 /(.*Tag value out of range.*)/
 >>>= 6
 
 ###############################################################################
 # Wrap with invalid type 1.
 
-gttlvwrap -i VERSION -t ppp
+GTTLVWRAP -i VERSION -t ppp
 >>>2 /(.*Bad tag value.*)(.*ppp.*)/
 >>>= 6
 
 ###############################################################################
 # Wrap with invalid type 2.
 
-gttlvwrap -i VERSION -t 1p
+GTTLVWRAP -i VERSION -t 1p
 >>>2 /(.*Bad tag value.*)(.*1p.*)/
 >>>= 6
 

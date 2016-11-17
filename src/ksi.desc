@@ -54,7 +54,7 @@
 0801.08.04.02	STR			Machine id
 0801.08.04.03	INT			Sequence nr
 0801.08.04.04	UTIME		Request time
-0801.07.04.1E	STR			Padding
+0801.08.04.1E	STR			Padding
 
 0802			*			Calendar chain
 0802.01			TIME		Publication time
@@ -117,6 +117,54 @@
 0806.14			RAW			Signed attributes suffix
 0806.15			INT			Signed attributed hash algorithm
 
+0220			*			Aggregation request PDU
+0220.01			*			PDU header
+0220.01.01		STR			Login id
+0220.01.02		INT			Instance id
+0220.01.03		INT			Message id
+0220.1f			IMPRINT		HMAC
+
+0220.02			*			Aggregation request
+0220.02.01		INT			Request id
+0220.02.02		IMPRINT		Request hash
+0220.02.03		INT			Request level
+
+0220.04			*			Aggregator conf request
+
+0220.05			*			Aggregator ACK request
+0220.05.01		UTIME		Request time
+
+0221			*			Aggregation response PDU
+0221.01			*			PDU header
+0221.01.01		STR			Login id
+0221.01.02		INT			Instance id
+0221.01.03		INT			Message id
+0221.1f			IMPRINT		HMAC
+
+0221.02			*			Aggregation response
+0221.02.01		INT			Request id
+0221.02.04		INT			Status
+0221.02.05		STR			Error message
+
+0221.03			*			Aggregation error
+0221.03.04		INT			Status
+0221.03.05		STR			Error message
+
+0221.04			*			Aggregator conf response
+0221.04.01		INT			Max level
+0221.04.02		INT			Aggregation algorithm
+0221.04.03		INT			Aggregation period
+0221.04.04		INT			Max requests
+0221.04.10		STR			Parent URI
+
+0221.05			*			Aggregator ACK response
+0221.05.01		UTIME		Request time
+0221.05.02		UTIME		Receipt time
+0221.05.03		UTIME		ACK time
+0221.05.04		INT			Aggregation delay ms
+0221.05.05		INT			Aggregation period ms
+0221.05.06		INT			Aggregation drift ms
+
 0200			*			Aggregation PDU
 0200.01			*			PDU header
 0200.01.01		STR			Login id
@@ -151,6 +199,43 @@
 0203.04			INT			Status
 0203.05			STR			Error message
 
+0320			*			Extension request PDU
+0320.01			*			PDU header
+0320.01.01		STR			Login id
+0320.01.02		INT			Instance id
+0320.01.03		INT			Message id
+0320.1f			IMPRINT		HMAC
+
+0320.02			*			Extension request
+0320.02.01		INT			Request id
+0320.02.02		TIME		Aggregation time
+0320.02.03		TIME		Publication time
+
+0320.04			*			Extender conf request
+
+0321			*			Extension response PDU
+0321.01			*			PDU header
+0321.01.01		STR			Login id
+0321.01.02		INT			Instance id
+0321.01.03		INT			Message id
+0321.1f			IMPRINT		HMAC
+
+0321.02			*			Extension response
+0321.02.01		INT			Request id
+0321.02.04		INT			Status
+0321.02.05		STR			Error message
+0321.02.12		TIME		Calendar last time
+
+0321.03			*			Extension error
+0321.03.04		INT			Status
+0321.03.05		STR			Error message
+
+0321.04			*			Extender conf response
+0321.04.04		INT			Max requests
+0321.04.10		STR			Parent URI
+0321.04.11		TIME		Calendar first time
+0321.04.12		TIME		Calendar last time
+
 0300			*			Extension PDU
 0300.01			*			PDU header
 0300.01.01		STR			Login id
@@ -167,7 +252,7 @@
 0302.01			INT			Request id
 0302.04			INT			Status
 0302.05			STR			Error message
-0302.10			TIME		Last time
+0302.10			TIME		Calendar last time
 
 0303			*			Extension error
 0303.04			INT			Status

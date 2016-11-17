@@ -36,7 +36,7 @@ INSTALL_MACHINE=64
 !ENDIF
 
 #Compiler and linker configuration
-CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE /I$(SRC_DIR)
+CCFLAGS = /nologo /W3 /D_CRT_SECURE_NO_DEPRECATE /I$(SRC_DIR) /DDATA_DIR="\"\""
 LDFLAGS = /NOLOGO
 
 #external libraries used for linking.

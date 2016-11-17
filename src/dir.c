@@ -148,7 +148,7 @@ static const char *path_removeFile(const char *origPath, char *buf, size_t buf_l
 }
 
 #ifdef _WIN32
-static char *directory_getMyFullPath(char *buf, size_t buf_len) {
+static char *directory_getMyFullPath(char *buf, size_t buf_len, char *arg0) {
 	TCHAR tmp[MAX_PATH];
 	DWORD count;
 	count = GetModuleFileName(NULL, tmp, MAX_PATH);
@@ -160,22 +160,39 @@ static char *directory_getMyFullPath(char *buf, size_t buf_len) {
 	return buf;
 }
 #else
-static char *directory_getMyFullPath(char *buf, size_t buf_len) {
+static char *directory_getMyFullPath(char *buf, size_t buf_len, char *arg0) {
 	char tmp[2048];
 
+	/* A full path is provided. */
+	if (*arg0 == '/') {
+		strcpy(buf, arg0);
+		return buf;
+	}
+
+	/* Get path to the working directory. */
 	if (getcwd (tmp, sizeof(tmp)) != tmp) {
 		return NULL;
 	}
+	strcpy(buf, tmp);
 
-	strncpy(buf, tmp, buf_len);
-	buf[buf_len - 1] = '\0';
+	/* Check whether application path starts with "./". */
+	if (*arg0 == '.' && strstr(arg0, "..") != arg0) {
+		/* Copy the executable path starting from '/' */
+		strcat(buf, strchr(arg0, '/'));
+	} else {
+		/* Append '/' to the path if not present. */
+		if (buf[strlen(buf)] != '/') {
+			strcat(buf, "/");
+		}
+		/* Append executable path. */
+		strcat(buf, arg0);
+	}
 
 	return buf;
-
 }
 #endif
 
-int DIRECTORY_getMyPath(char *path, size_t path_len) {
+int DIRECTORY_getMyPath(char *path, size_t path_len, char *arg0) {
 	int res = GT_UNKNOWN_ERROR;
 	char buf[2048];
 	char tmp[2048];
@@ -185,7 +202,7 @@ int DIRECTORY_getMyPath(char *path, size_t path_len) {
 		goto cleanup;
 	}
 
-	if (directory_getMyFullPath(buf, sizeof(buf)) == NULL) {
+	if (directory_getMyFullPath(buf, sizeof(buf), arg0) == NULL) {
 		fprintf(stderr, "Unable to retrieve gttlvdump full path.\n");
 		res = GT_INVALID_FORMAT;
 		goto cleanup;

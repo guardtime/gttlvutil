@@ -105,6 +105,18 @@ Print time in local timezone. Is valid with \fB-p\fR.
 Output format of binary value. Available: 'hex', 'base64'. If \fB-e\fR is not set, ’hex’ is used.
 .\"
 .TP
+\fB-D \fIpth\fR
+Set TLV description files directory. Description files will be loaded additionally to the default files. Only files with \fI*.desc\fR extention are loaded.
+.\"
+.TP
+\fB-o\fR
+Override default TLV description files. If set, the default descriptions will be overridden by user descriptions in case of a duplicate entry. Option is valid with \fB-D\fR and has no effect with \fB-i\fR.
+.\"
+.TP
+\fB-i\fR
+Ignore default TLV description files. If set, only description files provided with \fB-D\fR will be loaded.
+.\"
+.TP
 \fB-v\fR
 Print TLV utility version.
 .\"
