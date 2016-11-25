@@ -1,3 +1,4 @@
+* BUGFIX: Setting gttlvgrep (in case of '-r') and gttlvwrap stdout mode to binary.
 * BUGFIX: Grep is grepping invalid content.
 * BUGFIX: Setting gttlvdump stdin mode to binary.
 * BUGFIX: Fixed description for metadata padding TLV type in right link (0801.08.04.1E).
