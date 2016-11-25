@@ -2,6 +2,10 @@
 #include <getopt.h>
 #include <stdlib.h>
 #include <limits.h>
+#ifdef _WIN32
+#	include <io.h>
+#	include <fcntl.h>
+#endif
 
 #include "common.h"
 
@@ -13,7 +17,12 @@ int encode(unsigned int type, int non_critical, int forward, FILE *in, FILE *out
 	int count = 0;
 
 	if (in == NULL) in = stdin;
-	if (out == NULL) out = stdout;
+	if (out == NULL) {
+		out = stdout;
+#ifdef _WIN32
+		_setmode(_fileno(out), _O_BINARY);
+#endif
+	}
 
 	while (1) {
 		len = fread(buf, 1, sizeof(buf), in);

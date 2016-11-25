@@ -2,6 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
+#	include <io.h>
+#	include <fcntl.h>
+#endif
 
 #include "common.h"
 #include "fast_tlv.h"
@@ -95,6 +99,9 @@ int main(int argc, char **argv) {
 			case 'r':
 				conf.print_raw = true;
 				conf.print_path = false;
+#ifdef _WIN32
+				_setmode(_fileno(stdout), _O_BINARY);
+#endif
 				break;
 			case 'i':
 				conf.print_path_index = true;
