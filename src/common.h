@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 #ifndef _SIZE_T_DEFINED
-#	typedef size_t unsigned long long
+	typedef unsigned long long size_t;
 #endif
 
 #define GT_TLV_MASK_TLV16 0x80u
