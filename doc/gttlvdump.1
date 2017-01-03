@@ -44,7 +44,11 @@ Print help text.
 .\"
 .TP
 \fB-H \fIint\fR
-Ignore specified number of bytes in the beginning of the input while TLV parsing. The skipped part is printed in hex followed by the decoded TLV.
+Skip specified number of bytes in the beginning of the input. The skipped bytes are printed in hex followed by the decoded TLVs.
+.\"
+.TP
+\fB-H auto\fR
+Autodetect and skip known magic header bytes in the beginning of the input. The skipped bytes are printed in hex followed by the decoded TLVs.
 .\"
 .TP
 \fB-d \fIint\fR

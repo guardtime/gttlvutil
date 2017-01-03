@@ -13,10 +13,14 @@ In the TLV description (see \fBtlv\fR(5)) file the known TLV types are described
 TLV description file contains TLV descriptions line by line, and each line has the following format:
 .LP
 .RS 4
-<\fIparent type\fR>.<\fIchild type\fR>	<\fIvalue format\fR>	<\fIname\fR>
+<\fIparent type\fR>[.<\fIchild type\fR> [.<\fIchild type\fR> ...]]	<\fIvalue format\fR>	<\fIname\fR>
+
+or
+
+<\fImagic bytes\fR>	@magic	<\fIdescription\fR>
 .RE
 .LP
-Here the <\fIparent type\fR> and <\fIchild type\fR> specify the types of the parent and child (nested) TLVs, while the description applies to the latter.
+Here the <\fIparent type\fR> and <\fIchild type\fR> specify the types of the parent and child (nested) TLVs, while the description applies to the latter. The <\fImagic bytes\fR> represents the magic bytes in the beginning of an input. The magic bytes are represented as hex.
 .LP
 The <\fIvalue format\fR> specifies how the TLV value should be formatted when printed. Known value formats are:
 .LP
@@ -32,6 +36,8 @@ The <\fIvalue format\fR> specifies how the TLV value should be formatted when pr
 \fBTIME\fR - Formatted as time (number of seconds since 1970-01-01 00:00:00 UTC).
 .IP \(bu 4
 \fB*\fR - Formatted as parent of nested TLVs.
+.IP \(bu 4
+\fB@magic\fR - Magic bytes in the beginning of an input.
 .LP
 The <\fIname\fR> is a string which indicates the human-readable name for the type of this TLV.
 .\"
@@ -41,20 +47,22 @@ The <\fIname\fR> is a string which indicates the human-readable name for the typ
 \fRExample of a TLV description for parent TLV \fI0x1000\fR that contains nested TLVs:
 .LP
 .RS 4
-\fI1000\fR	\fB*\fR		Parent TLV
+\fI4d41474943\fR	\fB@magic\fR	Magic bytes "MAGIC"
 .br
-\fI1000.01\fR	\fBINT\fR	ID
+\fI1000\fR			\fB*\fR		Parent TLV
 .br
-\fI1000.02\fR	\fBSTRING\fR	Name
+\fI1000.01\fR		\fBINT\fR		ID
 .br
-\fI1000.03\fR	\fBRAW\fR	Binary data
+\fI1000.02\fR		\fBSTRING\fR	Name
 .br
-\fI1000.1100\fR	\fB*\fR		Nested TLV
+\fI1000.03\fR		\fBRAW\fR		Binary data
+.br
+\fI1000.04\fR		\fB*\fR		Nested TLV
 .br
 .LP
-\fI1100.01\fR	\fBINT\fR	ID
+\fI1000.04.01\fR	\fBINT\fR		ID
 .br
-\fI1100.02\fR	\fBRAW\fR	Binary data
+\fI1000.04.02\fR	\fBRAW\fR		Binary data
 .LP
 .\"
 .SH AUTHOR
