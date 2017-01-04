@@ -43,12 +43,8 @@ Some parameters depend on known TLV elements (\fB-s\fR, \fB-a\fR, \fB-P\fR, \fB-
 Print help text.
 .\"
 .TP
-\fB-H \fIint\fR
-Skip specified number of bytes in the beginning of the input. The skipped bytes are printed in hex followed by the decoded TLVs.
-.\"
-.TP
-\fB-H auto\fR
-Autodetect and skip known magic header bytes in the beginning of the input. The skipped bytes are printed in hex followed by the decoded TLVs.
+\fB-H \fIlen\fR
+Skip the number of bytes in the beginning of the input. The skipped bytes are printed in hex followed by the decoded TLVs. Additionally the value "auto" (\fB -H auto\fR) can be used to automatically detect known magic bytes. If the automatic detection is not successful the header length is set to zero (same as \fB-H 0\fR) and no bytes are skipped.
 .\"
 .TP
 \fB-d \fIint\fR

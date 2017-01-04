@@ -44,7 +44,7 @@ The <\fIname\fR> is a string which indicates the human-readable name for the typ
 .SH EXAMPLES
 .TP 2
 \fB1
-\fRExample of a TLV description for parent TLV \fI0x1000\fR that contains nested TLVs:
+\fRExample of a TLV description for parent TLV \fI0x1000\fR that contains nested TLVs and specifies magic header bytes for an input stream (note, the magic is not mandatory for the stream, the definition only helps to autodetect it if present):
 .LP
 .RS 4
 \fI4d41474943\fR	\fB@magic\fR	Magic bytes "MAGIC"

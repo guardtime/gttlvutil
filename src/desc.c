@@ -188,6 +188,8 @@ static int store_magic(struct desc_st *map_in, const char *key, const char *desc
 
 	if (map_in->magics == NULL) {
 		fprintf(stderr, "Out of memory.\n");
+		res = GT_OUT_OF_MEMORY;
+		goto cleanup;
 	}
 
 	magic = map_in->magics + map_in->magics_len++;
@@ -195,42 +197,38 @@ static int store_magic(struct desc_st *map_in, const char *key, const char *desc
 	memset(magic, 0, sizeof(struct file_magic_st));
 	magic->desc = strdup(desc); 
 
-	if (*key == '"') {
-		fprintf(stderr, "Unimplemented\n");
-		goto cleanup;
-	} else {
-		/* Assume the key is represented as hex. */
-		octet = 0;
-		for (i = 0; key[i] != '\0'; i++) {
-			char c = tolower(key[i]);
+	/* Assume the key is represented as hex. */
+	octet = 0;
+	for (i = 0; key[i] != '\0'; i++) {
+		char c = tolower(key[i]);
 
-			/* Sanity check. */
-			if (magic->len >= sizeof(magic->val)) {
-				res = GT_INVALID_FORMAT;
-				goto cleanup;
-			}
-
-			if (isdigit(c)) {
-				octet = (octet << 4) + (c - '0');
-			} else if (c >= 'a' && c <= 'f') {
-				octet = (octet << 4) + (c - 'a') + 10;
-			} else {
-				res = GT_INVALID_FORMAT;
-				goto cleanup;
-			}
-
-			/* Store the value for every second input. */
-			if ((i + 1) % 2 == 0) {
-				magic->val[magic->len++] = octet;
-				octet = 0;
-			}
+		/* Sanity check. */
+		if (magic->len >= sizeof(magic->val)) {
+			res = GT_INVALID_FORMAT;
+			goto cleanup;
 		}
 
-		/* Make sure there was no partial octet in the end. */
-		if ((i + 1) %2 == 0) {
-			/* The last octet was only one character. We assume, the trailing zero was omitted. */
-			magic->val[magic->len++] = octet << 4;
+		if (isdigit(c)) {
+			octet = (octet << 4) + (c - '0');
+		} else if (c >= 'a' && c <= 'f') {
+			octet = (octet << 4) + (c - 'a') + 10;
+		} else {
+			fprintf(stderr, "Unexpected character '%c' (%d) while processing magic header value.\n", c, c);
+			res = GT_INVALID_FORMAT;
+			goto cleanup;
 		}
+
+		/* Store the value for every second input. */
+		if ((i + 1) % 2 == 0) {
+			magic->val[magic->len++] = octet;
+			octet = 0;
+		}
+	}
+
+	/* Make sure there was no partial octet in the end. */
+	if ((i + 1) %2 == 0) {
+		/* The last octet was only one character. We assume, the trailing zero was omitted. */
+		magic->val[magic->len++] = octet << 4;
 	}
 
 	res = GT_OK;
@@ -292,7 +290,7 @@ static int store_line(struct desc_st *map_in, const char *key, const char *ts, c
 	int res = GT_UNKNOWN_ERROR;
 	int type;
 
-	if (map_in == NULL || key == NULL || *key == '\0' || val == NULL) {
+	if (map_in == NULL || key == NULL || *key == '\0' || ts == NULL || val == NULL) {
 		res = GT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
@@ -300,6 +298,7 @@ static int store_line(struct desc_st *map_in, const char *key, const char *ts, c
 	/* Convert the type into a number .*/
 	type = get_type(ts);
 	if (type < 0) {
+		fprintf(stderr, "Unexpected type: '%s'\n", ts);
 		res = GT_INVALID_FORMAT;
 		goto cleanup;
 	}
