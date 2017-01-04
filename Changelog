@@ -1,3 +1,4 @@
+* IMPROVEMENT: Removed size_t defined check.
 * BUGFIX: Setting gttlvgrep (in case of '-r') and gttlvwrap stdout mode to binary.
 * BUGFIX: Grep is grepping invalid content.
 * BUGFIX: Setting gttlvdump stdin mode to binary.

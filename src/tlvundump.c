@@ -811,7 +811,7 @@ cleanup:
 
 int getListOfSupportedHashAlgs(char *buf, size_t bufLen) {
 	int res = GT_UNKNOWN_ERROR;
-	int len = 1;
+	size_t len = 1;
 	int i;
 
 	if (bufLen < len) {

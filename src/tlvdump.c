@@ -507,7 +507,7 @@ static int loadDescriptions(struct desc_st *desc, const char *path, bool overrid
 	return res;
 }
 
-static int getOptionDecValue(char opt, char *arg, size_t *val, char *excstr, size_t excval) {
+static int getOptionDecValue(char opt, char *arg, size_t *val, char *excstr, int excval) {
 	int res = GT_INVALID_ARGUMENT;
 	char *endptr = NULL;
 	long int li = strtol(arg, &endptr, 10);
