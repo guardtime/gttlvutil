@@ -24,6 +24,7 @@ enum out_enc_en { ENCODE_HEX, ENCODE_BASE64 };
 
 struct conf_st {
 	const char *file_name;
+    bool auto_hdr;
 	size_t hdr_len;
 	size_t max_depth;
 	bool print_off;
@@ -82,7 +83,7 @@ static uint64_t get_uint64(unsigned char *buf, size_t len) {
 
 #define wrap_offset(l)	printf("\n%*s", (l), "")
 #define wrap_line(p)	if (conf->wrap_width && line_len > 0 && line_len % (conf->wrap_width * 2) == 0 ) { wrap_offset(prefix_len); line_len = 0; } line_len += p
-static void print_hex(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
+static void print_hex(unsigned char *buf, size_t len, int prefix_len, bool enable_convert, struct conf_st *conf) {
 	size_t i;
 	size_t line_len = 0;
 
@@ -90,13 +91,13 @@ static void print_hex(unsigned char *buf, size_t len, int prefix_len, struct con
 		wrap_line(printf("%02x", buf[i]));
 	}
 
-	if (conf->convert && len <= 8) {
+	if (enable_convert && conf->convert && len <= 8) {
 		printf(" (dec = %llu)", (unsigned long long) get_uint64(buf, len));
 	}
 	putchar('\n');
 }
 
-static void print_base64(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
+static void print_base64(unsigned char *buf, size_t len, int prefix_len, bool enable_convert, struct conf_st *conf) {
 	size_t i;
 	size_t line_len = 0;
 	static char tab[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -122,20 +123,20 @@ static void print_base64(unsigned char *buf, size_t len, int prefix_len, struct 
 		}
 	}
 
-	if (conf->convert && len <= 8) {
+	if (enable_convert && conf->convert && len <= 8) {
 		printf(" (dec = %llu)", (unsigned long long)get_uint64(buf, len));
 	}
 	putchar('\n');
 }
 
-static void print_raw_data(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
+static void print_raw_data(unsigned char *buf, size_t len, int prefix_len, bool enable_convert, struct conf_st *conf) {
 	switch (conf->out_enc) {
 		case ENCODE_BASE64:
-			print_base64(buf, len, prefix_len, conf);
+			print_base64(buf, len, prefix_len, enable_convert, conf);
 			break;
 		case ENCODE_HEX:
 		default:
-			print_hex(buf, len, prefix_len, conf);
+			print_hex(buf, len, prefix_len, enable_convert, conf);
 	}
 }
 
@@ -198,7 +199,7 @@ static void print_int(unsigned char *buf, size_t len, int prefix_len, struct con
 
 	if (len > 8) {
 		printf("0x");
-		print_raw_data(buf, len, prefix_len, conf);
+		print_raw_data(buf, len, prefix_len, true, conf);
 	} else {
 		printf("%llu\n", (unsigned long long)get_uint64(buf, len));
 	}
@@ -233,22 +234,21 @@ static void print_imprint(unsigned char *buf, size_t len, int prefix_len, struct
 			if (conf->wrap_width) {
 				wrap_offset(prefix_len);
 			}
-			print_raw_data(buf + 1, len - 1, prefix_len, conf);
+			print_raw_data(buf + 1, len - 1, prefix_len, true, conf);
 		} else if (conf->wrap_width && conf->out_enc == ENCODE_HEX) {
 			printf("%02x", buf[0]);
 			wrap_offset(prefix_len);
-			print_raw_data(buf + 1, len - 1, prefix_len, conf);
+			print_raw_data(buf + 1, len - 1, prefix_len, true, conf);
 		} else {
-			print_raw_data(buf, len, prefix_len, conf);
+			print_raw_data(buf, len, prefix_len, true, conf);
 		}
 	}
 }
 
 static void print_time(unsigned char *buf, size_t len, int prefix_len, int type, struct conf_st *conf) {
 	if (len > 8) {
-		print_raw_data(buf, len, prefix_len, conf);
+		print_raw_data(buf, len, prefix_len, true, conf);
 	} else {
-		char tmp[0xff];
 		char fract[0x1f];
 		struct tm *tm_info;
 		uint64_t t = get_uint64(buf, len);
@@ -256,7 +256,6 @@ static void print_time(unsigned char *buf, size_t len, int prefix_len, int type,
 		size_t len;
 
 		fract[0] = '\0';
-		tmp[0] = '\0';
 
 		switch (type) {
 			case TLV_MTIME:
@@ -274,8 +273,10 @@ static void print_time(unsigned char *buf, size_t len, int prefix_len, int type,
 		}
 
 		if (seconds >= 0xffffffff) {
-			fprintf(stderr, "Invalid time value.\n");
+			printf("%llu\n", (unsigned long long)t);
 		} else {
+			char tmp[0xff];
+			tmp[0] = '\0';
 			tm_info = (conf->timezone) ? localtime(&seconds) : gmtime(&seconds);
 			len = strftime(tmp, sizeof(tmp), "%Y-%m-%d %H:%M:%S", tm_info);
 			if (fract[0] != '\0') {
@@ -287,8 +288,8 @@ static void print_time(unsigned char *buf, size_t len, int prefix_len, int type,
 			} else {
 				snprintf(tmp + len, sizeof(tmp) - len, " UTC+00");
 			}
+			printf("(%llu) %s\n", (unsigned long long)t, tmp);
 		}
-		printf("(%llu) %s\n", (unsigned long long)t, tmp);
 	}
 }
 
@@ -385,55 +386,77 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 		if (type == TLV_IMPRINT && conf->wrap_width) {
 			print_imprint(ptr, len, prefix_len, conf);
 		} else {
-			print_raw_data(ptr, len, prefix_len, conf);
+			print_raw_data(ptr, len, prefix_len, true, conf);
 		}
 	}
 }
 
 static int read_from(FILE *f, struct conf_st *conf) {
 	int res;
-	unsigned char *header = NULL;
 	GT_FTLV t;
 	unsigned char buf[0xffff + 4];
 	size_t len;
 	size_t off = 0;
+	struct file_magic_st *pMagic = NULL;
+	size_t hdr_len = 0;
 
-	if (conf->hdr_len > 0) {
-		header = calloc(conf->hdr_len, 1);
-		if (header == NULL) {
-			res = GT_OUT_OF_MEMORY;
-			goto cleanup;
-		}
-		if (fread(header, conf->hdr_len, 1, f) != 1) {
-			res = GT_INVALID_FORMAT;
-			goto cleanup;
-		}
+	len = fread(buf, 1, sizeof(buf), f);
 
-		for (len = 0; len < conf->hdr_len; len++) {
-			printf("%02x", header[len]);
+	if (conf->auto_hdr) {
+		size_t i;
+		for (i = 0; i < conf->desc.magics_len; i++) {
+			size_t hdr_len = conf->desc.magics[i].len;
+			if (hdr_len < len && !memcmp(conf->desc.magics[i].val, buf, hdr_len)) {
+				pMagic = conf->desc.magics + i;
+				break;
+			}
 		}
-		printf("\n");
 	}
 
-	while (1) {
-		res = GT_FTLV_fileRead(f, buf, sizeof(buf), &len, &t);
+	hdr_len = pMagic != NULL ? pMagic->len : conf->hdr_len;
+
+	if (hdr_len > 0) {
+		if (conf->pretty_key && pMagic != NULL) {
+			printf("%s: ", pMagic->desc);
+		}
+		print_raw_data(buf, hdr_len, 0, false, conf);
+
+		len -= hdr_len;
+		/* Shift the contents. */
+		memmove(buf, buf + hdr_len, len);
+	}
+
+	while (len > 0) {
+		size_t consumed;
+		/* If buffer is not fully ocupied, try to fill it up. */
+		if (len < sizeof(buf)) {
+			len += fread(buf + len, 1, sizeof(buf), f);
+		}
+
+		res = GT_FTLV_memRead(buf, len, &t);
+		consumed = t.hdr_len + t.dat_len;
 		if (res != GT_OK) {
-			if (len == 0) break;
+			if (consumed == 0) {
+				if (feof(f)) break;
+				continue;
+			}
 			fprintf(stderr, "%s: Failed to parse %llu bytes.\n", conf->file_name, (unsigned long long) len);
-			break;
+			res = GT_INVALID_FORMAT;
+			goto cleanup;
 		}
 
 		t.off = off;
 
 		printTlv(buf, len, &t, 0, conf, NULL);
-		off += len;
+		off += consumed;
+
+		len -= consumed;
+		memmove(buf, buf + consumed, len);
 	}
 
 	res = GT_OK;
 
 cleanup:
-
-	if (header != NULL) free(header);
 
 	return res;
 }
@@ -543,13 +566,23 @@ int main(int argc, char **argv) {
 
 	memset(&conf, 0, sizeof(conf));
 
+	/* Set the auto header value to true. */
+	conf.auto_hdr = true;
+
 	initDefaultDescriptionFileDir(argv[0]);
+
+
 
 	while ((c = getopt(argc, argv, "hH:d:xw:yzaspPte:vD:oi")) != -1) {
 		switch(c) {
 			case 'H': {
-				res = getOptionDecValue((char)c, optarg, &conf.hdr_len, NULL, 0);
-				if (res != GT_OK) goto cleanup;
+				if (!strcmp(optarg, "auto")) {
+					conf.auto_hdr = true;
+				} else {
+					conf.auto_hdr = false;
+					res = getOptionDecValue((char)c, optarg, &conf.hdr_len, NULL, 0);
+					if (res != GT_OK) goto cleanup;
+				}
 				break;
 			case 'd':
 				res = getOptionDecValue((char)c, optarg, &conf.max_depth, NULL, 0);
