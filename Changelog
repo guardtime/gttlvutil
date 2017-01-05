@@ -1,4 +1,5 @@
 * IMPROVEMENT: Removed size_t defined check.
+* FEATURE: Automatic file magic bytes detection for known formats.
 * BUGFIX: Setting gttlvgrep (in case of '-r') and gttlvwrap stdout mode to binary.
 * BUGFIX: Grep is grepping invalid content.
 * BUGFIX: Setting gttlvdump stdin mode to binary.

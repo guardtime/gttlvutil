@@ -223,13 +223,27 @@ TLV.0702.*
 >>>= 0
 
 ###############################################################################
+# Tlvdump publications file.
+# Using automatic header length detection (no parameter).
+
+GTTLVDUMP test/resources/pub/ksi-publications.bin
+>>>= 0
+
+###############################################################################
+# Tlvdump publications file.
+# Using automatic header length detection (-H auto).
+
+GTTLVDUMP -H auto test/resources/pub/ksi-publications.bin
+>>>= 0
+
+###############################################################################
 # Try to dump garbage.
 
 echo -en "\x12\x34\x56" | GTTLVDUMP 
 >>>
 >>>2
 (null): Failed to parse 3 bytes.
->>>= 0
+>>>= 6
 
 ###############################################################################
 # Test timezone expression.
