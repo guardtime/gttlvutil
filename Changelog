@@ -1,3 +1,4 @@
+* BUGFIX: The search pattern is parsed before gttlvgrep starts parsing input.
 * FEATURE: Automatic file magic bytes detection for known formats.
 * BUGFIX: Setting gttlvgrep (in case of '-r') and gttlvwrap stdout mode to binary.
 * BUGFIX: Grep is grepping invalid content.

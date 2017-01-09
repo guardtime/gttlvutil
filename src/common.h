@@ -2,6 +2,7 @@
 #define COMMON_H_
 
 #include <stdlib.h>
+#include <ctype.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,6 +25,12 @@ extern "C" {
 #define GT_TLV_MASK_TLV8_TYPE 0x1fu
 
 #define TLV_UTIL_VERSION_STRING (PACKAGE_NAME" "VERSION)
+
+#define IS_SPACE(c) ((c) == ' ' || (c) == '\t')
+#define IS_DIGIT(c) ((c) >= '0' && (c) <= '9')
+#define IS_HEX(c) (IS_DIGIT(c) || (toupper(c) >= 'A' && toupper(c) <= 'F'))
+#define HEX_TO_DEC(c) (IS_DIGIT(c) ? ((c) - '0') : (toupper((c)) - 'A' + 10))
+
 
 /**
  * Crypto implementations.

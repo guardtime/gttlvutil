@@ -23,10 +23,6 @@
 #define error_log(s, lineNr) { fprintf(stderr, "%s:%llu - %s\n", fileName, (unsigned long long)(lineNr), (s)); }
 #define line_error(err, s, lineNr) { error_log(s, lineNr); return err; }
 #define error(err, s) line_error(err, (s), lineNr)
-#define IS_SPACE(c) ((c) == ' ' || (c) == '\t')
-#define IS_DIGIT(c) ((c) >= '0' && (c) <= '9')
-#define IS_HEX(c) (IS_DIGIT(c) || (toupper(c) >= 'A' && toupper(c) <= 'F'))
-#define HEX_TO_DEC(c) (IS_DIGIT(c) ? ((c) - '0') : (toupper((c)) - 'A' + 10))
 
 /* Supported function scripts. */
 #define HMAC_CALC_FUNC "HMAC"
@@ -179,6 +175,7 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 	unsigned char tmp[GT_HASH_MAX_LEN];
 	unsigned int tmp_len;
 	GT_Hash_AlgorithmId algId;
+	GT_GrepPattern *pattern = NULL;
 
 	if (stack == NULL || stack_len == 0) {
 		res = GT_FORMAT_ERROR;
@@ -227,12 +224,12 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 		default:
 			{
 				GT_GrepTlvConf conf;
-				int idx[IDX_MAP_LEN];
+				GT_ElementCounter idx;
 				GT_FTLV t;
 				unsigned char buf[0xffff + 4];
 				unsigned char *raw_buf_ptr = raw.buf + sizeof(raw.buf) - raw.len;
 
-				memset(idx, 0, sizeof(idx));
+				memset(&idx, 0, sizeof(idx));
 
 				GT_GrepTlv_initConf(&conf);
 				conf.print_raw = true;
@@ -241,18 +238,25 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 
 				res = GT_FTLV_memRead(raw_buf_ptr, raw.len, &t);
 				if (res != GT_OK) {
-					error_log("Failed to init raw TLV.", hmacCalcInfo.stack_pos+1);
+					error_log("Failed to init raw TLV.", hmacCalcInfo.stack_pos + 1);
 					goto cleanup;
 				}
 
-				res = GT_grepTlv(&conf, hmacCalcInfo.pattern, NULL, idx, raw_buf_ptr, &t, buf, &calc_len);
+				/* Parse the pattern. */
+				res = GT_GrepPattern_parse(hmacCalcInfo.pattern, &pattern);
 				if (res != GT_OK) {
-					error_log("Failed to grep pattern.", hmacCalcInfo.stack_pos+1);
+					error_log("Invalid pattern.", hmacCalcInfo.stack_pos + 1);
+					goto cleanup;
+				}
+
+				res = GT_grepTlv(&conf, pattern, NULL, &idx, raw_buf_ptr, &t, buf, &calc_len);
+				if (res != GT_OK) {
+					error_log("Failed to grep pattern.", hmacCalcInfo.stack_pos + 1);
 					goto cleanup;
 				}
 
 				if (calc_len == 0) {
-					error_log("Pattern not found.", hmacCalcInfo.stack_pos+1);
+					error_log("Pattern not found.", hmacCalcInfo.stack_pos + 1);
 					res = GT_FORMAT_ERROR;
 					goto cleanup;
 				}
@@ -268,6 +272,8 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 
 	res = GT_OK;
 cleanup:
+
+	GT_GrepPattern_free(pattern);
 
 	return res;
 }
