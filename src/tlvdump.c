@@ -37,8 +37,6 @@ struct conf_st {
 	bool pretty_val;
 	bool pretty_key;
 	bool timezone;
-	bool override_def;
-	bool ignore_def;
 	struct desc_st desc;
 	enum out_enc_en out_enc;
 };
@@ -653,10 +651,6 @@ int main(int argc, char **argv) {
 				}
 				strcpy(usr_desc_path, optarg);
 				break;
-			case 'i':
-				conf.ignore_def = true;
-				conf.override_def = false;
-				break;
 
 			case 'h':
 				printf("Usage:\n"
@@ -680,7 +674,6 @@ int main(int argc, char **argv) {
 						"    -t       Print time in local timezone (valid with -p).\n"
 						"    -e enc   Output format of binary value. Available: 'hex', 'base64'.\n"
 						"    -D <pth> Set TLV description files directory.\n"
-						"    -i       Do not load descriptions.\n"
 						"    -v       Print TLV utility version..\n"
 						"\n"
 						"Default description files directory:\n"
@@ -704,7 +697,7 @@ int main(int argc, char **argv) {
 	}
 
 	/* Read descriptions from default files. */
-	if (!conf.ignore_def) {
+	{
 		const char *descDir = NULL;
 
 		if (usr_desc_path != NULL) {
