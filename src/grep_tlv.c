@@ -40,15 +40,19 @@ enum {
 	MODE_ERROR
 };
 
+/* This function will copy the 'mach' pointer from the last element of the 'no_mach' chain to all of
+ * the elements in the 'no_mach' chain. */
 struct pattern_st *update_match(struct pattern_st *p) {
 	if (p == NULL) {
 		return NULL;
 	}
 
+	/* If this element has 'no_mach' set, use the 'mach' value from the next/last one. */
 	if (p->no_match != NULL) {
 		p->match = update_match(p->no_match);
 	}
 
+	/* If the 'mach' value is set update the next level. */
 	if (p->match != NULL) {
 		p->match->match = update_match(p->match);
 	}
@@ -167,7 +171,8 @@ int GT_GrepPattern_parse(const char *in, struct pattern_st **out) {
 		}
 	}
 
-	/* Update 'match' pointers - the value is sored in the last node of 'no_match' chain. */
+	/* The 'match' pointer is evaluated only for the last element in the 'no_mach' chain. Update the 'match'
+ 	 * pointers for all the elements in the 'no_mach' chain. */ 
 	tmp->match = update_match(tmp);
 
 	*out = tmp;
