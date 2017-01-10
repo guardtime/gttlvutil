@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <ctype.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -12,10 +13,6 @@ extern "C" {
 #	ifndef snprintf
 #		define snprintf _snprintf
 #	endif
-#endif
-
-#ifndef _SIZE_T_DEFINED
-	typedef unsigned long long size_t;
 #endif
 
 #define GT_TLV_MASK_TLV16 0x80u
