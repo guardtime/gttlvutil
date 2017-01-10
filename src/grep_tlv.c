@@ -49,6 +49,10 @@ struct pattern_st *update_match(struct pattern_st *p) {
 		p->match = update_match(p->no_match);
 	}
 
+	if (p->match != NULL) {
+		p->match->match = update_match(p->match);
+	}
+
 	return p->match;
 }
 
@@ -291,6 +295,9 @@ int GT_grepTlv(GT_GrepTlvConf *conf, struct pattern_st *pattern, char *prefix, G
 				ptr += n.hdr_len + n.dat_len;
 				len -= n.hdr_len + n.dat_len;
 			}
+
+			free(idx_map);
+			idx_map = NULL;
 		}
 
 		/* Continue search as there might be wildcards. */
