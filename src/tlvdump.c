@@ -511,7 +511,7 @@ static void initDefaultDescriptionFileDir(char *arg0) {
 	if (!set) {
 		char buf[PATH_SIZE];
 
-		if(DIRECTORY_getMyPath(buf, sizeof(buf), arg0) != GT_OK) {
+		if (DIRECTORY_getMyPath(buf, sizeof(buf), arg0) != GT_OK) {
 			fprintf(stderr, "Unable to get path to gttlvdump.\n");
 		}
 		setDescriptionFileDir(buf);
@@ -571,10 +571,8 @@ int main(int argc, char **argv) {
 
 	/* Set the auto header value to true. */
 	conf.auto_hdr = true;
-
+	
 	initDefaultDescriptionFileDir(argv[0]);
-
-
 
 	while ((c = getopt(argc, argv, "hH:d:xw:yzaspPte:vD:oi")) != -1) {
 		switch(c) {
@@ -655,9 +653,6 @@ int main(int argc, char **argv) {
 				}
 				strcpy(usr_desc_path, optarg);
 				break;
-			case 'o':
-				conf.override_def = true;
-				break;
 			case 'i':
 				conf.ignore_def = true;
 				conf.override_def = false;
@@ -685,8 +680,7 @@ int main(int argc, char **argv) {
 						"    -t       Print time in local timezone (valid with -p).\n"
 						"    -e enc   Output format of binary value. Available: 'hex', 'base64'.\n"
 						"    -D <pth> Set TLV description files directory.\n"
-						"    -o       Override default descriptions (valid with -D). Has no effect with -i.\n"
-						"    -i       Ignore default descriptions (valid with -D).\n"
+						"    -i       Do not load descriptions.\n"
 						"    -v       Print TLV utility version..\n"
 						"\n"
 						"Default description files directory:\n"
@@ -711,32 +705,20 @@ int main(int argc, char **argv) {
 
 	/* Read descriptions from default files. */
 	if (!conf.ignore_def) {
-		res = loadDescriptions(&conf.desc, getDescriptionFileDir(), false);
+		const char *descDir = NULL;
+
+		if (usr_desc_path != NULL) {
+			descDir = usr_desc_path;
+		} else {
+			descDir = getDescriptionFileDir();
+		}
+
+		res = loadDescriptions(&conf.desc, descDir, false);
 		if (res != GT_OK) {
 			/* As there was an error in loading data, clear all descriptions. */
 			desc_cleanup(&conf.desc);
 		} else {
 			desc_loaded = true;
-		}
-	}
-
-	/* Read descriptions from user files. */
-	if (usr_desc_path != NULL) {
-		struct desc_st tmp;
-		memset(&tmp, 0, sizeof(tmp));
-		/* Verify user descriptions. */
-		res = loadDescriptions(&tmp, usr_desc_path, false);
-		desc_cleanup(&tmp);
-		/* If there were no issues, load the descriptions into common buffer. */
-		if (res == GT_OK) {
-			res = loadDescriptions(&conf.desc, usr_desc_path, conf.override_def);
-			if (res != GT_OK) {
-				/* As there was an error in loading data, clear all descriptions. */
-				desc_cleanup(&conf.desc);
-			} else {
-
-				desc_loaded = true;
-			}
 		}
 	}
 
