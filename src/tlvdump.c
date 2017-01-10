@@ -534,6 +534,7 @@ static int getOptionDecValue(char opt, char *arg, size_t *val, char *excstr, siz
 	int res = GT_INVALID_ARGUMENT;
 	char *endptr = NULL;
 	long int li = strtol(arg, &endptr, 10);
+	size_t tmp = 0;
 
 	if (errno == ERANGE) {
 		fprintf(stderr, "Option %c is out of range.\n", opt);
@@ -543,15 +544,17 @@ static int getOptionDecValue(char opt, char *arg, size_t *val, char *excstr, siz
 		goto cleanup;
 	} else if (li == 0 && endptr != NULL && *endptr != '\0') {
 		if (excstr && strcmp(endptr, excstr) == 0) {
-			li = excval;
+			tmp = excval;
 		} else {
 			fprintf(stderr, "Option %c must be a decimal integer.\n", opt);
 			goto cleanup;
 		}
+	} else {
+		tmp = (size_t)li;
 	}
 
+	*val = tmp;
 	res = GT_OK;
-	*val = li;
 cleanup:
 	return res;
 }
