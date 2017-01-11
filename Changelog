@@ -1,4 +1,5 @@
 * IMPROVEMENT: Simplified the loading of custom description files.
+* BUGFIX: The search pattern is parsed before gttlvgrep starts parsing input.
 * IMPROVEMENT: Removed size_t defined check.
 * FEATURE: Automatic file magic bytes detection for known formats.
 * BUGFIX: Setting gttlvgrep (in case of '-r') and gttlvwrap stdout mode to binary.

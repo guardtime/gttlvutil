@@ -202,8 +202,8 @@ printf "TLV[123]:\n  TLV[1f]:\$HMAC(v2|sha224|anon)" | GTTLVUNDUMP
 
 # Test invalid pattern
 (cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v1|sha256|anon|invalid.pattern)") | GTTLVUNDUMP | GTTLVGREP 300.1f
->>>2 /.*Invalid pattern: 'invalid.pattern'.*
-.*Failed to grep pattern.*
+>>>2 /.*Invalid pattern 'invalid.pattern':.*
+.*Invalid pattern.*
 .*Failed to calculate HMAC./
 >>>= 0
 
