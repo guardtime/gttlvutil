@@ -17,25 +17,30 @@ static int grepFile(GT_GrepTlvConf *conf, FILE *f) {
 	GT_FTLV t;
 	size_t len;
 	unsigned char buf[0xffff + 4];
-	int idx[IDX_MAP_LEN];
+	GT_ElementCounter idx;
 
-	memset(idx, 0, sizeof(idx));
+	memset(&idx, 0, sizeof(idx));
 
 	while (!feof(f)) {
 		res = GT_FTLV_fileRead(f, buf, sizeof(buf), &len, &t);
 		if (len == 0) {
 			/* Reached the end of file. */
 			res = GT_OK;
-			break;
+			goto cleanup;
 		}
 		if (res != GT_OK) {
 			fprintf(stderr, "%s: Failed to parse TLV.\n", conf->file_name);
-			return res;
+			goto cleanup;
 		}
 
-		res = GT_grepTlv(conf, conf->pattern, NULL, idx, buf, &t, NULL, NULL);
-		if (res != GT_OK) return res;
+		res = GT_grepTlv(conf, conf->pattern, NULL, &idx, buf, &t, NULL, NULL);
+		if (res != GT_OK) goto cleanup;
 	}
+
+	res = GT_OK;
+
+cleanup:
+
 	return res;
 }
 
@@ -73,14 +78,14 @@ int main(int argc, char **argv) {
 	FILE *f = NULL;
 	int c;
 
+	/* Default conf. */
+	GT_GrepTlv_initConf(&conf);
+
 	if (argc < 2) {
 		printHelp(stderr);
 		res = GT_INVALID_CMD_PARAM;
 		goto cleanup;
 	}
-
-	/* Default conf. */
-	GT_GrepTlv_initConf(&conf);
 
 	while ((c = getopt(argc, argv, "hH:oenriT:L:v")) != -1) {
 		switch(c) {
@@ -128,7 +133,10 @@ int main(int argc, char **argv) {
 		goto cleanup;
 	}
 
-	conf.pattern = argv[optind++];
+	res = GT_GrepPattern_parse(argv[optind++], &conf.pattern);
+	if (res != GT_OK) {
+		goto cleanup;
+	}
 
 	if (optind >= argc) {
 		f = stdin;
@@ -163,6 +171,9 @@ int main(int argc, char **argv) {
 	res = GT_OK;
 
 cleanup:
+
+	GT_GrepPattern_free(conf.pattern);
+
 	if (f != NULL && f != stdin) fclose(f);
 
 	return res;
