@@ -197,6 +197,7 @@ void GT_GrepTlv_initConf(GT_GrepTlvConf *conf) {
 	conf->print_tlv_hdr = false;
 	conf->trunc_tlv_tag = 0;
 	conf->print_tlv_hdr_only = false;
+	conf->pattern = NULL;
 }
 
 int GT_grepTlv(GT_GrepTlvConf *conf, struct pattern_st *pattern, char *prefix, GT_ElementCounter *map, unsigned char *buf, GT_FTLV *t, unsigned char *raw, size_t *rlen) {

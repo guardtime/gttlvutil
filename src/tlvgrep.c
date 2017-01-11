@@ -78,14 +78,14 @@ int main(int argc, char **argv) {
 	FILE *f = NULL;
 	int c;
 
+	/* Default conf. */
+	GT_GrepTlv_initConf(&conf);
+
 	if (argc < 2) {
 		printHelp(stderr);
 		res = GT_INVALID_CMD_PARAM;
 		goto cleanup;
 	}
-
-	/* Default conf. */
-	GT_GrepTlv_initConf(&conf);
 
 	while ((c = getopt(argc, argv, "hH:oenriT:L:v")) != -1) {
 		switch(c) {
