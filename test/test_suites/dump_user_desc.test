@@ -39,17 +39,6 @@ TLV\[0123\]:Dummy PDU:.*
 >>>= 0
 
 ###############################################################################
-# Load test description files with '-D'.
-# Use TLV file with dummy data and KSI TLV element.
-# Set -p and -P flags for pretty print keys and values.
-
-GTTLVUNDUMP test/resources/tlv/dummy_and_known_pdu.txt | GTTLVDUMP -D test/resources/desc -pP
->>> /TLV\[0200\]:.*
-TLV\[0123\]:Dummy PDU:.*
-  TLV\[1f\]: Dummy INT: 26/
->>>= 0
-
-###############################################################################
 # Use TLV file with dummy data and KSI TLV element. 
 # Set -p and -P flags for pretty print keys and values.
 
