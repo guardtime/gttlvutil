@@ -139,7 +139,7 @@ int GT_GrepPattern_parse(const char *in, struct pattern_st **out) {
 				break;
 			case MODE_TAG:
 				if (IS_HEX(*p)) {
-					ptr->tag = (ptr->tag << 4) + HEX_TO_DEC(*p);
+					ptr->tag = (ptr->tag << 4) + HEXCHAR_TO_DEC(*p);
 					p++;
 					continue;
 				}
@@ -149,7 +149,7 @@ int GT_GrepPattern_parse(const char *in, struct pattern_st **out) {
 				break;
 			case MODE_INDEX:
 				if (IS_DIGIT(*p)) {
-					ptr->index = ptr->index * 10 + HEX_TO_DEC(*p);
+					ptr->index = ptr->index * 10 + DECCHAR_TO_DEC(*p);
 					p++;
 					continue;
 				}

@@ -514,7 +514,7 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 			case ST_DATA_HEX_1:
 				if (IS_SPACE(c)) break;
 				if (IS_HEX(c)) {
-					tlv->dat[tlv->dat_len] = HEX_TO_DEC(c) << 4;
+					tlv->dat[tlv->dat_len] = HEXCHAR_TO_DEC(c) << 4;
 					state = ST_DATA_HEX_2;
 				} else {
 					state = ST_END;
@@ -524,7 +524,7 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 			case ST_DATA_HEX_2:
 				if (IS_SPACE(c)) break;
 				if (IS_HEX(c)) {
-					tlv->dat[tlv->dat_len++] |= HEX_TO_DEC(c);
+					tlv->dat[tlv->dat_len++] |= HEXCHAR_TO_DEC(c);
 					state = ST_DATA_HEX_1;
 				} else {
 					error(GT_PARSER_ERROR, "Hex strings must contain even number of characters.");
