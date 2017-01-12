@@ -61,7 +61,7 @@ static int desc_get(struct desc_st *in, unsigned tag, bool create, struct desc_s
 		}
 	}
 
-	if (in->map[pos] != NULL && in->map[pos]->key != tag) {
+	if (pos >= arr_len || (in->map[pos] != NULL && in->map[pos]->key != tag)) {
 		res = GT_BUFFER_OVERFLOW;
 		goto cleanup;
 	}
