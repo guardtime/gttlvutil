@@ -428,7 +428,7 @@ static int read_from(FILE *f, struct conf_st *conf) {
 		size_t consumed;
 		/* If buffer is not fully ocupied, try to fill it up. */
 		if (len < sizeof(buf)) {
-			len += fread(buf + len, 1, sizeof(buf), f);
+			len += fread(buf + len, 1, sizeof(buf) - len, f);
 		}
 
 		res = GT_FTLV_memRead(buf, len, &t);
