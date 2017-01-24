@@ -43,6 +43,13 @@ extern "C" {
 #	define CRYPTO_IMPL HASH_OPENSSL
 #endif
 
+#define GT_TLV_BUF_SIZE (0xffff + 4)
+
+#ifdef _WIN32
+#  define setBinaryMode(f) _setmode(_fileno(f), _O_BINARY);
+#else
+#  define setBinaryMode(f)
+#endif
 
 typedef enum {
 	false = 0, true = !false

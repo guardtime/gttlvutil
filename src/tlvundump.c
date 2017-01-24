@@ -170,15 +170,24 @@ cleanup:
 
 static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size_t stack_len, int isLastTlv) {
 	int res = GT_UNKNOWN_ERROR;
-	Buffer raw;
+	Buffer *raw = NULL;
 	size_t calc_len = 0;
 	unsigned char tmp[GT_HASH_MAX_LEN];
 	unsigned int tmp_len;
 	GT_Hash_AlgorithmId algId;
 	GT_GrepPattern *pattern = NULL;
+	unsigned char *buf = NULL;
+
+	GT_ElementCounter *idx = NULL;
 
 	if (stack == NULL || stack_len == 0) {
 		res = GT_FORMAT_ERROR;
+		goto cleanup;
+	}
+
+	raw = calloc(sizeof(Buffer), 1);
+	if (raw == NULL) {
+		res = GT_OUT_OF_MEMORY;
 		goto cleanup;
 	}
 
@@ -190,7 +199,7 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 	}
 
 	/* Serialize current stack. */
-	res = serializeStack(stack, stack_len, raw.buf, sizeof(raw.buf), &raw.len);
+	res = serializeStack(stack, stack_len, raw->buf, sizeof(raw->buf), &raw->len);
 	if (res != GT_OK) {
 		error_log("Failed to generate raw data.", hmacCalcInfo.stack_pos+1);
 		goto cleanup;
@@ -213,9 +222,9 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 					goto cleanup;
 				}
 
-				calc_len = raw.len - GT_Hash_getAlgorithmLenght(algId);
+				calc_len = raw->len - GT_Hash_getAlgorithmLenght(algId);
 
-				res = GT_Hmac_Calculate(algId, hmacCalcInfo.key, strlen(hmacCalcInfo.key), raw.buf + sizeof(raw.buf) - raw.len, calc_len, tmp, &tmp_len);
+				res = GT_Hmac_Calculate(algId, hmacCalcInfo.key, strlen(hmacCalcInfo.key), raw->buf + sizeof(raw->buf) - raw->len, calc_len, tmp, &tmp_len);
 				if (res != GT_OK) goto cleanup;
 			}
 			break;
@@ -224,19 +233,27 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 		default:
 			{
 				GT_GrepTlvConf conf;
-				GT_ElementCounter idx;
 				GT_FTLV t;
-				unsigned char buf[0xffff + 4];
-				unsigned char *raw_buf_ptr = raw.buf + sizeof(raw.buf) - raw.len;
+				unsigned char *raw_buf_ptr = raw->buf + sizeof(raw->buf) - raw->len;
 
-				memset(&idx, 0, sizeof(idx));
+				buf = calloc(GT_TLV_BUF_SIZE, 1);
+				if (buf == NULL) {
+					res = GT_OUT_OF_MEMORY;
+					goto cleanup;
+				}
+
+				idx = calloc(sizeof(GT_ElementCounter), 1);
+				if (idx == NULL) {
+					res = GT_OUT_OF_MEMORY;
+					goto cleanup;
+				}
 
 				GT_GrepTlv_initConf(&conf);
 				conf.print_raw = true;
 				conf.print_path = false;
 				conf.print_tlv_hdr = true;
 
-				res = GT_FTLV_memRead(raw_buf_ptr, raw.len, &t);
+				res = GT_FTLV_memRead(raw_buf_ptr, raw->len, &t);
 				if (res != GT_OK) {
 					error_log("Failed to init raw TLV.", hmacCalcInfo.stack_pos + 1);
 					goto cleanup;
@@ -249,7 +266,7 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 					goto cleanup;
 				}
 
-				res = GT_grepTlv(&conf, pattern, NULL, &idx, raw_buf_ptr, &t, buf, &calc_len);
+				res = GT_grepTlv(&conf, pattern, NULL, idx, raw_buf_ptr, &t, buf, &calc_len);
 				if (res != GT_OK) {
 					error_log("Failed to grep pattern.", hmacCalcInfo.stack_pos + 1);
 					goto cleanup;
@@ -273,6 +290,8 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 	res = GT_OK;
 cleanup:
 
+	free(idx);
+	free(raw);
 	GT_GrepPattern_free(pattern);
 
 	return res;
@@ -280,7 +299,7 @@ cleanup:
 
 int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 	int state = ST_BEGIN;
-	TlvLine *tlv = &stack[stackLen];
+	TlvLine *tlv = stack + stackLen;
 	int c;
 
 	memset(tlv, 0, sizeof(TlvLine));
@@ -706,11 +725,18 @@ static int convertStream(FILE *f) {
 	size_t stack_size = 100;
 	size_t stack_len = 0;
 	size_t i;
+	unsigned char *buf = NULL;
+
+	buf = calloc(GT_TLV_BUF_SIZE, 1);
+	if (buf == NULL) {
+		res = GT_OUT_OF_MEMORY;
+		goto cleanup;
+	}
 
 	stack = calloc(stack_size, sizeof(TlvLine));
 	if (stack == NULL) {
-		fprintf(stderr, "Out of memory!\n");
-		return GT_OUT_OF_MEMORY;
+		res = GT_OUT_OF_MEMORY;
+		goto cleanup;
 	}
 
 	while (1) {
@@ -764,16 +790,15 @@ static int convertStream(FILE *f) {
 
 		/* Serialize the TLV if there level returned to 0. */
 		if (stack_len != 0 && stack[stack_len].level == 0) {
-			unsigned char buf[0xffff + 4];
 			size_t buf_len = 0;
 
 			res = runPostponedTasks(stack, stack_len);
 			if (res != GT_OK) goto cleanup;
 
-			res = serializeStack(stack, stack_len, buf, sizeof(buf), &buf_len);
+			res = serializeStack(stack, stack_len, buf, GT_TLV_BUF_SIZE, &buf_len);
 			if (res != GT_OK) goto cleanup;
 
-			res = writeStream(buf + sizeof(buf) - buf_len, 1, buf_len, stdout);
+			res = writeStream(buf + GT_TLV_BUF_SIZE - buf_len, 1, buf_len, stdout);
 			if (res != GT_OK) goto cleanup;
 
 			stack[0] = stack[stack_len];
@@ -797,21 +822,25 @@ static int convertStream(FILE *f) {
 	}
 
 	if (stack_len > 0) {
-		unsigned char buf[0xffff + 4];
 		size_t buf_len = 0;
 
 		res = runPostponedTasks(stack, stack_len);
 		if (res != GT_OK) goto cleanup;
 
-		res = serializeStack(stack, stack_len, buf, sizeof(buf), &buf_len);
+		res = serializeStack(stack, stack_len, buf, GT_TLV_BUF_SIZE, &buf_len);
 		if (res != GT_OK) goto cleanup;
 
-		res = writeStream(buf + sizeof(buf) - buf_len, 1, buf_len, stdout);
+		res = writeStream(buf + GT_TLV_BUF_SIZE - buf_len, 1, buf_len, stdout);
 		if (res != GT_OK) goto cleanup;
 	}
+
 	res = GT_OK;
+
 cleanup:
-	if (stack != NULL) free(stack);
+
+	free(buf);
+	free(stack);
+
 	return res;
 }
 
