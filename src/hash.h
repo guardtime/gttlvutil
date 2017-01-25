@@ -22,10 +22,6 @@
 
 #include "common.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 	#define GT_HASH_MAX_LEN 64 /* Longest digest */
 
 	#define GT_HASH_MAX_BLOCK_SIZE (1024/8)
@@ -54,10 +50,5 @@ extern "C" {
 	size_t GT_Hash_getAlgorithmLenght(GT_Hash_AlgorithmId id);
 	size_t GT_Hash_getAlgorithmBlockSize(GT_Hash_AlgorithmId id);
 	char* GT_Hash_getAlgorithmName(GT_Hash_AlgorithmId id);
-
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* HASH_H_ */

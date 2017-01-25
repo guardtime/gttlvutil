@@ -24,10 +24,6 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 	typedef struct fast_tlv_s GT_FTLV;
 
 	struct fast_tlv_s {
@@ -89,10 +85,5 @@ extern "C" {
 	 * and \c arr_len equal to 0.
 	 */
 	int GT_FTLV_memReadN(const unsigned char *buf, size_t buf_len, GT_FTLV *arr, size_t arr_len, size_t *rd);
-
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* FAST_TLV_H_ */

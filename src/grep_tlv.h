@@ -24,12 +24,6 @@
 #include "common.h"
 #include "fast_tlv.h"
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
 	typedef struct pattern_st GT_GrepPattern;
 
 	#define IDX_MAP_LEN 0x1ffff
@@ -57,9 +51,5 @@ extern "C" {
 	int GT_grepTlv(GT_GrepTlvConf *conf, GT_GrepPattern *pattern, char *prefix, GT_ElementCounter *map, unsigned char *buf, GT_FTLV *t, unsigned char *raw, size_t *rlen);
 	int GT_GrepPattern_parse(const char *in, GT_GrepPattern **out);
 	void GT_GrepPattern_free(GT_GrepPattern *p);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* GREP_TLV_H_ */

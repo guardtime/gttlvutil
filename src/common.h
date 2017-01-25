@@ -6,10 +6,6 @@
 #include <ctype.h>
 #include <stddef.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifdef _WIN32
 #	ifndef snprintf
 #		define snprintf _snprintf
@@ -64,10 +60,6 @@ enum StatusCodes {
 	GT_END_OF_STREAM,
 	GT_UNKNOWN_ERROR = 0xffff
 };
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* COMMON_H_ */
 
