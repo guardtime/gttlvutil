@@ -1,3 +1,4 @@
+* IMPROVEMENT: Code cleanup.
 * IMPROVEMENT: Simplified the loading of custom description files.
 * BUGFIX: The search pattern is parsed before gttlvgrep starts parsing input.
 * IMPROVEMENT: Removed size_t defined check.
