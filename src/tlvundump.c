@@ -31,11 +31,6 @@
 #define FUNC_SCRIPT_BUF 1024
 #define HMAC_CALC_ARG_DEL "|"
 
-typedef struct {
-	unsigned char buf[0xffff + 4];
-	size_t len;
-} Buffer;
-
 size_t lineNr = 0;
 char *fileName = "<stdin>";
 
@@ -170,7 +165,8 @@ cleanup:
 
 static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size_t stack_len, int isLastTlv) {
 	int res = GT_UNKNOWN_ERROR;
-	Buffer *raw = NULL;
+	unsigned char *raw = NULL;
+	size_t raw_len = 0;
 	size_t calc_len = 0;
 	unsigned char tmp[GT_HASH_MAX_LEN];
 	unsigned int tmp_len;
@@ -185,7 +181,7 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 		goto cleanup;
 	}
 
-	raw = calloc(sizeof(Buffer), 1);
+	raw = calloc(GT_TLV_BUF_SIZE, 1);
 	if (raw == NULL) {
 		res = GT_OUT_OF_MEMORY;
 		goto cleanup;
@@ -194,21 +190,21 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 	/* Verify that HMAC is PDU child in first level. */
 	if (stack[hmacCalcInfo.stack_pos].level != 1) {
 		res = GT_FORMAT_ERROR;
-		error_log("HMAC TLV is not first level PDU child.", hmacCalcInfo.stack_pos+1);
+		error_log("HMAC TLV is not first level PDU child.", hmacCalcInfo.stack_pos + 1);
 		goto cleanup;
 	}
 
 	/* Serialize current stack. */
-	res = serializeStack(stack, stack_len, raw->buf, sizeof(raw->buf), &raw->len);
+	res = serializeStack(stack, stack_len, raw, GT_TLV_BUF_SIZE, &raw_len);
 	if (res != GT_OK) {
-		error_log("Failed to generate raw data.", hmacCalcInfo.stack_pos+1);
+		error_log("Failed to generate raw data.", hmacCalcInfo.stack_pos + 1);
 		goto cleanup;
 	}
 
 
 	res = GT_Hash_getAlgorithmId(hmacCalcInfo.algId, &algId);
 	if (res != GT_OK) {
-		error_log("Failed to get hash algorith id.", hmacCalcInfo.stack_pos+1);
+		error_log("Failed to get hash algorith id.", hmacCalcInfo.stack_pos + 1);
 		goto cleanup;
 	}
 
@@ -218,13 +214,13 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 				/* HMAC in v2 approach should be last in PDU. */
 				if (!isLastTlv) {
 					res = GT_FORMAT_ERROR;
-					error_log("HMAC TLV is not last in PDU.", hmacCalcInfo.stack_pos+1);
+					error_log("HMAC TLV is not last in PDU.", hmacCalcInfo.stack_pos + 1);
 					goto cleanup;
 				}
 
-				calc_len = raw->len - GT_Hash_getAlgorithmLenght(algId);
+				calc_len = raw_len - GT_Hash_getAlgorithmLenght(algId);
 
-				res = GT_Hmac_Calculate(algId, hmacCalcInfo.key, strlen(hmacCalcInfo.key), raw->buf + sizeof(raw->buf) - raw->len, calc_len, tmp, &tmp_len);
+				res = GT_Hmac_Calculate(algId, hmacCalcInfo.key, strlen(hmacCalcInfo.key), raw + GT_TLV_BUF_SIZE - raw_len, calc_len, tmp, &tmp_len);
 				if (res != GT_OK) goto cleanup;
 			}
 			break;
@@ -234,7 +230,7 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 			{
 				GT_GrepTlvConf conf;
 				GT_FTLV t;
-				unsigned char *raw_buf_ptr = raw->buf + sizeof(raw->buf) - raw->len;
+				unsigned char *raw_buf_ptr = raw + GT_TLV_BUF_SIZE - raw_len;
 
 				buf = calloc(GT_TLV_BUF_SIZE, 1);
 				if (buf == NULL) {
@@ -253,7 +249,7 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 				conf.print_path = false;
 				conf.print_tlv_hdr = true;
 
-				res = GT_FTLV_memRead(raw_buf_ptr, raw->len, &t);
+				res = GT_FTLV_memRead(raw_buf_ptr, raw_len, &t);
 				if (res != GT_OK) {
 					error_log("Failed to init raw TLV.", hmacCalcInfo.stack_pos + 1);
 					goto cleanup;
@@ -290,6 +286,7 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 	res = GT_OK;
 cleanup:
 
+	free(buf);
 	free(idx);
 	free(raw);
 	GT_GrepPattern_free(pattern);
@@ -688,11 +685,9 @@ cleanup:
 }
 
 static int writeStream(const void *raw, size_t size, size_t count, FILE *f) {
-#ifdef _WIN32
 	if (f != NULL) {
-		_setmode(_fileno(f), _O_BINARY);
+		setBinaryMode(f);
 	}
-#endif
 
 	if (fwrite(raw, size, count, f) != count) {
 		error(GT_IO_ERROR, "Failed to write to stream.");
