@@ -41,8 +41,8 @@ int encode(unsigned int type, int non_critical, int forward, FILE *in, FILE *out
 		}
 
 		/* TLV 18? */
-		if (type > 0x1f || len > 0xff) {
-			*hdr = 0x80 | (non_critical * 0x40) | (forward * 0x20) | (type >> 8);
+		if (type > GT_TLV_TYPE_1ST_BYTE_MASK || len > 0xff) {
+			*hdr = GT_TLV_MASK_TLV16 | (non_critical * GT_TLV_MASK_NON_CRITICAL) | (forward * GT_TLV_MASK_FORWARD) | (type >> 8);
 			*(hdr + 1) = type & 0xff;
 			*(hdr + 2) = (unsigned char)(len >> 8);
 			*(hdr + 3) = len & 0xff;
@@ -50,7 +50,7 @@ int encode(unsigned int type, int non_critical, int forward, FILE *in, FILE *out
 				fprintf(stderr, "Failed to write to stream.");
 			}
 		} else {
-			*hdr = 0x00 | (non_critical * 0x40) | (forward * 0x20) | (type);
+			*hdr = (non_critical * GT_TLV_MASK_NON_CRITICAL) | (forward * GT_TLV_MASK_FORWARD) | (type);
 			*(hdr + 1) = len & 0xff;
 			if (fwrite(hdr, 1, 2, out) != 2) {
 				fprintf(stderr, "Failed to write to stream.");

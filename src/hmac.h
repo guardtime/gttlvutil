@@ -23,17 +23,8 @@
 
 #include "hash.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-	int GT_Hmac_Calculate(GT_Hash_AlgorithmId alg, const void *key, size_t key_len, const void *data, size_t data_len, unsigned char *hsh, unsigned int *sz);
-	int GT_Hmac_IsAlgorithmsSupported(GT_Hash_AlgorithmId id);
-	const char *GT_Hmac_GetCryptoProvider();
-
-#ifdef __cplusplus
-}
-#endif
+int GT_Hmac_Calculate(GT_Hash_AlgorithmId alg, const void *key, size_t key_len, const void *data, size_t data_len, unsigned char *hsh, unsigned int *sz);
+int GT_Hmac_IsAlgorithmsSupported(GT_Hash_AlgorithmId id);
+const char *GT_Hmac_GetCryptoProvider();
 
 #endif /* HMAC_H_ */

@@ -113,7 +113,7 @@ static int store_nested(struct desc_st *map_in, const char *key, int type, const
 	tag = strtol(key, &ptr, 16);
 
 	/* Validate tag value and reminder. */
-	if (key == ptr || tag < 0 || tag > ((GT_TLV_MASK_TLV8_TYPE << 8) | 0xff) || (*ptr && *ptr != '.')) {
+	if (key == ptr || tag < 0 || tag > ((GT_TLV_TYPE_1ST_BYTE_MASK << 8) | 0xff) || (*ptr && *ptr != '.')) {
 		res = GT_INVALID_FORMAT;
 		goto cleanup;
 	}
@@ -251,7 +251,7 @@ static int store_tag(struct desc_st *map_in, const char *key, int type, char *va
 	}
 
 	tag = strtol(key, &ptr, 16);
-	if (key == ptr || tag < 0 || tag > ((GT_TLV_MASK_TLV8_TYPE << 8) | 0xff) || (*ptr && *ptr != '.')) {
+	if (key == ptr || tag < 0 || tag > ((GT_TLV_TYPE_1ST_BYTE_MASK << 8) | 0xff) || (*ptr && *ptr != '.')) {
 		res = GT_INVALID_FORMAT;
 		goto cleanup;
 	}

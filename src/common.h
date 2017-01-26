@@ -6,10 +6,6 @@
 #include <ctype.h>
 #include <stddef.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifdef _WIN32
 #	ifndef snprintf
 #		define snprintf _snprintf
@@ -20,7 +16,7 @@ extern "C" {
 #define GT_TLV_MASK_NON_CRITICAL 0x40u
 #define GT_TLV_MASK_FORWARD 0x20u
 
-#define GT_TLV_MASK_TLV8_TYPE 0x1fu
+#define GT_TLV_TYPE_1ST_BYTE_MASK 0x1fu
 
 #define TLV_UTIL_VERSION_STRING (PACKAGE_NAME" "VERSION)
 
@@ -71,10 +67,6 @@ enum StatusCodes {
 	GT_END_OF_STREAM,
 	GT_UNKNOWN_ERROR = 0xffff
 };
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* COMMON_H_ */
 

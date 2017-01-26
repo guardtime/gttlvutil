@@ -1,3 +1,4 @@
+* IMPROVEMENT: Code cleanup.
 * BUGFIX: Setting gttlvgrep stdin into binary mode under windows.
 * BUGFIX: Putting temp buffer arrays into heap.
 * IMPROVEMENT: Simplified the loading of custom description files.

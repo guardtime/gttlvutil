@@ -648,7 +648,7 @@ static int serializeStack(TlvLine *stack, size_t stack_len, unsigned char *buf, 
 		goto cleanup;
 	}
 
-	if (stack[0].tag > 0x1f || subLen > 0xff || stack[0].force == 16) {
+	if (stack[0].tag > GT_TLV_TYPE_1ST_BYTE_MASK || subLen > 0xff || stack[0].force == 16) {
 		/* TLV16 */
 		if (buf_len - len < 4) {
 			line_error(GT_BUFFER_OVERFLOW, "TLV16 buffer overflow.", stack[0].lineNr);
@@ -660,22 +660,22 @@ static int serializeStack(TlvLine *stack, size_t stack_len, unsigned char *buf, 
 		buf[buf_len - len - 1] = subLen & 0xff;
 		buf[buf_len - len - 2] = (subLen >> 8) & 0xff;
 		buf[buf_len - len - 3] = stack[0].tag & 0xff;
-		buf[buf_len - len - 4] = (stack[0].tag >> 8) & 0x1f;
+		buf[buf_len - len - 4] = (stack[0].tag >> 8) & GT_TLV_TYPE_1ST_BYTE_MASK;
 		len += 4;
 
-		buf[buf_len - len] |= 0x80;
+		buf[buf_len - len] |= GT_TLV_MASK_TLV16;
 
 	} else {
 		if (buf_len - len < 2) {
 			line_error(GT_BUFFER_OVERFLOW, "TLV8 buffer overflow.", stack[0].lineNr);
 		}
 		buf[buf_len - len - 1] = subLen & 0xff;
-		buf[buf_len - len - 2] = stack[0].tag & 0x1f;
+		buf[buf_len - len - 2] = stack[0].tag & GT_TLV_TYPE_1ST_BYTE_MASK;
 		len += 2;
 	}
 
-	if (stack[0].isNc) buf[buf_len - len] |= 0x40;
-	if (stack[0].isFw) buf[buf_len - len] |= 0x20;
+	if (stack[0].isNc) buf[buf_len - len] |= GT_TLV_MASK_NON_CRITICAL;
+	if (stack[0].isFw) buf[buf_len - len] |= GT_TLV_MASK_FORWARD;
 
 	res = GT_OK;
 cleanup:
