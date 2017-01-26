@@ -11,7 +11,7 @@
 
 int encode(unsigned int type, int non_critical, int forward, FILE *in, FILE *out) {
 	int res = GT_UNKNOWN_ERROR;
-	unsigned char buf[0xffff];
+	unsigned char *buf = NULL;
 	unsigned char hdr[4];
 	size_t len;
 	int count = 0;
@@ -19,13 +19,17 @@ int encode(unsigned int type, int non_critical, int forward, FILE *in, FILE *out
 	if (in == NULL) in = stdin;
 	if (out == NULL) {
 		out = stdout;
-#ifdef _WIN32
-		_setmode(_fileno(out), _O_BINARY);
-#endif
+		setBinaryMode(out);
+	}
+
+	buf = calloc(GT_TLV_BUF_SIZE, 1);
+	if (buf == NULL) {
+		res = GT_OUT_OF_MEMORY;
+		goto cleanup;
 	}
 
 	while (1) {
-		len = fread(buf, 1, sizeof(buf), in);
+		len = fread(buf, 1, GT_TLV_BUF_SIZE, in);
 
 		if (len == 0 && count > 0) break;
 		count++;
@@ -61,6 +65,8 @@ int encode(unsigned int type, int non_critical, int forward, FILE *in, FILE *out
 	res = GT_OK;
 
 cleanup:
+
+	free(buf);
 
 	return res;
 }

@@ -392,13 +392,19 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 static int read_from(FILE *f, struct conf_st *conf) {
 	int res;
 	GT_FTLV t;
-	unsigned char buf[0xffff + 4];
+	unsigned char *buf = NULL;
 	size_t len;
 	size_t off = 0;
 	struct file_magic_st *pMagic = NULL;
 	size_t hdr_len = 0;
 
-	len = fread(buf, 1, sizeof(buf), f);
+	buf = calloc(GT_TLV_BUF_SIZE, 1);
+	if (buf == NULL) {
+		res = GT_OUT_OF_MEMORY;
+		goto cleanup;
+	}
+
+	len = fread(buf, 1, GT_TLV_BUF_SIZE, f);
 
 	if (conf->auto_hdr) {
 		size_t i;
@@ -427,8 +433,8 @@ static int read_from(FILE *f, struct conf_st *conf) {
 	while (len > 0) {
 		size_t consumed;
 		/* If buffer is not fully ocupied, try to fill it up. */
-		if (len < sizeof(buf)) {
-			len += fread(buf + len, 1, sizeof(buf) - len, f);
+		if (len < GT_TLV_BUF_SIZE) {
+			len += fread(buf + len, 1, GT_TLV_BUF_SIZE - len, f);
 		}
 
 		res = GT_FTLV_memRead(buf, len, &t);
@@ -455,6 +461,8 @@ static int read_from(FILE *f, struct conf_st *conf) {
 	res = GT_OK;
 
 cleanup:
+
+	free(buf);
 
 	return res;
 }
@@ -717,9 +725,7 @@ int main(int argc, char **argv) {
 
 	/* If there are no input files, read from the standard in. */
 	if (optind >= argc) {
-#ifdef _WIN32
-		_setmode(_fileno(stdin), _O_BINARY);
-#endif
+		setBinaryMode(stdin);
 		res = read_from(stdin, &conf);
 		if (res != GT_OK) goto cleanup;
 	} else {

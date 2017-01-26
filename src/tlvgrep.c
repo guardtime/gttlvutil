@@ -16,13 +16,23 @@ static int grepFile(GT_GrepTlvConf *conf, FILE *f) {
 	int res = GT_OK;
 	GT_FTLV t;
 	size_t len;
-	unsigned char buf[0xffff + 4];
-	GT_ElementCounter idx;
+	unsigned char *buf = NULL;
+	GT_ElementCounter *idx = NULL;
 
-	memset(&idx, 0, sizeof(idx));
+	buf = calloc(GT_TLV_BUF_SIZE, 1);
+	if (buf == NULL) {
+		res = GT_OUT_OF_MEMORY;
+		goto cleanup;
+	}
+
+	idx = calloc(sizeof(GT_ElementCounter), 1);
+	if (idx == NULL) {
+		res = GT_OUT_OF_MEMORY;
+		goto cleanup;
+	}
 
 	while (!feof(f)) {
-		res = GT_FTLV_fileRead(f, buf, sizeof(buf), &len, &t);
+		res = GT_FTLV_fileRead(f, buf, GT_TLV_BUF_SIZE, &len, &t);
 		if (len == 0) {
 			/* Reached the end of file. */
 			res = GT_OK;
@@ -33,13 +43,16 @@ static int grepFile(GT_GrepTlvConf *conf, FILE *f) {
 			goto cleanup;
 		}
 
-		res = GT_grepTlv(conf, conf->pattern, NULL, &idx, buf, &t, NULL, NULL);
+		res = GT_grepTlv(conf, conf->pattern, NULL, idx, buf, &t, NULL, NULL);
 		if (res != GT_OK) goto cleanup;
 	}
 
 	res = GT_OK;
 
 cleanup:
+
+	free(buf);
+	free(idx);	
 
 	return res;
 }
@@ -104,9 +117,7 @@ int main(int argc, char **argv) {
 			case 'r':
 				conf.print_raw = true;
 				conf.print_path = false;
-#ifdef _WIN32
-				_setmode(_fileno(stdout), _O_BINARY);
-#endif
+				setBinaryMode(stdout);
 				break;
 			case 'i':
 				conf.print_path_index = true;
@@ -139,6 +150,7 @@ int main(int argc, char **argv) {
 	}
 
 	if (optind >= argc) {
+		setBinaryMode(stdin);
 		f = stdin;
 		conf.file_name = "<stdin>";
 		res = grepFile(&conf, f);
