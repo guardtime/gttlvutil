@@ -127,63 +127,6 @@ cleanup:
 	return res;
 }
 
-int GT_Base64_encode(const unsigned char *data, const size_t data_len, char **encoded) {
-	int res = GT_UNKNOWN_ERROR;
-	char *tmp = NULL;
-	size_t outLen = 0;
-	size_t r = 0;
-	size_t i = 0;
-	size_t padding = 0;
-
-	if (data == NULL || data_len == 0 || encoded == NULL) {
-		res = GT_INVALID_ARGUMENT;
-		goto cleanup;
-	}
-
-	/* Calculate output string length. */
-	outLen = (4 * ((data_len + 2) / 3)) + 1;
-	/* Calculate nof padding bytes. */
-	padding = (data_len % 3) ? 3 - (data_len % 3) : 0;
-
-	tmp = calloc(outLen, sizeof(char));
-	if (tmp == NULL) {
-		res = GT_OUT_OF_MEMORY;
-		goto cleanup;
-	}
-
-	while (i < data_len) {
-		int j;
-		unsigned long block = 0;
-
-		block  = (i < data_len) ? data[i++] << 2 * 8 : 0;
-		block |= (i < data_len) ? data[i++] << 1 * 8 : 0;
-		block |= (i < data_len) ? data[i++] << 0 * 8 : 0;
-
-		for (j = 3; j >= 0 && r < (outLen - 1 - padding); j--) {
-			tmp[r++] = base64EncodeTable[(block >> 6 * j) & 0x3f];
-		}
-	}
-
-	/* Add padding bytes. */
-	while (r % 4 != 0) {
-		/* Should never occure, just to be sure check anyway. */
-		if (r > outLen) {
-			res = GT_BUFFER_OVERFLOW;
-			goto cleanup;
-		}
-		tmp[r++] = PADDING_CHAR;
-	}
-
-	tmp[r++] = '\0';
-	*encoded = tmp;
-	tmp = NULL;
-
-	res = GT_OK;
-cleanup:
-	free(tmp);
-	return res;
-}
-
 int GT_Base16_decode(const char *encoded, unsigned char **data, size_t *data_len) {
 	int res = GT_UNKNOWN_ERROR;
 	const char *p = NULL;
@@ -253,65 +196,6 @@ int GT_Base16_decode(const char *encoded, unsigned char **data, size_t *data_len
 	res = GT_OK;
 cleanup:
 	free(tmp);
-	return res;
-}
-
-int GT_Base16_encode(const unsigned char *data, const size_t data_len, char **encoded) {
-	int res = GT_UNKNOWN_ERROR;
-#if 0
-	char *tmp = NULL;
-	size_t outLen = 0;
-	size_t r = 0;
-	size_t i = 0;
-	size_t padding = 0;
-
-	if (data == NULL || data_len == 0 || encoded == NULL) {
-		res = GT_INVALID_ARGUMENT;
-		goto cleanup;
-	}
-
-	/* Calculate output string length. */
-	outLen = (4 * ((data_len + 2) / 3)) + 1;
-	/* Calculate nof padding bytes. */
-	padding = (data_len % 3) ? 3 - (data_len % 3) : 0;
-
-	tmp = calloc(outLen, sizeof(char));
-	if (tmp == NULL) {
-		res = GT_OUT_OF_MEMORY;
-		goto cleanup;
-	}
-
-	while (i < data_len) {
-		int j;
-		unsigned long block = 0;
-
-		block  = (i < data_len) ? data[i++] << 2 * 8 : 0;
-		block |= (i < data_len) ? data[i++] << 1 * 8 : 0;
-		block |= (i < data_len) ? data[i++] << 0 * 8 : 0;
-
-		for (j = 3; j >= 0 && r < (outLen - 1 - padding); j--) {
-			tmp[r++] = base64EncodeTable[(block >> 6 * j) & 0x3f];
-		}
-	}
-
-	/* Add padding bytes. */
-	while (r % 4 != 0) {
-		/* Should never occure, just to be sure check anyway. */
-		if (r > outLen) {
-			res = GT_BUFFER_OVERFLOW;
-			goto cleanup;
-		}
-		tmp[r++] = PADDING_CHAR;
-	}
-
-	tmp[r++] = '\0';
-	*encoded = tmp;
-	tmp = NULL;
-
-	res = GT_OK;
-cleanup:
-	free(tmp);
-#endif
 	return res;
 }
 
