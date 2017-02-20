@@ -1,3 +1,4 @@
+* IMPROVEMENT: Support for base-16 and base-64 endoded TLV data
 * IMPROVEMENT: Code cleanup.
 * BUGFIX: Setting gttlvgrep stdin into binary mode under windows.
 * BUGFIX: Putting temp buffer arrays into heap.
