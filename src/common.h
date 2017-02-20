@@ -22,9 +22,18 @@
 
 #define IS_SPACE(c) ((c) == ' ' || (c) == '\t')
 #define IS_DIGIT(c) ((c) >= '0' && (c) <= '9')
+#define IS_CHAR(c) ((toupper(c) >= 'A' && toupper(c) <= 'Z'))
 #define IS_HEX(c) (IS_DIGIT(c) || (toupper(c) >= 'A' && toupper(c) <= 'F'))
 #define DECCHAR_TO_DEC(c) ((c) - '0')
 #define HEXCHAR_TO_DEC(c) (IS_DIGIT(c) ? DECCHAR_TO_DEC(c) : (toupper((c)) - 'A' + 10))
+
+#define GROUPING_CHAR '-'
+#define PADDING_CHAR  '='
+#define IS_GROUPING_CHAR(c) ((c) == GROUPING_CHAR)
+#define IS_PADDING_CHAR(c)  ((c) == PADDING_CHAR)
+
+#define IS_BASE64(c) (IS_CHAR(c) || IS_DIGIT(c) || (c) == '+' || (c) == '/' || IS_PADDING_CHAR(c))
+
 
 /**
  * Crypto implementations.

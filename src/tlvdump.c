@@ -6,25 +6,24 @@
 #include <time.h>
 #include <ctype.h>
 #include <errno.h>
-#include "fast_tlv.h"
-#include "desc.h"
-#include "common.h"
-#include "dir.h"
-
 #ifdef _WIN32
 #	include <io.h>
 #	include <fcntl.h>
 #endif
 
+#include "fast_tlv.h"
+#include "desc.h"
+#include "dir.h"
+#include "file_io.h"
+
+
 #define INDENT_LEN 2
 #define DEFAULT_WRAP 32
 #define PATH_SIZE 2048
 
-enum out_enc_en { ENCODE_HEX, ENCODE_BASE64 };
-
 struct conf_st {
 	const char *file_name;
-    bool auto_hdr;
+	bool auto_hdr;
 	size_t hdr_len;
 	size_t max_depth;
 	bool print_off;
@@ -38,7 +37,8 @@ struct conf_st {
 	bool pretty_key;
 	bool timezone;
 	struct desc_st desc;
-	enum out_enc_en out_enc;
+	GT_Encoding out_enc;
+	GT_Encoding in_enc;
 };
 
 static char *hash_alg[] = {
@@ -80,7 +80,15 @@ static uint64_t get_uint64(unsigned char *buf, size_t len) {
 
 
 #define wrap_offset(l)	printf("\n%*s", (l), "")
-#define wrap_line(p)	if (conf->wrap_width && line_len > 0 && line_len % (conf->wrap_width * 2) == 0 ) { wrap_offset(prefix_len); line_len = 0; } line_len += p
+#define wrap_line(p)                                   \
+	if (conf->wrap_width && line_len > 0 &&            \
+			line_len % (conf->wrap_width * 2) == 0 ) { \
+		wrap_offset(prefix_len);                       \
+		line_len = 0;                                  \
+	}                                                  \
+	line_len += p
+
+
 static void print_hex(unsigned char *buf, size_t len, int prefix_len, bool enable_convert, struct conf_st *conf) {
 	size_t i;
 	size_t line_len = 0;
@@ -129,10 +137,10 @@ static void print_base64(unsigned char *buf, size_t len, int prefix_len, bool en
 
 static void print_raw_data(unsigned char *buf, size_t len, int prefix_len, bool enable_convert, struct conf_st *conf) {
 	switch (conf->out_enc) {
-		case ENCODE_BASE64:
+		case GT_BASE_64:
 			print_base64(buf, len, prefix_len, enable_convert, conf);
 			break;
-		case ENCODE_HEX:
+		case GT_BASE_16:
 		default:
 			print_hex(buf, len, prefix_len, enable_convert, conf);
 	}
@@ -233,7 +241,7 @@ static void print_imprint(unsigned char *buf, size_t len, int prefix_len, struct
 				wrap_offset(prefix_len);
 			}
 			print_raw_data(buf + 1, len - 1, prefix_len, true, conf);
-		} else if (conf->wrap_width && conf->out_enc == ENCODE_HEX) {
+		} else if (conf->wrap_width && conf->out_enc == GT_BASE_16) {
 			printf("%02x", buf[0]);
 			wrap_offset(prefix_len);
 			print_raw_data(buf + 1, len - 1, prefix_len, true, conf);
@@ -404,7 +412,7 @@ static int read_from(FILE *f, struct conf_st *conf) {
 		goto cleanup;
 	}
 
-	len = fread(buf, 1, GT_TLV_BUF_SIZE, f);
+	len = GT_fread(conf->in_enc, buf, 1, GT_TLV_BUF_SIZE, f);
 
 	if (conf->auto_hdr) {
 		size_t i;
@@ -434,7 +442,7 @@ static int read_from(FILE *f, struct conf_st *conf) {
 		size_t consumed;
 		/* If buffer is not fully ocupied, try to fill it up. */
 		if (len < GT_TLV_BUF_SIZE) {
-			len += fread(buf + len, 1, GT_TLV_BUF_SIZE - len, f);
+			len += GT_fread(conf->in_enc, buf + len, 1, GT_TLV_BUF_SIZE - len, f);
 		}
 
 		res = GT_FTLV_memRead(buf, len, &t);
@@ -577,10 +585,12 @@ int main(int argc, char **argv) {
 
 	/* Set the auto header value to true. */
 	conf.auto_hdr = true;
-	
+	/* Set default output encoding. */
+	conf.out_enc = GT_BASE_16;
+
 	initDefaultDescriptionFileDir(argv[0]);
 
-	while ((c = getopt(argc, argv, "hH:d:xw:yzaspPte:vD:oi")) != -1) {
+	while ((c = getopt(argc, argv, "hH:d:xw:yzaspPte:E:vD:oi")) != -1) {
 		switch(c) {
 			case 'H': {
 				if (!strcmp(optarg, "auto")) {
@@ -626,28 +636,19 @@ int main(int argc, char **argv) {
 				conf.timezone = true;
 				break;
 			case 'e': {
-				struct {
-					const char *alias;
-					enum out_enc_en enc;
-				} enc_map[] = {
-					{"hex", ENCODE_HEX },
-					{"base16", ENCODE_HEX },
-					{"16", ENCODE_HEX },
-					{"base64", ENCODE_BASE64 },
-					{"64", ENCODE_BASE64 },
-					{ NULL, 0 }
-				};
-				size_t i = 0;
-				while (enc_map[i].alias != NULL) {
-					if (!strcmp(enc_map[i].alias, optarg)) {
-						conf.out_enc = enc_map[i].enc;
-						break;
-					}
-					++i;
-				}
-				if (enc_map[i].alias == NULL) {
+				conf.out_enc = GT_ParseEncoding(optarg);
+				if (conf.out_enc == GT_BASE_NA) {
 					fprintf(stderr, "Unknown encoding '%s', defaulting to 'hex'.\n", optarg);
-					conf.out_enc = ENCODE_HEX;
+					conf.out_enc = GT_BASE_16;
+				}
+				break;
+			}
+			case 'E': {
+				conf.in_enc = GT_ParseEncoding(optarg);
+				if (conf.in_enc == GT_BASE_NA) {
+					fprintf(stderr, "Unknown input data encoding: '%s'\n", optarg);
+					res = GT_INVALID_CMD_PARAM;
+					goto cleanup;
 				}
 				break;
 			}
@@ -681,6 +682,7 @@ int main(int argc, char **argv) {
 						"             override -z).\n"
 						"    -t       Print time in local timezone (valid with -p).\n"
 						"    -e enc   Output format of binary value. Available: 'hex', 'base64'.\n"
+						"    -E enc   Input data encoding (if not binary). Available: 'hex', 'base64'.\n"
 						"    -D <pth> Set TLV description files directory.\n"
 						"    -v       Print TLV utility version..\n"
 						"\n"
@@ -725,7 +727,7 @@ int main(int argc, char **argv) {
 
 	/* If there are no input files, read from the standard in. */
 	if (optind >= argc) {
-		setBinaryMode(stdin);
+		if (conf.in_enc == GT_BASE_2) setBinaryMode(stdin);
 		res = read_from(stdin, &conf);
 		if (res != GT_OK) goto cleanup;
 	} else {

@@ -26,7 +26,7 @@ void GT_GrepPattern_free(struct pattern_st *p) {
 			/* Freed already above. */
 			tmp->match = NULL;
 			free(tmp);
-			tmp = next;	
+			tmp = next;
 		}
 		free(p);
 	}
@@ -143,7 +143,7 @@ int GT_GrepPattern_parse(const char *in, struct pattern_st **out) {
 					p++;
 					continue;
 				}
-				
+
 				/* On unexpected input default to MODE_NEXT. */
 				mode = MODE_NEXT;
 				break;
@@ -172,7 +172,7 @@ int GT_GrepPattern_parse(const char *in, struct pattern_st **out) {
 	}
 
 	/* The 'match' pointer is evaluated only for the last element in the 'no_mach' chain. Update the 'match'
- 	 * pointers for all the elements in the 'no_mach' chain. */ 
+	 * pointers for all the elements in the 'no_mach' chain. */
 	tmp->match = update_match(tmp);
 
 	*out = tmp;
@@ -198,6 +198,7 @@ void GT_GrepTlv_initConf(GT_GrepTlvConf *conf) {
 	conf->trunc_tlv_tag = 0;
 	conf->print_tlv_hdr_only = false;
 	conf->pattern = NULL;
+	conf->in_enc = GT_BASE_2;
 }
 
 int GT_grepTlv(GT_GrepTlvConf *conf, struct pattern_st *pattern, char *prefix, GT_ElementCounter *map, unsigned char *buf, GT_FTLV *t, unsigned char *raw, size_t *rlen) {
@@ -219,7 +220,7 @@ int GT_grepTlv(GT_GrepTlvConf *conf, struct pattern_st *pattern, char *prefix, G
 
 		/* Index of the element matches. */
 		if (pt->match_index && (
-				( pt->match_tag && pt->index + 1 != map->element_count[t->tag]) || 
+				( pt->match_tag && pt->index + 1 != map->element_count[t->tag]) ||
 				(!pt->match_tag && pt->index + 1 != map->count))) {
 			pt = pt->no_match;
 			continue;
@@ -237,13 +238,13 @@ int GT_grepTlv(GT_GrepTlvConf *conf, struct pattern_st *pattern, char *prefix, G
 			snprintf(pre + strlen(pre), sizeof(pre) - strlen(pre), "[%llu]", (unsigned long long) map->element_count[t->tag] - 1);
 		}
 
-		if (pt->match == NULL) { 
+		if (pt->match == NULL) {
 			/* The matching pattern has been found. */
 			size_t i;
 			unsigned char *ptr = NULL;
 			size_t len;
 			size_t dat_len = (conf->trunc_tlv_tag == t->tag && conf->trunc_len < t->dat_len) ? conf->trunc_len : t->dat_len;
-			
+
 			if (conf->print_tlv_hdr_only) {
 				/* Set the pointer to the header. */
 				ptr = buf;
@@ -279,7 +280,7 @@ int GT_grepTlv(GT_GrepTlvConf *conf, struct pattern_st *pattern, char *prefix, G
 			if (!conf->print_raw) {
 				putc('\n', stdout);
 			}
-		} else { 
+		} else {
 			/* Continue the search within nesting TLVs. */
 			unsigned char *ptr = buf + t->hdr_len;
 			size_t len = t->dat_len;
