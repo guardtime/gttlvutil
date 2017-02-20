@@ -20,6 +20,7 @@
 
 #define TLV_UTIL_VERSION_STRING (PACKAGE_NAME" "VERSION)
 
+#define IS_EOL(c) ((c) == '\n' || (c) == '\r')
 #define IS_SPACE(c) ((c) == ' ' || (c) == '\t')
 #define IS_DIGIT(c) ((c) >= '0' && (c) <= '9')
 #define IS_CHAR(c) ((toupper(c) >= 'A' && toupper(c) <= 'Z'))

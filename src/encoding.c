@@ -22,7 +22,6 @@
 #include <string.h>
 
 
-#define IS_EOL(c) ((c) == '\n' || (c) == '\r')
 
 static const char base64EncodeTable[65] =
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -48,20 +47,18 @@ int GT_Base64_decode(const char *encoded, unsigned char **data, size_t *data_len
 	size_t inLen;
 	size_t outLen = 0;
 	const char *padding = NULL;
-	char *p = NULL;
+	const char *p = NULL;
 	unsigned char alphabet[0xff] = {0};
-	const char *pEnc = NULL;
 
 	if (encoded == NULL || data == NULL || data_len == NULL) {
 		res = GT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
-	/* Get number of grouping chars in the base64 string. */
-	p = strchr(encoded, GROUPING_CHAR);
-	while (p) {
-		gc++;
-		p = strchr(p + 1, GROUPING_CHAR);
+	p = encoded;
+	while (*p) {
+		if (IS_GROUPING_CHAR(*p) || IS_SPACE(*p) || IS_EOL(*p)) gc++;
+		p++;
 	}
 
 	inLen = strlen(encoded);
@@ -93,20 +90,20 @@ int GT_Base64_decode(const char *encoded, unsigned char **data, size_t *data_len
 
 	initDecodeTable(alphabet, base64EncodeTable, 64);
 
-	pEnc = encoded;
+	p = encoded;
 	do {
 		int j;
 		unsigned long block = 0;
 		unsigned char count = 0;
 
-		while (*pEnc) {
-			if (IS_BASE64(*pEnc)) {
+		while (*p) {
+			if (IS_BASE64(*p)) {
 				block <<= 6;
-				block |= alphabet[(unsigned char)*pEnc];
-				pEnc++;
+				block |= alphabet[(unsigned char)*p];
+				p++;
 				if (++count == 4) break;
-			} else if (IS_GROUPING_CHAR(*pEnc) || IS_SPACE(*pEnc) || IS_EOL(*pEnc)) {
-				pEnc++;
+			} else if (IS_GROUPING_CHAR(*p) || IS_SPACE(*p) || IS_EOL(*p)) {
+				p++;
 			} else {
 				/* Unknown character has occured. */
 				res = GT_INVALID_FORMAT;
@@ -118,7 +115,7 @@ int GT_Base64_decode(const char *encoded, unsigned char **data, size_t *data_len
 				tmp[r++] = (block >> 8 * j) & 0xff;
 			}
 		}
-	} while (r < outLen && *pEnc);
+	} while (r < outLen && *p);
 
 	*data_len = r;
 	*data = tmp;
@@ -189,24 +186,22 @@ cleanup:
 
 int GT_Base16_decode(const char *encoded, unsigned char **data, size_t *data_len) {
 	int res = GT_UNKNOWN_ERROR;
-	char *p = NULL;
+	const char *p = NULL;
 	size_t gc = 0;
 	size_t inLen;
 	size_t outLen = 0;
 	unsigned char *tmp = NULL;
 	size_t i = 0;
-	const char *pEnc = NULL;
 
 	if (encoded == NULL || data == NULL || data_len == NULL) {
 		res = GT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
-	/* Get number of grouping chars in the encoded string. */
-	p = strchr(encoded, GROUPING_CHAR);
-	while (p) {
-		gc++;
-		p = strchr(p + 1, GROUPING_CHAR);
+	p = encoded;
+	while (*p) {
+		if (IS_GROUPING_CHAR(*p) || IS_SPACE(*p) || IS_EOL(*p)) gc++;
+		p++;
 	}
 
 	inLen = strlen(encoded);
@@ -226,22 +221,22 @@ int GT_Base16_decode(const char *encoded, unsigned char **data, size_t *data_len
 		goto cleanup;
 	}
 
-	pEnc = encoded;
+	p = encoded;
 	while (i < outLen) {
 		int highNibble = true;
-		while (*pEnc) {
-			if (IS_HEX(*pEnc)) {
+		while (*p) {
+			if (IS_HEX(*p)) {
 				if (highNibble) {
-					tmp[i] = HEXCHAR_TO_DEC(*pEnc) << 4;
+					tmp[i] = HEXCHAR_TO_DEC(*p) << 4;
 					highNibble = false;
-					pEnc++;
+					p++;
 				} else {
-					tmp[i] |= HEXCHAR_TO_DEC(*pEnc);
-					pEnc++;
+					tmp[i] |= HEXCHAR_TO_DEC(*p);
+					p++;
 					break;
 				}
-			} else if (IS_GROUPING_CHAR(*pEnc) || IS_SPACE(*pEnc) || IS_EOL(*pEnc)) {
-				pEnc++;
+			} else if (IS_GROUPING_CHAR(*p) || IS_SPACE(*p) || IS_EOL(*p)) {
+				p++;
 			} else {
 				/* Unknown character has occured. */
 				res = GT_INVALID_FORMAT;
@@ -326,9 +321,6 @@ typedef struct {
 } encoding_map;
 
 static const encoding_map enc_map[] = {
-	{ "bin",	GT_BASE_2 },
-	{ "base2",	GT_BASE_2 },
-	{ "2",		GT_BASE_2 },
 	{ "hex",	GT_BASE_16 },
 	{ "base16",	GT_BASE_16 },
 	{ "16",		GT_BASE_16 },

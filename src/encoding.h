@@ -17,25 +17,21 @@
  * reserves and retains all trademark rights.
  */
 
-#ifndef _GT_ENCODING_H_
-#define _GT_ENCODING_H_
+#ifndef GT_ENCODING_H
+#define GT_ENCODING_H
 
 #include "common.h"
 
 typedef enum encoding_en {
 	GT_BASE_2,
 	GT_BASE_16,
-	GT_BASE_32,
 	GT_BASE_64,
 	GT_BASE_NA
 } GT_Encoding;
 
 int GT_Base64_decode(const char *encoded, unsigned char **data, size_t *data_len);
-int GT_Base64_encode(const unsigned char *data, const size_t data_len, char **encoded);
-
 int GT_Base16_decode(const char *encoded, unsigned char **data, size_t *data_len);
-int GT_Base16_encode(const unsigned char *data, const size_t data_len, char **encoded);
 
 GT_Encoding GT_ParseEncoding(const char *enc);
 
-#endif /* _GT_ENCODING_H_ */
+#endif /* GT_ENCODING_H */

@@ -64,6 +64,24 @@ Unable to open input file 'test/tmp/missing/file'.
 >>>= 0
 
 ###############################################################################
+# Create an aggregation error response. Compare it to the original file.
+# Use -E flag for using input data with various encoding. 
+# TLV[0200]:
+#   TLV[01]:
+#     TLV[01]: 616e6f6e00
+#     TLV[02]: 54ca47b5
+#     TLV[03]: 01
+#   TLV[0202]:
+#     TLV[01]:
+#     TLV[04]: 0103
+#     TLV[05]: 546865207265717565737420636f6e7461696e656420696e76616c6964207061796c6f616400
+#   TLV[1f]: 01c4aaaff79bab9137d2c1d8c43e4fcd09c3bce28e19079be36bb0d211864e2a3e
+
+((echo -en "\x61\x6e\x6f\x6e\x00" | GTTLVWRAP -t 01; echo -n "54ca47b5" | GTTLVWRAP -t 02 -E 16; echo -en "01" | GTTLVWRAP -t 03 -E hex) | GTTLVWRAP -t 01; (echo -en "" | GTTLVWRAP -t 01; echo -en "\x01\x03" | GTTLVWRAP -t 04; (echo -n "The request contained invalid payload"; echo -en "\x00") | GTTLVWRAP -t 05) | GTTLVWRAP -t 0202; (echo -n "AcSqr/ebq5E30sHYxD5PzQnDvOKOGQeb42uw0hGGTio+") | GTTLVWRAP -t 1f -E 64) | GTTLVWRAP -t 0200 | diff test/resources/tlv/ok_aggr_err_response-1.tlv -
+>>> 
+>>>= 0
+
+###############################################################################
 # Create an aggregation error response (see above test case). Save the resulting 
 # steam to a temporary file and compare it to the original file.
 

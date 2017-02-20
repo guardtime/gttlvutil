@@ -58,6 +58,71 @@ GTTLVDUMP test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>= 0
 
 ###############################################################################
+# Tlvdump KSI signature which is in hex format. 
+# Use -E key to set input data encoding.
+# Encoding parameter '16'.
+
+GTTLVDUMP -E 16 test/resources/sig/ok-sig-2014-08-01.1.b16
+>>>  /TLV.0800.*
+.*TLV.0805.*
+.*TLV.10,F.*
+.*TLV.02.*53dc2a00.*
+.*TLV.04.*01e4fc0853cacb3c888ee4d2f843083acb1a822e60403a6af7167f70d0ca8eee61.*/
+>>>= 0
+
+###############################################################################
+# Tlvdump KSI signature which is in hex format. 
+# Use -E key to set input data encoding.
+# Encoding parameter 'hex'.
+
+GTTLVDUMP -E hex test/resources/sig/ok-sig-2014-08-01.1.b16
+>>>  /TLV.0800.*
+.*TLV.0805.*
+.*TLV.10,F.*
+.*TLV.02.*53dc2a00.*
+.*TLV.04.*01e4fc0853cacb3c888ee4d2f843083acb1a822e60403a6af7167f70d0ca8eee61.*/
+>>>= 0
+
+###############################################################################
+# Tlvdump KSI signature which is in hex format. 
+# Use -E key to set input data encoding.
+# Encoding parameter 'base16'.
+
+GTTLVDUMP -E base16 test/resources/sig/ok-sig-2014-08-01.1.b16
+>>>  /TLV.0800.*
+.*TLV.0805.*
+.*TLV.10,F.*
+.*TLV.02.*53dc2a00.*
+.*TLV.04.*01e4fc0853cacb3c888ee4d2f843083acb1a822e60403a6af7167f70d0ca8eee61.*/
+>>>= 0
+
+###############################################################################
+# Tlvdump KSI signature which is in Base64 format. 
+# Use -E key to set input data encoding.
+# Encoding parameter '64'.
+
+GTTLVDUMP -E 64 test/resources/sig/ok-sig-2014-08-01.1.b64
+>>>  /TLV.0800.*
+.*TLV.0805.*
+.*TLV.10,F.*
+.*TLV.02.*53dc2a00.*
+.*TLV.04.*01e4fc0853cacb3c888ee4d2f843083acb1a822e60403a6af7167f70d0ca8eee61.*/
+>>>= 0
+
+###############################################################################
+# Tlvdump KSI signature which is in Base64 format. 
+# Use -E key to set input data encoding.
+# Encoding parameter 'base64'.
+
+GTTLVDUMP -E base64 test/resources/sig/ok-sig-2014-08-01.1.b64
+>>>  /TLV.0800.*
+.*TLV.0805.*
+.*TLV.10,F.*
+.*TLV.02.*53dc2a00.*
+.*TLV.04.*01e4fc0853cacb3c888ee4d2f843083acb1a822e60403a6af7167f70d0ca8eee61.*/
+>>>= 0
+
+###############################################################################
 # Tlvdump KSI signature.
 # Using '-x' option for displaying file offset for every TLV.
 

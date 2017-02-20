@@ -66,6 +66,50 @@ GTTLVGREP 800.801[1].07[1],08[1] test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>= 0
 
 ###############################################################################
+# Tlvgrep 2nd aggregation hash chain 2nd right and left links.
+# Use -E key to set input data encoding.
+# Encoding parameter '16'.
+
+GTTLVGREP -E 16 800.801[1].07[1],08[1] test/resources/sig/ok-sig-2014-08-01.1.b16
+>>>
+010101022101ec97ee31cc71bdc84d9582a4f88c7e5ca443ced0e55a9e97168b0b688048a76e
+0101070221011ca255e3aaabf1ae17b80c881a981976abc05348897479731ca6c9d89e411bd5
+>>>= 0
+
+###############################################################################
+# Tlvgrep 2nd aggregation hash chain 2nd right and left links.
+# Use -E key to set input data encoding.
+# Encoding parameter 'hex'.
+
+GTTLVGREP -E hex 800.801[1].07[1],08[1] test/resources/sig/ok-sig-2014-08-01.1.b16
+>>>
+010101022101ec97ee31cc71bdc84d9582a4f88c7e5ca443ced0e55a9e97168b0b688048a76e
+0101070221011ca255e3aaabf1ae17b80c881a981976abc05348897479731ca6c9d89e411bd5
+>>>= 0
+
+###############################################################################
+# Tlvgrep 2nd aggregation hash chain 2nd right and left links.
+# Use -E key to set input data encoding.
+# Encoding parameter '64'.
+
+GTTLVGREP -E 64 800.801[1].07[1],08[1] test/resources/sig/ok-sig-2014-08-01.1.b64
+>>>
+010101022101ec97ee31cc71bdc84d9582a4f88c7e5ca443ced0e55a9e97168b0b688048a76e
+0101070221011ca255e3aaabf1ae17b80c881a981976abc05348897479731ca6c9d89e411bd5
+>>>= 0
+
+###############################################################################
+# Tlvgrep 2nd aggregation hash chain 2nd right and left links.
+# Use -E key to set input data encoding.
+# Encoding parameter 'base64'.
+
+GTTLVGREP -E base64 800.801[1].07[1],08[1] test/resources/sig/ok-sig-2014-08-01.1.b64
+>>>
+010101022101ec97ee31cc71bdc84d9582a4f88c7e5ca443ced0e55a9e97168b0b688048a76e
+0101070221011ca255e3aaabf1ae17b80c881a981976abc05348897479731ca6c9d89e411bd5
+>>>= 0
+
+###############################################################################
 # Tlvgrep 3rd aggregation hash chain 2nd left and 1st right links.
 # The right link is not present in hash chain.
 
