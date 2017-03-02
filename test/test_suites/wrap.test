@@ -39,8 +39,15 @@ GTTLVWRAP: invalid option -- 'V'
 Unknown parameter, try -h.
 >>>= 1
 
-# Missing file.
+# Missing mandatory -t.
 GTTLVWRAP -i test/tmp/missing/file
+>>>
+>>>2
+Tlv tag (-t) must be specified.
+>>>= 6
+
+# Missing file.
+GTTLVWRAP -t 01 -i test/tmp/missing/file
 >>>
 >>>2
 Unable to open input file 'test/tmp/missing/file'.

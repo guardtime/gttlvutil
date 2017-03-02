@@ -25,7 +25,21 @@
 #include "common.h"
 #include "encoding.h"
 
-size_t GT_fread(GT_Encoding enc, void *dstBuf,  size_t elementSize, size_t count, FILE *file);
+/**
+ * Read file stream. The stream is buffered till eof is reached.
+ * \param enc	File stream data encoding.
+ * \param raw	Buffer containing content of the \c file stream.
+ * \param size	Buffer size.
+ * \param file	File stream.
+ * \return	Status code (#GT_OK, when operation succeeded, otherwise an error code).
+ */
+int GT_fread(GT_Encoding enc, unsigned char **raw, size_t *size, FILE *file);
+
+/**
+ * File size in bytes.
+ * \param file	File stream.
+ * \return Number of bytes in the file, or -1 in case of an error.
+ */
 long GT_fsize(FILE *file);
 
 #endif /* FILE_IO_H_ */

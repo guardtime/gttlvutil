@@ -6,6 +6,7 @@
 #	include <io.h>
 #	include <fcntl.h>
 #endif
+#include <string.h>
 
 #include "file_io.h"
 
@@ -14,59 +15,42 @@ struct conf_st {
 	int non_critical;
 	int forward;
 	GT_Encoding in_enc;
+	char *in_file;
 };
 
 int encode(struct conf_st *conf, FILE *in, FILE *out) {
 	int res = GT_UNKNOWN_ERROR;
 	unsigned char *buf = NULL;
 	unsigned char hdr[4];
-	size_t len;
-	int count = 0;
+	size_t len = 0;
 
-	if (in == NULL) in = stdin;
-	if (out == NULL) {
-		out = stdout;
-		setBinaryMode(out);
-	}
+	if ((res = GT_fread(conf->in_enc, &buf, &len, in)) != GT_OK) goto cleanup;
 
-	buf = calloc(GT_TLV_BUF_SIZE, 1);
-	if (buf == NULL) {
-		res = GT_OUT_OF_MEMORY;
+	if (len >> 8 > UCHAR_MAX) {
+		res = GT_INVALID_ARGUMENT;
+		fprintf(stderr, "Len is too great: '%llu'.\n", (unsigned long long)len);
 		goto cleanup;
 	}
 
-	while (1) {
-		len = GT_fread(conf->in_enc, buf, 1, GT_TLV_BUF_SIZE, in);
-
-		if (len == 0 && count > 0) break;
-		count++;
-
-		if (len >> 8 > UCHAR_MAX) {
-			res = GT_INVALID_ARGUMENT;
-			fprintf(stderr, "Len is too great: '%llu'.\n", (unsigned long long)len);
-			goto cleanup;
-		}
-
-		/* TLV 18? */
-		if (conf->type > GT_TLV_TYPE_1ST_BYTE_MASK || len > 0xff) {
-			*hdr = GT_TLV_MASK_TLV16 | (conf->non_critical * GT_TLV_MASK_NON_CRITICAL) | (conf->forward * GT_TLV_MASK_FORWARD) | (conf->type >> 8);
-			*(hdr + 1) = conf->type & 0xff;
-			*(hdr + 2) = (unsigned char)(len >> 8);
-			*(hdr + 3) = len & 0xff;
-			if (fwrite(hdr, 1, 4, out) != 4) {
-				fprintf(stderr, "Failed to write to stream.");
-			}
-		} else {
-			*hdr = (conf->non_critical * GT_TLV_MASK_NON_CRITICAL) | (conf->forward * GT_TLV_MASK_FORWARD) | (conf->type);
-			*(hdr + 1) = len & 0xff;
-			if (fwrite(hdr, 1, 2, out) != 2) {
-				fprintf(stderr, "Failed to write to stream.");
-			}
-		}
-
-		if (fwrite(buf, 1, len, out) != len) {
+	/* TLV 18? */
+	if (conf->type > GT_TLV_TYPE_1ST_BYTE_MASK || len > 0xff) {
+		*hdr = GT_TLV_MASK_TLV16 | (conf->non_critical * GT_TLV_MASK_NON_CRITICAL) | (conf->forward * GT_TLV_MASK_FORWARD) | (conf->type >> 8);
+		*(hdr + 1) = conf->type & 0xff;
+		*(hdr + 2) = (unsigned char)(len >> 8);
+		*(hdr + 3) = len & 0xff;
+		if (fwrite(hdr, 1, 4, out) != 4) {
 			fprintf(stderr, "Failed to write to stream.");
 		}
+	} else {
+		*hdr = (conf->non_critical * GT_TLV_MASK_NON_CRITICAL) | (conf->forward * GT_TLV_MASK_FORWARD) | (conf->type);
+		*(hdr + 1) = len & 0xff;
+		if (fwrite(hdr, 1, 2, out) != 2) {
+			fprintf(stderr, "Failed to write to stream.");
+		}
+	}
+
+	if (fwrite(buf, 1, len, out) != len) {
+		fprintf(stderr, "Failed to write to stream.");
 	}
 
 	res = GT_OK;
@@ -88,7 +72,7 @@ void printHelp(FILE *f) {
 		"  -N         Set the TLV Non-Critical flag.\n"
 		"  -F         Set the TLV Forward Unknown Flag.\n"
 		"  -i file    Input file that is going to be wrapped with TLV header.\n"
-		"  -E enc     Input data encoding (if not binary). Available: 'hex', 'base64'.\n"
+		"  -E enc     Input data encoding. Available: 'bin', 'hex', 'base64'.\n"
 		"  -o file    Output file for generated TLV.\n"
 		"  -v         Print TLV utility version.\n"
 		"\n");
@@ -105,6 +89,7 @@ int main(int argc, char **argv) {
 	conf.non_critical = 0;
 	conf.forward = 0;
 	conf.in_enc = GT_BASE_2;
+	conf.in_file = NULL;
 
 
 	while ((c = getopt(argc, argv, "LNFt:i:o:hvE:")) != -1) {
@@ -141,12 +126,12 @@ int main(int argc, char **argv) {
 				}
 				break;
 			case 'i':
-				in = fopen(optarg, "rb");
-				if (in == NULL) {
-					fprintf(stderr, "Unable to open input file '%s'.\n", optarg);
-					res = GT_IO_ERROR;
+				conf.in_file = calloc(strlen(optarg), sizeof(char));
+				if (!conf.in_file) {
+					res = GT_OUT_OF_MEMORY;
 					goto cleanup;
 				}
+				strcpy(conf.in_file, optarg);
 				break;
 			case 'o':
 				out = fopen(optarg, "wb");
@@ -177,12 +162,29 @@ int main(int argc, char **argv) {
 		goto cleanup;
 	}
 
+	if (conf.in_file) {
+		in = fopen(conf.in_file, conf.in_enc == GT_BASE_2 ? "rb" : "r");
+		if (in == NULL) {
+			fprintf(stderr, "Unable to open input file '%s'.\n", conf.in_file);
+			res = GT_IO_ERROR;
+			goto cleanup;
+		}
+	} else {
+		in = stdin;
+	}
+
+	if (out == NULL) {
+		out = stdout;
+		setBinaryMode(out);
+	}
+
 	res = encode(&conf, in, out);
 
 cleanup:
 
-	if (in != NULL) fclose(in);
-	if (out != NULL) fclose(out);
+	if (in != NULL && in != stdin) fclose(in);
+	if (out != NULL && out != stdout) fclose(out);
+	free(conf.in_file);
 
 	return res;
 }

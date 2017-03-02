@@ -542,10 +542,6 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 				if (IS_HEX(c)) {
 					tlv->dat[tlv->dat_len++] |= HEXCHAR_TO_DEC(c);
 					state = ST_DATA_HEX_1;
-				/*} else if (IS_CHAR(c)) {
-					char msg = "Unexpected character:  .";
-					msg[strlen(msg) - 2] = c;
-					error(GT_PARSER_ERROR, msg);*/
 				} else {
 					error(GT_PARSER_ERROR, "Hex strings must contain even number of characters.");
 				}

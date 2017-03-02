@@ -18,7 +18,6 @@ static int grepFile(GT_GrepTlvConf *conf, FILE *f) {
 	unsigned char *buf = NULL;
 	GT_ElementCounter *idx = NULL;
 	size_t len = 0;
-	size_t bufSize = 0;
 
 	idx = calloc(sizeof(GT_ElementCounter), 1);
 	if (idx == NULL) {
@@ -26,20 +25,7 @@ static int grepFile(GT_GrepTlvConf *conf, FILE *f) {
 		goto cleanup;
 	}
 
-	/* Buffer the input stream. */
-	while (!feof(f)) {
-		unsigned char *tmp = NULL;
-
-		bufSize += GT_TLV_BUF_SIZE;
-		tmp = realloc(buf, bufSize * sizeof(unsigned char));
-		if (tmp == NULL) {
-			res = GT_OUT_OF_MEMORY;
-			goto cleanup;
-		}
-		buf = tmp;
-
-		len += GT_fread(conf->in_enc, buf + len, 1, bufSize - len, f);
-	}
+	if ((res = GT_fread(conf->in_enc, &buf, &len, f)) != GT_OK) goto cleanup;
 
 	/* Handle binary TLV data. */
 	while (len) {
@@ -96,7 +82,7 @@ void printHelp(FILE *f) {
 			" -n       Print path of TLV type in human-readable format (has no effect with\n"
 			"          -r).\n"
 			" -i       Print index of the TLV element (has no effect without -n).\n"
-			" -E enc   Input data encoding (if not binary). Available: 'hex', 'base64'.\n"
+			" -E enc   Input data encoding. Available: 'bin', 'hex', 'base64'.\n"
 			" -v       Print TLV utility version.\n"
 			"\n");
 

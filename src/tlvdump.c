@@ -406,13 +406,7 @@ static int read_from(FILE *f, struct conf_st *conf) {
 	struct file_magic_st *pMagic = NULL;
 	size_t hdr_len = 0;
 
-	buf = calloc(GT_TLV_BUF_SIZE, 1);
-	if (buf == NULL) {
-		res = GT_OUT_OF_MEMORY;
-		goto cleanup;
-	}
-
-	len = GT_fread(conf->in_enc, buf, 1, GT_TLV_BUF_SIZE, f);
+	if ((res = GT_fread(conf->in_enc, &buf, &len, f)) != GT_OK) goto cleanup;
 
 	if (conf->auto_hdr) {
 		size_t i;
@@ -440,10 +434,6 @@ static int read_from(FILE *f, struct conf_st *conf) {
 
 	while (len > 0) {
 		size_t consumed;
-		/* If buffer is not fully ocupied, try to fill it up. */
-		if (len < GT_TLV_BUF_SIZE) {
-			len += GT_fread(conf->in_enc, buf + len, 1, GT_TLV_BUF_SIZE - len, f);
-		}
 
 		res = GT_FTLV_memRead(buf, len, &t);
 		consumed = t.hdr_len + t.dat_len;
@@ -682,7 +672,7 @@ int main(int argc, char **argv) {
 						"             override -z).\n"
 						"    -t       Print time in local timezone (valid with -p).\n"
 						"    -e enc   Output format of binary value. Available: 'hex', 'base64'.\n"
-						"    -E enc   Input data encoding (if not binary). Available: 'hex', 'base64'.\n"
+						"    -E enc   Input data encoding. Available: 'bin', 'hex', 'base64'.\n"
 						"    -D <pth> Set TLV description files directory.\n"
 						"    -v       Print TLV utility version..\n"
 						"\n"

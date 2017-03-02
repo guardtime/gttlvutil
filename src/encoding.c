@@ -21,16 +21,12 @@
 
 #include <string.h>
 
+#define IS_KNOWN_REDUNDANT_CHAR(c) (IS_GROUPING_CHAR(c) || IS_SPACE(c) || IS_EOL(c))
 
-
-static const char base64EncodeTable[65] =
+static const char base64EncodeTable[64 + 1] =
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 		"abcdefghijklmnopqrstuvwxyz"
 		"0123456789+/";
-
-static const char base32EncodeTable[33] =
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-		"234567";
 
 static void initDecodeTable(unsigned char *decTbl, const char *encTbl, size_t encLen) {
 	unsigned char i;
@@ -39,25 +35,29 @@ static void initDecodeTable(unsigned char *decTbl, const char *encTbl, size_t en
 	}
 }
 
-int GT_Base64_decode(const char *encoded, unsigned char **data, size_t *data_len) {
+int GT_Base64_decode(const char *encoded, unsigned char *raw, size_t *raw_len) {
 	int res = GT_UNKNOWN_ERROR;
 	size_t r = 0;
 	size_t gc = 0;
-	unsigned char *tmp = NULL;
+	size_t pc = 0;
 	size_t inLen;
 	size_t outLen = 0;
-	const char *padding = NULL;
 	const char *p = NULL;
 	unsigned char alphabet[0xff] = {0};
 
-	if (encoded == NULL || data == NULL || data_len == NULL) {
+	if (encoded == NULL || raw_len == NULL) {
 		res = GT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
 	p = encoded;
 	while (*p) {
-		if (IS_GROUPING_CHAR(*p) || IS_SPACE(*p) || IS_EOL(*p)) gc++;
+		if (IS_KNOWN_REDUNDANT_CHAR(*p)) gc++;
+		else if (IS_PADDING_CHAR(*p)) pc++;
+		else if (!IS_BASE64(*p)) {
+			res = GT_INVALID_FORMAT;
+			goto cleanup;
+		}
 		p++;
 	}
 
@@ -69,81 +69,71 @@ int GT_Base64_decode(const char *encoded, unsigned char **data, size_t *data_len
 		goto cleanup;
 	}
 
-	padding = strchr(encoded, PADDING_CHAR);
-	if (padding != NULL) {
-		size_t padSize = inLen - (padding - encoded);
-		/* Padding can be only on last two chars. */
-		if (padSize > 2) {
-			res = GT_INVALID_FORMAT;
+	outLen = 3 * (inLen - pc - gc) / 4;
+
+	if (raw != NULL) {
+		initDecodeTable(alphabet, base64EncodeTable, 64);
+
+		p = encoded;
+		do {
+			int j;
+			unsigned long block = 0;
+			unsigned char count = 0;
+
+			while (*p) {
+				if (IS_BASE64(*p)) {
+					block <<= 6;
+					block |= alphabet[(unsigned char)*p];
+					p++;
+					if (++count == 4) break;
+				} else if (IS_KNOWN_REDUNDANT_CHAR(*p)) {
+					p++;
+				} else {
+					/* Unknown character has occured. */
+					res = GT_INVALID_FORMAT;
+					goto cleanup;
+				}
+			}
+			if (count) {
+				for (j = 2; j >= 0 && r < outLen; j--) {
+					raw[r++] = (block >> 8 * j) & 0xff;
+				}
+			}
+		} while (r < outLen && *p);
+
+		if (r != outLen) {
+			res = GT_PARSER_ERROR;
 			goto cleanup;
 		}
-		inLen -= padSize;
 	}
 
-	outLen = 3 * (inLen - gc) / 4;
-
-	tmp = calloc(outLen, sizeof(unsigned char));
-	if (tmp == NULL) {
-		res = GT_OUT_OF_MEMORY;
-		goto cleanup;
-	}
-
-	initDecodeTable(alphabet, base64EncodeTable, 64);
-
-	p = encoded;
-	do {
-		int j;
-		unsigned long block = 0;
-		unsigned char count = 0;
-
-		while (*p) {
-			if (IS_BASE64(*p)) {
-				block <<= 6;
-				block |= alphabet[(unsigned char)*p];
-				p++;
-				if (++count == 4) break;
-			} else if (IS_GROUPING_CHAR(*p) || IS_SPACE(*p) || IS_EOL(*p)) {
-				p++;
-			} else {
-				/* Unknown character has occured. */
-				res = GT_INVALID_FORMAT;
-				goto cleanup;
-			}
-		}
-		if (count) {
-			for (j = 2; j >= 0 && r < outLen; j--) {
-				tmp[r++] = (block >> 8 * j) & 0xff;
-			}
-		}
-	} while (r < outLen && *p);
-
-	*data_len = r;
-	*data = tmp;
-	tmp = NULL;
+	*raw_len = outLen;
 
 	res = GT_OK;
 cleanup:
-	free(tmp);
 	return res;
 }
 
-int GT_Base16_decode(const char *encoded, unsigned char **data, size_t *data_len) {
+int GT_Base16_decode(const char *encoded, unsigned char *raw, size_t *raw_len) {
 	int res = GT_UNKNOWN_ERROR;
 	const char *p = NULL;
 	size_t gc = 0;
 	size_t inLen;
 	size_t outLen = 0;
-	unsigned char *tmp = NULL;
 	size_t i = 0;
 
-	if (encoded == NULL || data == NULL || data_len == NULL) {
+	if (encoded == NULL || raw_len == NULL) {
 		res = GT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
 	p = encoded;
 	while (*p) {
-		if (IS_GROUPING_CHAR(*p) || IS_SPACE(*p) || IS_EOL(*p)) gc++;
+		if (IS_KNOWN_REDUNDANT_CHAR(*p)) gc++;
+		else if (!IS_HEX(*p)) {
+			res = GT_INVALID_FORMAT;
+			goto cleanup;
+		}
 		p++;
 	}
 
@@ -158,45 +148,58 @@ int GT_Base16_decode(const char *encoded, unsigned char **data, size_t *data_len
 	/* Calculate output buffer size. */
 	outLen = (inLen - gc) / 2;
 
-	tmp = calloc(outLen, sizeof(unsigned char));
-	if (tmp == NULL) {
-		res = GT_OUT_OF_MEMORY;
-		goto cleanup;
-	}
-
-	p = encoded;
-	while (i < outLen) {
-		int highNibble = true;
-		while (*p) {
-			if (IS_HEX(*p)) {
-				if (highNibble) {
-					tmp[i] = HEXCHAR_TO_DEC(*p) << 4;
-					highNibble = false;
+	if (raw != NULL) {
+		p = encoded;
+		while (i < outLen) {
+			int highNibble = true;
+			while (*p) {
+				if (IS_HEX(*p)) {
+					if (highNibble) {
+						raw[i] = HEXCHAR_TO_DEC(*p) << 4;
+						highNibble = false;
+						p++;
+					} else {
+						raw[i] |= HEXCHAR_TO_DEC(*p);
+						p++;
+						break;
+					}
+				} else if (IS_KNOWN_REDUNDANT_CHAR(*p)) {
 					p++;
 				} else {
-					tmp[i] |= HEXCHAR_TO_DEC(*p);
-					p++;
-					break;
+					/* Unknown character has occured. */
+					res = GT_INVALID_FORMAT;
+					goto cleanup;
 				}
-			} else if (IS_GROUPING_CHAR(*p) || IS_SPACE(*p) || IS_EOL(*p)) {
-				p++;
-			} else {
-				/* Unknown character has occured. */
-				res = GT_INVALID_FORMAT;
-				goto cleanup;
 			}
+			i++;
 		}
-		i++;
+
+		if (i != outLen) {
+			res = GT_PARSER_ERROR;
+			goto cleanup;
+		}
 	}
 
-	*data_len = i;
-	*data = tmp;
-	tmp = NULL;
+	*raw_len = outLen;
 
 	res = GT_OK;
 cleanup:
-	free(tmp);
 	return res;
+}
+
+size_t GT_GetDecodedSize(GT_Encoding enc, const char *encoded) {
+	int res;
+	size_t size;
+
+	switch (enc) {
+		case GT_BASE_64:	res = GT_Base64_decode(encoded, NULL, &size); break;
+		case GT_BASE_16:	res = GT_Base16_decode(encoded, NULL, &size); break;
+		default:			res = GT_INVALID_ARGUMENT; break;
+	}
+	if (res != GT_OK) {
+		size = 0;
+	}
+	return size;
 }
 
 typedef struct {
@@ -205,11 +208,14 @@ typedef struct {
 } encoding_map;
 
 static const encoding_map enc_map[] = {
+	{ "2",		GT_BASE_2  },
+	{ "bin",	GT_BASE_2  },
+	{ "raw",	GT_BASE_2  },
+	{ "16",		GT_BASE_16 },
 	{ "hex",	GT_BASE_16 },
 	{ "base16",	GT_BASE_16 },
-	{ "16",		GT_BASE_16 },
-	{ "base64", GT_BASE_64 },
 	{ "64",		GT_BASE_64 },
+	{ "base64", GT_BASE_64 },
 	{ NULL,     GT_BASE_NA }
 };
 

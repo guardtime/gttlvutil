@@ -22,43 +22,52 @@
 #include <string.h>
 
 
-
-static size_t calculateEncBufLen(GT_Encoding enc, size_t bufSize) {
-	switch (enc) {
-		case GT_BASE_64:	return (4 * ((bufSize + 2) / 3)) + 1;
-		case GT_BASE_16:	return bufSize * 2;
-		default:		return bufSize;
-	}
-}
-
-size_t GT_fread(GT_Encoding enc, void * dstBuf,  size_t elementSize, size_t count, FILE *file) {
-	size_t dstLen = 0;
-	char *encoded = NULL;
+ int GT_fread(GT_Encoding enc, unsigned char **raw, size_t *size, FILE *file) {
+	int res = GT_UNKNOWN_ERROR;
 	unsigned char *decoded = NULL;
-	size_t decLen = 0;
+	unsigned char *readBuf = NULL;
+	size_t bufSize = 0;
+	size_t read = 0;
 
-	if (enc == GT_BASE_2) {
-		dstLen = fread(dstBuf, elementSize, count, file);
-	} else {
-		int res;
-		size_t read = 0;
-		size_t encBufSize = calculateEncBufLen(enc, count);
+	while (!feof(file)) {
+		unsigned char *tmp = NULL;
 
-		if ((encoded = calloc(encBufSize, sizeof(char))) == NULL) {
+		bufSize += GT_TLV_BUF_SIZE;
+		tmp = realloc(readBuf, bufSize);
+		if (tmp == NULL) {
 			fprintf(stderr, "Out of memory.\n");
+			res = GT_OUT_OF_MEMORY;
 			goto cleanup;
 		}
+		readBuf = tmp;
 
-		read = fread(encoded, sizeof(char), encBufSize, file);
-		if (read != strlen(encoded)) {
-			fprintf(stderr, "Inconsistent file read buffer.\n");
+		read += fread(readBuf + read, 1, bufSize - read, file);
+
+		if (ferror(file)) {
+			fprintf(stderr, "Failed to read input stream.\n");
+			res = GT_IO_ERROR;
 			goto cleanup;
 		}
+	}
 
-		if (read) {
+	if (read) {
+		if (enc == GT_BASE_2) {
+			*raw = readBuf;
+			readBuf = NULL;
+			*size = read;
+		} else {
+			char *encoded = (char *)readBuf;
+			size_t decLen = GT_GetDecodedSize(enc, encoded);
+
+			decoded = calloc(decLen, sizeof(char));
+			if (decoded == NULL) {
+				fprintf(stderr, "Out of memory.\n");
+				goto cleanup;
+			}
+
 			switch (enc) {
-				case GT_BASE_64: res = GT_Base64_decode(encoded, &decoded, &decLen); break;
-				case GT_BASE_16: res = GT_Base16_decode(encoded, &decoded, &decLen); break;
+				case GT_BASE_16: res = GT_Base16_decode(encoded, decoded, &decLen); break;
+				case GT_BASE_64: res = GT_Base64_decode(encoded, decoded, &decLen); break;
 				default:      res = GT_INVALID_ARGUMENT; break;
 			}
 			if (res != GT_OK) {
@@ -66,19 +75,18 @@ size_t GT_fread(GT_Encoding enc, void * dstBuf,  size_t elementSize, size_t coun
 				goto cleanup;
 			}
 
-			if (decLen > count) {
-				fprintf(stderr, "Decoded data buffer overflow.\n");
-				goto cleanup;
-			}
-			memcpy(dstBuf, decoded, decLen);
-			dstLen = decLen;
+			*raw = decoded;
+			decoded = NULL;
+			*size = decLen;
 		}
 	}
+
+	res = GT_OK;
 cleanup:
-	free(encoded);
+	free(readBuf);
 	free(decoded);
 
-	return dstLen;
+	return res;
 }
 
 long GT_fsize(FILE *file) {
