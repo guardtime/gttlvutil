@@ -70,9 +70,6 @@ sed -i -- "s|{GTTLVDUMP}|$TLVDUMP_CMD|g"     $EXEC_TEST_SUITES/*.test
 sed -i -- "s|{GTTLVUNDUMP}|$TLVUNDUMP_CMD|g" $EXEC_TEST_SUITES/*.test
 
 # Excecute automated tests.
-#shelltest -c $EXEC_TEST_SUITES -- -j1
-#--error-exitcode=<number> [default: 0]
-#Specifies an alternative exit code to return if Valgrind reported any errors in the run. When set to the default value (zero), the return value from Valgrind will always be the return value of the process being simulated. When set to a nonzero value, that value is returned instead, if Valgrind detects any errors. This is useful for using Valgrind as part of an automated test suite, since it makes it easy to detect test cases for which Valgrind has reported errors, just by inspecting return codes.
 valgrind --leak-check=full --trace-children=yes -- shelltest -c $EXEC_TEST_SUITES
 # Get execution exit code.
 EXIT_CODE=$?
