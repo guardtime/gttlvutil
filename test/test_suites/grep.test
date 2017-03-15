@@ -22,29 +22,29 @@
 # Test user interface.
 
 # Help
-GTTLVGREP -h
+TESTCASE: {GTTLVGREP} -h
 >>> /Usage:.*
 .*gttlvgrep.*/
 >>>= 0
 
 # Version
-GTTLVGREP -v | grep -f VERSION
+TESTCASE: {GTTLVGREP} -v | grep -f VERSION
 >>> /^gttlvutil.[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,4}$/
 >>>= 0
 
 # Invalid parameter.
-GTTLVGREP -V 
+TESTCASE: {GTTLVGREP} -V
 >>>
 >>>2
-GTTLVGREP: invalid option -- 'V'
+{GTTLVGREP}: invalid option -- 'V'
 Unknown parameter, try -h.
 >>>= 1
 
 ###############################################################################
 # Tlvgrep entire KSI signature from KSI signature file.
 
-GTTLVGREP 800 test/resources/sig/ok-sig-2014-08-01.1.ksig
->>> 
+TESTCASE: {GTTLVGREP} 800 test/resources/sig/ok-sig-2014-08-01.1.ksig
+>>>
 880501513029020453dc2a00042101e4fc0853cacb3c888ee4d2f843083acb1a822e60403a6af7167f70d0ca8eee61800b01220116312e322e3834302e3131333534392e312e312e3131008002010009c2d248f5a7ff7bcbe3d913d41a12ee0fb79939d2f97b1b3e5fe1d33e739232dee03a886392b3910f614ca65004eeadf938a5d3ba5fd44005f0174eab6dd7ecd761dfb44f152061c324fed8d051d24b0915418ef7d9b975bfe50c91aeea724a668862c12f3366fcb94304cc613e3dd40e8e34bb9c2349043413a1ed912dbe91031c6270af7f40aa935dc585db768a1c6be765656cd3070494316b92efb1597791471b59a8d84af74617b15e2bea82d4a8affd02754de0484a51e0a7deaefb4da1f82cda775f4f6265ae8dad3318a8f5a71d6f6454518389199da1364b7ed72fe655e42a22fa69069f68f2a8185e3b8132a4a448a5c0675c12985701da8083ac0304a42c61ad880203e0010453dc2a00020453dba70205210126280bd737f8290d22faadeb423593d20cdcfbe477ae88515a4b824c29ba5ee507210100000000000000000000000000000000000000000000000000000000000000000821019afd522442652cf617935158862b798bb1c16f6d44d49801d310cbf87ccfeb300721010000000000000000000000000000000000000000000000000000000000000000072101000000000000000000000000000000000000000000000000000000000000000007210100000000000000000000000000000000000000000000000000000000000000000721010000000000000000000000000000000000000000000000000000000000000000072101000000000000000000000000000000000000000000000000000000000000000007210100000000000000000000000000000000000000000000000000000000000000000821019226c437f3247c4e83b322d2646cd8a3cdaf4ae46e8f09670a0fbb303398cafa082101ba31982989fcedcb627235a024db5c9c5e6a2ff116a30fa8ae5944c18e67927f0821017bb9738374b278860c6e3b92580ee054cbb24013054242ff521ee203276edc0b0721010000000000000000000000000000000000000000000000000000000000000000072101000000000000000000000000000000000000000000000000000000000000000008210151eae045ed263731876c60ffd54d4195639ba9c170b65d8d442309d2fe7daf100721010000000000000000000000000000000000000000000000000000000000000000082101181edb056bf2c5044ee51b17ea0700788b8691b303d06fd39df85676579d495c0821016bb53c28d5fde0141a15997622e0ccfa92c43697cc52a6810f05109bd7f2ae4e08210161cc320bf6dcb8ab28f41456bf3d32472371c13c4fa097e743366c8f6f88b6fb072101000000000000000000000000000000000000000000000000000000000000000008210155efe91732c4877aade5b188197e714271de7e7c5bfa2cf039d7536c75d672d80821012c34704fde928ddffcb55f51ffc3aeaefcf2c70f12c3c464d4289852d9a4717308210100964a7ec2f75703a8925ff038e05b8f528a5f0df18715f61257d0f2a2450d8c0821016b303486ce63811eccf8fb5ee071e471c574e661fbcae366f8f4dc6acfc79c400821011c102667ac4fbc8d91b99ef4a7c78bee2448ff52aa6cd1d557595f23510e98ea082101fb79b43e0aa6bee9173839c051d3d0dac6f8efbd487331b5b86a214c42faa81c082101496fc0120d854e7534b992ab32ec3045b20d4bee1bfbe4564fd092ceafa08b72082101bb44fd36a5f3cdee7b5c6df3a6098a09e353335b6029f1477502588a7e37be008801005d020453dba70203010f0304036effdf03010305210111a700b0c8066c47ecba05ed37bc14dcadb238552d86c659342d1d7e87b8772d06010107230221010101010101010101010101010101010101010101010101010101010101010101880103d8020453dba70203010f0304036effdf052101d1f50535611dbec771f7a2f542efc663a6ad8c250c8e8f2c276ea9ba55d27da1060101072201010d031d03000733362d74657374000000000000000000000000000000000000000726010101022101ec97ee31cc71bdc84d9582a4f88c7e5ca443ced0e55a9e97168b0b688048a76e0723022101000000000000000000000000000000000000000000000000000000000000000007230221010000000000000000000000000000000000000000000000000000000000000000072302210100000000000000000000000000000000000000000000000000000000000000000823022101000000000000000000000000000000000000000000000000000000000000000007230221010000000000000000000000000000000000000000000000000000000000000000072302210100000000000000000000000000000000000000000000000000000000000000000722010106031d030005746573744100000000000000000000000000000000000000000007260101070221010000000000000000000000000000000000000000000000000000000000000000072302210100000000000000000000000000000000000000000000000000000000000000000723022101000000000000000000000000000000000000000000000000000000000000000007230221010000000000000000000000000000000000000000000000000000000000000000072302210100000000000000000000000000000000000000000000000000000000000000000723022101257093cf4228c5b39338709056f30527393f0523be369640ad41cdd5ba77e2240722010107031d030002475400000000000000000000000000000000000000000000000008260101070221011ca255e3aaabf1ae17b80c881a981976abc05348897479731ca6c9d89e411bd50723022101000000000000000000000000000000000000000000000000000000000000000007230221010000000000000000000000000000000000000000000000000000000000000000072302210100000000000000000000000000000000000000000000000000000000000000000823022101a7cd0fee349453d80578b58414f41c2623d3721c4f378df56b0e776b72dd144a072302210100000000000000000000000000000000000000000000000000000000000000000723022101921d2cbe4f0bf934c9c3ca6c4a69d1534de645ae287b0dc6c053db49ce15f2a60823022101d46e2fb2cac197634f28ca2c1721a6708b327d6a0f8eac31a8eeeaea947289a30723022101cba143a26e8cb6f1f572632270dfe6269d612d2564f215e86e1363796f4ae19d880100a4020453dba70203010f0521017a553d4ac99907258e1815ec3d156f07cc1b0ae8acbaf3ca2f0201bcf253573a060101072601010d0221010000000000000000000000000000000000000000000000000000000000000000072601012e02210122265578464114f13e452dbd0013afd95ed9189ff88f368fd69699b18cc4aaad0723022101641812ad8ded1024089a018e6fc00d92766f9a901d3deb302696e13f3ab07e48
 >>>= 0
 
@@ -52,14 +52,14 @@ GTTLVGREP 800 test/resources/sig/ok-sig-2014-08-01.1.ksig
 # Tlvgrep 2nd KSI signature from KSI signature file. There is only one signature
 # present.
 
-GTTLVGREP 800[1] test/resources/sig/ok-sig-2014-08-01.1.ksig
+TESTCASE: {GTTLVGREP} 800[1] test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 >>>= 0
 
 ###############################################################################
 # Tlvgrep 2nd aggregation hash chain 2nd right and left links.
 
-GTTLVGREP 800.801[1].07[1],08[1] test/resources/sig/ok-sig-2014-08-01.1.ksig
+TESTCASE: {GTTLVGREP} 800.801[1].07[1],08[1] test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 010101022101ec97ee31cc71bdc84d9582a4f88c7e5ca443ced0e55a9e97168b0b688048a76e
 0101070221011ca255e3aaabf1ae17b80c881a981976abc05348897479731ca6c9d89e411bd5
@@ -69,13 +69,13 @@ GTTLVGREP 800.801[1].07[1],08[1] test/resources/sig/ok-sig-2014-08-01.1.ksig
 # Tlvgrep 3rd aggregation hash chain 2nd left and 1st right links.
 # The right link is not present in hash chain.
 
-GTTLVGREP 800.801[2].07[1],08[0] test/resources/sig/ok-sig-2014-08-01.1.ksig
+TESTCASE: {GTTLVGREP} 800.801[2].07[1],08[0] test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 01012e02210122265578464114f13e452dbd0013afd95ed9189ff88f368fd69699b18cc4aaad
 >>>= 0
 
 # Change position link in the list
-GTTLVGREP 800.801[2].08[0],07[1] test/resources/sig/ok-sig-2014-08-01.1.ksig
+TESTCASE: {GTTLVGREP} 800.801[2].08[0],07[1] test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 01012e02210122265578464114f13e452dbd0013afd95ed9189ff88f368fd69699b18cc4aaad
 >>>= 0
@@ -84,14 +84,14 @@ GTTLVGREP 800.801[2].08[0],07[1] test/resources/sig/ok-sig-2014-08-01.1.ksig
 ###############################################################################
 # Tlvgrep 2nd aggregation hash chain 2nd left and 4th right links.
 
-GTTLVGREP 800.801[1].07[1],08[3] test/resources/sig/ok-sig-2014-08-01.1.ksig
+TESTCASE: {GTTLVGREP} 800.801[1].07[1],08[3] test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 010101022101ec97ee31cc71bdc84d9582a4f88c7e5ca443ced0e55a9e97168b0b688048a76e
 022101d46e2fb2cac197634f28ca2c1721a6708b327d6a0f8eac31a8eeeaea947289a3
 >>>= 0
 
 # Change position link in the list
-GTTLVGREP 800.801[1].08[3],07[1] test/resources/sig/ok-sig-2014-08-01.1.ksig
+TESTCASE: {GTTLVGREP} 800.801[1].08[3],07[1] test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 010101022101ec97ee31cc71bdc84d9582a4f88c7e5ca443ced0e55a9e97168b0b688048a76e
 022101d46e2fb2cac197634f28ca2c1721a6708b327d6a0f8eac31a8eeeaea947289a3
@@ -100,7 +100,7 @@ GTTLVGREP 800.801[1].08[3],07[1] test/resources/sig/ok-sig-2014-08-01.1.ksig
 ###############################################################################
 # Tlvgrep 3rd aggregation hash chain 2nd leftlink.
 
-GTTLVGREP 800.801[2].07[1] test/resources/sig/ok-sig-2014-08-01.1.ksig
+TESTCASE: {GTTLVGREP} 800.801[2].07[1] test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 01012e02210122265578464114f13e452dbd0013afd95ed9189ff88f368fd69699b18cc4aaad
 >>>= 0
@@ -109,14 +109,14 @@ GTTLVGREP 800.801[2].07[1] test/resources/sig/ok-sig-2014-08-01.1.ksig
 # Tlvgrep 3rd aggregation hash chain 5th left link.
 # The link is not present in hash chain.
 
-GTTLVGREP 800.801[2].07[5] test/resources/sig/ok-sig-2014-08-01.1.ksig
+TESTCASE: {GTTLVGREP} 800.801[2].07[5] test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 >>>= 0
 
 ###############################################################################
 # Tlvgrep calendar authentication record publication time.
 
-GTTLVGREP 800.805.10.02 test/resources/sig/ok-sig-2014-08-01.1.ksig
+TESTCASE: {GTTLVGREP} 800.805.10.02 test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 53dc2a00
 >>>= 0
@@ -125,7 +125,7 @@ GTTLVGREP 800.805.10.02 test/resources/sig/ok-sig-2014-08-01.1.ksig
 # Tlvgrep 10th certificate record.
 # Using '-H' option for skipping first 8 bytes.
 
-GTTLVGREP -H 8 702[9] test/resources/pub/ksi-publications.bin
+TESTCASE: {GTTLVGREP} -H 8 702[9] test/resources/pub/ksi-publications.bin
 >>>
 010423b6135c800202ba308202b63082019e020101300d06092a864886f70d01010b05003021310b300906035504031302483531123010060355040a1309477561726474696d65301e170d3134313230383039303334375a170d3137303130383039303334375a3021310b300906035504031302483531123010060355040a1309477561726474696d6530820122300d06092a864886f70d01010105000382010f003082010a0282010100bad30a213436eb9b200bffb5aea46611160f2c062cebc89ba9d470d5fd826f855028ee3b7ade7af3bb1aa70037aa97379e9361ae62e821e4b6d8451f04781b71137b2c21a6e57394cb28f663d61cc9f93b30dfd06b6d879b414c2eb3153e05472543d4e9c6048033a7976b9c36a62f68f1e88754cc735d0e5ce411345c64921f82114687a3ff19de6a55e0c4d205bc49b5e2c16f900834e16410c03f594e658c63cd161de60316bfafecde76d2bd7d18cc9373c62847c0df588d252c162b706d720d7bba81995a2c3f97adbeb7dd09fb5918160f47a30a1f6d6966c40c1c2873a68cf326432df06c1316104a7f113027155d98c366fe64efe2106a8ce08f4abb0203016ab9300d06092a864886f70d01010b05000382010100b9f3cad1afc720c47fc7c3684af1215699a54719ad64a27e205cde32b78773ef153b9a63df034fd91e6365f5bccf6649e301bac45d31b224151380ebeb9450d117969ee5404a19f7f3751f8bc21ac72f65604eb9aebaf2ac363eb5024280f9a4fd520c7ff42692b8c17f9793c6dd8be43a707bb6a7ad3aaf83c1b4956fda8479cbe2da8214c2d74a53fb8f8443cac33e6b1e89ab6f49af5d25dcf744cfdb211f8a8bd38ee67058a4f05026ebc34c9d6b7d649fafb243d1e8c3395786f4e7cdd23dba2ffb02855e6e67144cb3f9af2254626c7a97534fa878e1820ac6466fa60ddbb9cb161e5351daad1916c9baeddfffcb5834b6bb19bfe223a69fa4ef274577
 >>>= 0
@@ -134,7 +134,7 @@ GTTLVGREP -H 8 702[9] test/resources/pub/ksi-publications.bin
 # Tlvgrep all publication records publication time present in publications file.
 # Using '-H' option for skipping first 8 bytes.
 
-GTTLVGREP -H 8 -n 703.10.02 test/resources/pub/ksi-publications.bin
+TESTCASE: {GTTLVGREP} -H 8 -n 703.10.02 test/resources/pub/ksi-publications.bin
 >>>
 703.10.02: 53ed4d80
 703.10.02: 54162c00
@@ -160,20 +160,20 @@ GTTLVGREP -H 8 -n 703.10.02 test/resources/pub/ksi-publications.bin
 >>>= 0
 
 ###############################################################################
-# Tlvgrep 21st publication record publication time from publications file. 
+# Tlvgrep 21st publication record publication time from publications file.
 # Using '-H' option for skipping first 8 bytes.
 
-GTTLVGREP -H 8 703[20].10.02 test/resources/pub/ksi-publications.bin
+TESTCASE: {GTTLVGREP} -H 8 703[20].10.02 test/resources/pub/ksi-publications.bin
 >>>
 57102f00
 >>>= 0
 
 ###############################################################################
-# Tlvgrep 21st publication record publication time from publications file. 
+# Tlvgrep 21st publication record publication time from publications file.
 # Using '-n' option for printing TLV path.
 # Using '-H' option for skipping first 8 bytes.
 
-GTTLVGREP -H 8 -n 703[20].10.02 test/resources/pub/ksi-publications.bin
+TESTCASE: {GTTLVGREP} -H 8 -n 703[20].10.02 test/resources/pub/ksi-publications.bin
 >>>
 703.10.02: 57102f00
 >>>= 0
@@ -181,17 +181,17 @@ GTTLVGREP -H 8 -n 703[20].10.02 test/resources/pub/ksi-publications.bin
 ###############################################################################
 # Tlvgrep HMAC digest from extending PDU.
 
-GTTLVGREP 300.1f test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv
+TESTCASE: {GTTLVGREP} 300.1f test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv
 >>>
 01a4219f8f80f31a6640d9634c25035998282e057f21d12628584199f6c91c6532
 >>>= 0
 
 ###############################################################################
 # Tlvgrep HMAC digest from extending PDU.
-# Using '-i' option for printing TLV index in path. Should have no effect 
+# Using '-i' option for printing TLV index in path. Should have no effect
 # without '-n' option.
 
-GTTLVGREP 300.1f -i test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv
+TESTCASE: {GTTLVGREP} 300.1f -i test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv
 >>>
 01a4219f8f80f31a6640d9634c25035998282e057f21d12628584199f6c91c6532
 >>>= 0
@@ -201,7 +201,7 @@ GTTLVGREP 300.1f -i test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv
 # Using '-i' option for printing TLV index in path.
 # Using '-n' option for printing TLV path.
 
-GTTLVGREP 300.1f -in test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv
+TESTCASE: {GTTLVGREP} 300.1f -in test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv
 >>>
 300[0].1f[0]: 01a4219f8f80f31a6640d9634c25035998282e057f21d12628584199f6c91c6532
 >>>= 0
@@ -211,22 +211,22 @@ GTTLVGREP 300.1f -in test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv
 # Tlvgrep HMAC digest from extending PDU with '-i' option and save to file.
 # Compare resulting files.
 
-GTTLVGREP 300.1f test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv > test/tmp/tmp-digest1.txt
+TESTCASE: {GTTLVGREP} 300.1f test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv > {TEST_DIR}/tmp-digest1.txt
 >>>
 >>>= 0
 
-GTTLVGREP 300.1f -i test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv > test/tmp/tmp-digest2.txt
+TESTCASE: {GTTLVGREP} 300.1f -i test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv > {TEST_DIR}/tmp-digest2.txt
 >>>
 >>>= 0
 
-diff test/tmp/tmp-digest1.txt test/tmp/tmp-digest2.txt
+TESTUTIL: diff {TEST_DIR}/tmp-digest1.txt {TEST_DIR}/tmp-digest2.txt
 >>>
 >>>= 0
 
 ###############################################################################
 # Tlvgrep calendar hash chain publication time from KSI signature.
 
-GTTLVGREP 800.802.01 test/resources/sig/ok-sig-2014-08-01.1.ksig
+TESTCASE: {GTTLVGREP} 800.802.01 test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 53dc2a00
 >>>= 0
@@ -235,7 +235,7 @@ GTTLVGREP 800.802.01 test/resources/sig/ok-sig-2014-08-01.1.ksig
 # Tlvgrep calendar hash chain publication time from KSI signature.
 # Using '-e' option for printing TLV header.
 
-GTTLVGREP 800.802.01 -e test/resources/sig/ok-sig-2014-08-01.1.ksig
+TESTCASE: {GTTLVGREP} 800.802.01 -e test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 010453dc2a00
 >>>= 0
@@ -243,10 +243,10 @@ GTTLVGREP 800.802.01 -e test/resources/sig/ok-sig-2014-08-01.1.ksig
 ###############################################################################
 # Tlvgrep calendar hash chain publication time from KSI signature.
 # Using '-e' option for printing TLV header.
-# Using '-i' option for printing TLV index in path. Should have no effect 
+# Using '-i' option for printing TLV index in path. Should have no effect
 # without '-n' option.
 
-GTTLVGREP 800.802.01 -ei test/resources/sig/ok-sig-2014-08-01.1.ksig
+TESTCASE: {GTTLVGREP} 800.802.01 -ei test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 010453dc2a00
 >>>= 0
@@ -256,7 +256,7 @@ GTTLVGREP 800.802.01 -ei test/resources/sig/ok-sig-2014-08-01.1.ksig
 # Using '-i' option for printing TLV index in path.
 # Using '-n' option for printing TLV path.
 
-GTTLVGREP 800.802.01 -ein test/resources/sig/ok-sig-2014-08-01.1.ksig
+TESTCASE: {GTTLVGREP} 800.802.01 -ein test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 800[0].802[0].01[0]: 010453dc2a00
 >>>= 0
@@ -265,7 +265,7 @@ GTTLVGREP 800.802.01 -ein test/resources/sig/ok-sig-2014-08-01.1.ksig
 # Tlvgrep PDU v2 extend response header and payload.
 # BUGFIX: UTLV-43
 
-GTTLVGREP -n 0321.01,02 test/resources/tlv/V2ExtendResponse-oldHmac.tlv
+TESTCASE: {GTTLVGREP} -n 0321.01,02 test/resources/tlv/V2ExtendResponse-oldHmac.tlv
 >>>
 321.01: 0105616e6f6e0002045809ec2d03020133
 321.02: 0108748559a670a87d7d040005094e6f206572726f72001204580a0c92880201f60104580a0c580204580a0c53052101a35a16457ffedb1ac55864a73994f2c04f7d0381d920ab8d67e5b93a7f6bd1a008210160905195ec2898438015dc5663a6c3a03a0714657ffcca9caeae941fa7b878dd082101870f10075fb43b3de772d4eb79255c5080e59b7cd85a0339231be15c3b05f792072101c1067fce67a3d7183b88f34c8e103e453c64cfa0ac1fe0ee546c95a7d3fd0101072101bf3e09532550c66c761642c4bf8eab2463122dfe731decdaacf12fd4f70aeb17082101cad778e2673766ab93460927bb91edcc1bbcf32f0de4bbee567af4b80ef63a460821013b1585610581c00156a71dd5b8f559763bf68c251dc786c1b8b017975b3440a90821017b199bbcf2a73e115b47807ad6a520541646ce68351db5e6c9445181d31ad4f9082101c4c267820aa3002d2ee026c034b2ca04c72a60c7a5181fd51ac9d47fe38e90f608210104669d103457232832d3eb6be33cd59bda6a598225a03f10e802cc578ac93faa0821012d43f902b7231b1d923ec932f01eef2f6fb43a149b334a12fb4a47cc032f31a9082101ebc3ab1d86641581130ac3c7077b71b67bba4c915530e9fe49b98769fc8dcaeb082101496fc0120d854e7534b992ab32ec3045b20d4bee1bfbe4564fd092ceafa08b72082101bb44fd36a5f3cdee7b5c6df3a6098a09e353335b6029f1477502588a7e37be00
@@ -275,14 +275,14 @@ GTTLVGREP -n 0321.01,02 test/resources/tlv/V2ExtendResponse-oldHmac.tlv
 # Tlvgrep PDU v2 extend response header instance identifier.
 # BUGFIX: UTLV-43
 
-GTTLVGREP -n 0321.01.02 test/resources/tlv/V2ExtendResponse-oldHmac.tlv
+TESTCASE: {GTTLVGREP} -n 0321.01.02 test/resources/tlv/V2ExtendResponse-oldHmac.tlv
 >>>
 321.01.02: 5809ec2d
 >>>= 0
 
 ###############################################################################
 # Tlvgrep without any arguments.
-GTTLVGREP
+TESTCASE: {GTTLVGREP}
 >>>2 /Usage:.*
 .*gttlvgrep.*/
 >>>= 1

@@ -22,7 +22,7 @@
 # Load test description files with '-D'.
 # Use TLV file with dummy data. Set -p and -P flags for pretty print keys and values.
 
-GTTLVUNDUMP test/resources/tlv/dummy.txt | GTTLVDUMP -D test/resources/desc -pP
+TESTCASE: {GTTLVUNDUMP} test/resources/tlv/dummy.txt | {GTTLVDUMP} -D test/resources/desc -pP
 >>> /TLV\[0123\]:Dummy PDU:.*
   TLV\[1f\]: Dummy INT: 26/
 >>>= 0
@@ -32,17 +32,17 @@ GTTLVUNDUMP test/resources/tlv/dummy.txt | GTTLVDUMP -D test/resources/desc -pP
 # Use TLV file with dummy data and KSI TLV element.
 # Set -p and -P flags for pretty print keys and values.
 
-GTTLVUNDUMP test/resources/tlv/dummy_and_known_pdu.txt | GTTLVDUMP -D test/resources/desc -pP
+TESTCASE: {GTTLVUNDUMP} test/resources/tlv/dummy_and_known_pdu.txt | {GTTLVDUMP} -D test/resources/desc -pP
 >>> /TLV\[0200\]:.*
 TLV\[0123\]:Dummy PDU:.*
   TLV\[1f\]: Dummy INT: 26/
 >>>= 0
 
 ###############################################################################
-# Use TLV file with dummy data and KSI TLV element. 
+# Use TLV file with dummy data and KSI TLV element.
 # Set -p and -P flags for pretty print keys and values.
 
-GTTLVUNDUMP test/resources/tlv/dummy_and_known_pdu.txt | GTTLVDUMP -pP
+TESTCASE: {GTTLVUNDUMP} test/resources/tlv/dummy_and_known_pdu.txt | {GTTLVDUMP} -pP
 >>> /TLV\[0200\]:.*
 TLV\[0123\]:.*
   TLV\[1f\]: 1a/
@@ -54,7 +54,7 @@ TLV\[0123\]:.*
 # Set -i flag to ignore default descriptions.
 # Provide a modified description file with duplicate entries.
 
-GTTLVDUMP test/resources/sig/ok-sig-2014-08-01.1.ksig -D test/resources/desc/duplicate_in_file -pP
+TESTCASE: {GTTLVDUMP} test/resources/sig/ok-sig-2014-08-01.1.ksig -D test/resources/desc/duplicate_in_file -pP
 >>> /TLV\[0800\]:.*/
 >>>2 /.*duplicate_in_file\/ksi.desc:22 - duplicate description.*/
 >>>= 0
