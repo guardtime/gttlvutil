@@ -43,7 +43,7 @@ b loop
 
 
 # Replace the stderr regex in test file. Avoid replacment
-# if the test case is markes as TESTUTIL.
+# If there is a comment mark at the beginning of the line.
 # arg1		- regex for memory test.
 # arg2		- file to modify.
 function insert_memory_control() {
