@@ -15,7 +15,7 @@ bin_PROGRAMS=gttlvdump gttlvgrep gttlvwrap gttlvundump
 if USE_DATA_DIR
 if USE_PKG_DATA_DIR
   gttlvdumpdir=$(@DESC_DATA_DIR@)
-else 
+else
   gttlvdumpdir=$(DESC_DATA_DIR)
 endif #USE_PKG_DATA_DIR
   AM_CFLAGS+= -DDATA_DIR="\"$(gttlvdumpdir)\""
@@ -24,7 +24,48 @@ else
   AM_CFLAGS+= -DDATA_DIR="\"\""
 endif #USE_DATA_DIR
 
-gttlvdump_SOURCES=common.h tlvdump.c fast_tlv.h fast_tlv.c desc.h desc.c dir.c dir.h
-gttlvwrap_SOURCES=common.h tlvwrap.c
-gttlvgrep_SOURCES=tlvgrep.c fast_tlv.h fast_tlv.c common.h grep_tlv.h grep_tlv.c
-gttlvundump_SOURCES=tlvundump.c common.h fast_tlv.h fast_tlv.c hash.h hash.c hmac.h hmac_openssl.c grep_tlv.h grep_tlv.c
+gttlvdump_SOURCES=\
+	tlvdump.c \
+	common.h \
+	fast_tlv.h \
+	fast_tlv.c \
+	desc.h \
+	desc.c \
+	dir.c \
+	dir.h \
+	encoding.c \
+	encoding.h \
+	file_io.c \
+	file_io.h
+
+gttlvwrap_SOURCES=\
+	tlvwrap.c \
+	common.h \
+	encoding.c \
+	encoding.h \
+	file_io.c \
+	file_io.h
+
+gttlvgrep_SOURCES=\
+	tlvgrep.c \
+	common.h \
+	fast_tlv.h \
+	fast_tlv.c \
+	grep_tlv.h \
+	grep_tlv.c \
+	encoding.c \
+	encoding.h \
+	file_io.c \
+	file_io.h
+
+gttlvundump_SOURCES=\
+	tlvundump.c \
+	common.h \
+	fast_tlv.h \
+	fast_tlv.c \
+	hash.h \
+	hash.c \
+	hmac.h \
+	hmac_openssl.c \
+	grep_tlv.h \
+	grep_tlv.c
