@@ -29,6 +29,11 @@
 	size_t bufSize = 0;
 	size_t read = 0;
 
+	if (raw == NULL || size == NULL || file == NULL) {
+		res = GT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
 	while (!feof(file)) {
 		unsigned char *tmp = NULL;
 
@@ -90,8 +95,12 @@ cleanup:
 }
 
 long GT_fsize(FILE *file) {
-	long curPos = ftell(file);
+	long curPos;
 	long endPos;
+
+	if (file == NULL) return -1L;
+
+	curPos = ftell(file);
 	if (fseek(file, 0L, SEEK_END)) return -1L;
 	endPos = ftell(file);
 	if (fseek(file, curPos, SEEK_SET)) return -1L;
