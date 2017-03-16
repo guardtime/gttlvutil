@@ -23,6 +23,7 @@
 
 #include "common.h"
 #include "fast_tlv.h"
+#include "encoding.h"
 
 typedef struct pattern_st GT_GrepPattern;
 
@@ -44,6 +45,7 @@ typedef struct {
 	bool print_path_index;
 	unsigned trunc_tlv_tag;
 	size_t trunc_len;
+	GT_Encoding in_enc;
 } GT_GrepTlvConf;
 
 void GT_GrepTlv_initConf(GT_GrepTlvConf *conf);

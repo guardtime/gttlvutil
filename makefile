@@ -59,17 +59,23 @@ DUMP_OBJ = \
 	$(OBJ_DIR)\getopt.obj \
 	$(OBJ_DIR)\fast_tlv.obj \
 	$(OBJ_DIR)\desc.obj \
-	$(OBJ_DIR)\dir.obj
+	$(OBJ_DIR)\dir.obj \
+	$(OBJ_DIR)\encoding.obj \
+	$(OBJ_DIR)\file_io.obj
 
 WRAP_OBJ = \
 	$(OBJ_DIR)\tlvwrap.obj \
-	$(OBJ_DIR)\getopt.obj
+	$(OBJ_DIR)\getopt.obj \
+	$(OBJ_DIR)\encoding.obj \
+	$(OBJ_DIR)\file_io.obj
 
 GREP_OBJ = \
 	$(OBJ_DIR)\tlvgrep.obj \
 	$(OBJ_DIR)\grep_tlv.obj \
 	$(OBJ_DIR)\fast_tlv.obj \
-	$(OBJ_DIR)\getopt.obj
+	$(OBJ_DIR)\getopt.obj \
+	$(OBJ_DIR)\encoding.obj \
+	$(OBJ_DIR)\file_io.obj
 
 UNDUMP_OBJ = \
 	$(OBJ_DIR)\tlvundump.obj \
