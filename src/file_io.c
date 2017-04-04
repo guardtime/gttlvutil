@@ -26,7 +26,7 @@
 	int res = GT_UNKNOWN_ERROR;
 	unsigned char *decoded = NULL;
 	unsigned char *readBuf = NULL;
-	size_t bufSize = 0;
+	size_t bufSize = 1; /* Extra byte for string termination. */
 	size_t read = 0;
 
 	if (raw == NULL || size == NULL || file == NULL) {
@@ -62,8 +62,11 @@
 			*size = read;
 		} else {
 			char *encoded = (char *)readBuf;
-			size_t decLen = GT_GetDecodedSize(enc, encoded);
+			size_t decLen = 0;
 
+			encoded[read] = '\0';
+
+			decLen = GT_GetDecodedSize(enc, encoded);
 			decoded = calloc(decLen, sizeof(char));
 			if (decoded == NULL) {
 				fprintf(stderr, "Out of memory.\n");
@@ -71,9 +74,9 @@
 			}
 
 			switch (enc) {
-				case GT_BASE_16: res = GT_Base16_decode(encoded, decoded, &decLen); break;
-				case GT_BASE_64: res = GT_Base64_decode(encoded, decoded, &decLen); break;
-				default:      res = GT_INVALID_ARGUMENT; break;
+				case GT_BASE_16:	res = GT_Base16_decode(encoded, decoded, &decLen); break;
+				case GT_BASE_64:	res = GT_Base64_decode(encoded, decoded, &decLen); break;
+				default:			res = GT_INVALID_ARGUMENT; break;
 			}
 			if (res != GT_OK) {
 				fprintf(stderr, "Unable to decode string.\n");
