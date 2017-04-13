@@ -1,5 +1,5 @@
 * IMPROVEMENT: Support for running memory tests.
-* IMPROVEMENT: Support for base-16 and base-64 endoded TLV data.
+* IMPROVEMENT: New parameter -E to support base-16 and base-64 encoded input data.
 * IMPROVEMENT: Code cleanup.
 * BUGFIX: Setting gttlvgrep stdin into binary mode under windows.
 * BUGFIX: Putting temp buffer arrays into heap.
