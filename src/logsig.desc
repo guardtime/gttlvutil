@@ -1,5 +1,7 @@
 4c4f475349473131 @MAGIC	Log signature version 11 magic bytes
 4c4f475349473132 @MAGIC Log signature version 12 magic bytes
+4c4f473132534947 @MAGIC Log signature version 12 separate signatures file magic bytes
+4c4f473132424c4b @MAGIC Log signature version 12 separate blocks file magic bytes
 0901		*			Header record of the log block
 0901.01		INT			Hash algorithm used for aggregation
 0901.02		RAW			Random seed for the blinding mask
@@ -8,6 +10,9 @@
 0903		IMPRINT		Intermediate aggregate hash value
 0904		*			Signature data for a log block
 0904.01		INT			Record count
+0904.02		*			Unsigned block marker
+0904.02.01	IMPRINT		Root hash value of a unsigned block
+0904.02.02	STR			Error message for signing failure
 0905		*			KSI signature on the log block root hash value
 0906		RAW			RFC 3161 signature on the log block root hash value
 0907		*			Hash chain for one log record
@@ -18,4 +23,8 @@
 0907.03		*			Hash step where input data is right child
 0907.03.01	INT			Level correction value
 0907.03.02	IMPRINT		Sibling hash value
-
+0911		*			Header record of the log meta record
+0911.01		INT			Meta reocrd index
+0911.02		*			Meta record pair
+0911.02.01	STR			Meta-data key
+0911.02.02	RAW			Meta-data value
