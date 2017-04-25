@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
 				}
 				break;
 			case 'i':
-				conf.in_file = calloc(strlen(optarg), sizeof(char));
+				conf.in_file = calloc(strlen(optarg) + 1, sizeof(char));
 				if (!conf.in_file) {
 					res = GT_OUT_OF_MEMORY;
 					goto cleanup;
