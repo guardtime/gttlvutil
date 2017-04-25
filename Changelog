@@ -1,3 +1,4 @@
+* BUGFIX: Corrected gttlvwrap heap corruption under windows when RTL is MDd or MTd.
 * IMPROVEMENT: Support for running memory tests.
 * IMPROVEMENT: New parameter -E to support base-16 and base-64 encoded input data.
 * IMPROVEMENT: Code cleanup.
