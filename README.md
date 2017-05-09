@@ -42,7 +42,7 @@ sudo yum install gttlvutil
 
 ### From Source Code
 
-If the latest version is needed, or the package is not available for the platform, check out source code from Github and build it using `gcc` or VS.
+If the latest version is needed, or the package is not available for the platform, check out source code from Github and build it using `gcc` or Microsoft Visual Studio.
 
 To build the `gttlvutil`, a cryptography provider has to be installed in the system. The following providers are supported:
 * OpenSSL (recommended)

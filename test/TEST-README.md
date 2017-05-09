@@ -2,7 +2,7 @@
 
 This document describes how to configure and run `gttlvutil` automated test. Also the dependencies and brief overview of files related to the tests will be described.
 
-Tests can be run with `gttlvutil` package installed on the machine, or within the project directory. On Unix platform executables are located in `src``directory. If the executables are present in the project directory then the tests are run with the corresponding binaries, otherwise the installed binaries are used.
+Tests can be run with `gttlvutil` package installed on the machine, or within the project directory. On Unix platform executables are located in `src` directory. If the executables are present in the project directory then the tests are run with the corresponding binaries, otherwise the installed binaries are used.
 
 Unit tests are using default description files. In case the project has been built without explicit setup of `--with-data-dir` option:
 - via `rebuild.sh` script, then the files are loaded from `src` directory.
