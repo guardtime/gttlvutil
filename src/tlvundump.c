@@ -105,8 +105,7 @@ static int hmacGetScriptTokens(char *args, size_t aLen, char *alg, char *key, ch
 
 	/* Make a temporary copy of the func script for further manipulation. */
 	tmp = malloc(aLen + 1);
-	strncpy(tmp, args, aLen);
-	tmp[aLen] = '\0';
+	GT_strncpy(tmp, args, aLen + 1);
 
 	/* Break the arguments up into tokens. */
 

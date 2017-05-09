@@ -66,9 +66,9 @@ int DIRECTORY_open(const char *dir_name, DIRECTORY **dir) {
 #ifdef _WIN32
 	dir_name_len = strlen(dir_name);
 	if (dir_name[dir_name_len - 1] == '\\'  || dir_name[dir_name_len - 1] == '/')
-		snprintf(path, sizeof(path), "%s*", dir_name);
+		GT_snprintf(path, sizeof(path), "%s*", dir_name);
 	else
-		snprintf(path, sizeof(path), "%s\\*", dir_name);
+		GT_snprintf(path, sizeof(path), "%s\\*", dir_name);
 
 	tmp_handle = FindFirstFile(path, &tmp->currentEntity.entity);
 	if(tmp_handle == INVALID_HANDLE_VALUE) {
@@ -142,8 +142,8 @@ static const char *path_removeFile(const char *origPath, char *buf, size_t buf_l
 	path_len = beginingOfFile - origPath;
 	if (path_len + 1 > buf_len) return NULL;
 
-	ret = strncpy(buf, origPath, path_len + 1);
-	buf[path_len + 1] = 0;
+	ret = GT_strncpy(buf, origPath, path_len + 1);
+
 	return  ret;
 }
 
@@ -154,8 +154,7 @@ static char *directory_getMyFullPath(char *buf, size_t buf_len, char *arg0) {
 	count = GetModuleFileName(NULL, tmp, MAX_PATH);
 	if (count == 0) return NULL;
 
-	strncpy(buf, tmp, buf_len);
-	buf[buf_len - 1] = '\0';
+	GT_strncpy(buf, tmp, buf_len);
 
 	return buf;
 }
@@ -213,7 +212,7 @@ int DIRECTORY_getMyPath(char *path, size_t path_len, char *arg0) {
 		res = GT_INVALID_FORMAT;
 	}
 
-	strncpy(path, tmp, path_len);
+	GT_strncpy(path, tmp, path_len);
 	path[path_len - 1] = '\0';
 	res = GT_OK;
 

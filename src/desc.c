@@ -5,9 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef _WIN32
-#	define strdup(s) _strdup(s)
-#endif
+#include "common.h"
 
 void desc_cleanup(struct desc_st *desc) {
 	if (desc != NULL) {
@@ -139,8 +137,11 @@ static int store_nested(struct desc_st *map_in, const char *key, int type, const
 			res = desc_get(map_in, tag, true, &map, &isNew);
 			if (res != GT_OK) goto cleanup;
 		}
-		map->val = strdup(val);
+
 		map->type = type;
+		res = GT_strdup(val, &map->val);
+		if (res != GT_OK) goto cleanup;
+
 	}
 
 	res = GT_OK;
@@ -175,7 +176,7 @@ static int store_magic(struct desc_st *map_in, const char *key, const char *desc
 
 	if (map_in == NULL || key == NULL) {
 		res = GT_INVALID_ARGUMENT;
-		goto cleanup;	
+		goto cleanup;
 	}
 
 	if (map_in->magics == NULL) {
@@ -195,7 +196,9 @@ static int store_magic(struct desc_st *map_in, const char *key, const char *desc
 	magic = map_in->magics + map_in->magics_len++;
 
 	memset(magic, 0, sizeof(struct file_magic_st));
-	magic->desc = strdup(desc); 
+
+	res = GT_strdup(desc, &magic->desc);
+	if (res != GT_OK) goto cleanup;
 
 	/* Assume the key is represented as hex. */
 	octet = 0;
@@ -275,8 +278,10 @@ static int store_tag(struct desc_st *map_in, const char *key, int type, char *va
 			res = desc_get(map_in, tag, true, &map, &isNew);
 			if (res != GT_OK) goto cleanup;
 		}
-		map->val = strdup(val);
+
 		map->type = type;
+		res = GT_strdup(val, &map->val);
+		if (res != GT_OK) goto cleanup;
 	}
 
 	res = GT_OK;

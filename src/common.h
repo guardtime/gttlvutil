@@ -5,12 +5,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <stddef.h>
-
-#ifdef _WIN32
-#	ifndef snprintf
-#		define snprintf _snprintf
-#	endif
-#endif
+#include "compatibility.h"
 
 #define GT_TLV_MASK_TLV16 0x80u
 #define GT_TLV_MASK_NON_CRITICAL 0x40u
