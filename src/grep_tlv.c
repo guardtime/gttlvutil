@@ -227,7 +227,7 @@ int GT_grepTlv(GT_GrepTlvConf *conf, struct pattern_st *pattern, char *prefix, G
 		}
 
 		/* Create the prefix string. */
-		snprintf(pre, sizeof(pre), "%s%s%02x",
+		GT_snprintf(pre, sizeof(pre), "%s%s%02x",
 				(prefix ? prefix : ""),
 				((prefix && *prefix) ? "." : ""),
 				t->tag
@@ -235,7 +235,7 @@ int GT_grepTlv(GT_GrepTlvConf *conf, struct pattern_st *pattern, char *prefix, G
 
 		/* Add the index value, if requested. */
 		if (conf->print_path_index) {
-			snprintf(pre + strlen(pre), sizeof(pre) - strlen(pre), "[%llu]", (unsigned long long) map->element_count[t->tag] - 1);
+			GT_snprintf(pre + strlen(pre), sizeof(pre) - strlen(pre), "[%llu]", (unsigned long long) map->element_count[t->tag] - 1);
 		}
 
 		if (pt->match == NULL) {

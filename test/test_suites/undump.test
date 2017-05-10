@@ -141,6 +141,18 @@ TESTCASE: echo "TLV[1]:2345q67890" | {GTTLVUNDUMP}
 <stdin>:1 - Unexpected character: q.
 >>>= 8
 
+TESTCASE: echo -n -e 'TLV[1]:234567890\x00' | {GTTLVUNDUMP}
+>>>2 /(.*Hex string contains unknown character.*)(.*0x00.*)/
+>>>= 8
+
+TESTCASE: echo -n -e 'TLV[1]:234567890\x0a' | {GTTLVUNDUMP}
+>>>2 /(.*Hex string contains unknown character.*)(.*0x0a.*)/
+>>>= 8
+
+TESTCASE: echo -n -e 'TLV[1]:234567890z' | {GTTLVUNDUMP}
+>>>2 /(.*Hex string contains unknown character.*)(.*z.*)/
+>>>= 8
+
 ###############################################################################
 # Verify that TLV hex values are handled in byte-precision.
 

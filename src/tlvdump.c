@@ -11,6 +11,7 @@
 #	include <fcntl.h>
 #endif
 
+#include "common.h"
 #include "fast_tlv.h"
 #include "desc.h"
 #include "dir.h"
@@ -61,7 +62,7 @@ void setDescriptionFileDir(const char *dir) {
 		return;
 	}
 
-	strncpy(descriptionDir, dir, sizeof(descriptionDir));
+	GT_strncpy(descriptionDir, dir, sizeof(descriptionDir));
 	descriptionDir[sizeof(descriptionDir) - 1] = '\0';
 }
 
@@ -266,11 +267,11 @@ static void print_time(unsigned char *buf, size_t len, int prefix_len, int type,
 		switch (type) {
 			case TLV_MTIME:
 				seconds = (time_t) t / 1000;
-				snprintf(fract, sizeof(fract), "%03llu", (unsigned long long)(t % 1000));
+				GT_snprintf(fract, sizeof(fract), "%03llu", (unsigned long long)(t % 1000));
 				break;
 			case TLV_UTIME:
 				seconds = (time_t) t / 1000 / 1000;
-				snprintf(fract, sizeof(fract), "%06llu", (unsigned long long)(t % (1000 * 1000)));
+				GT_snprintf(fract, sizeof(fract), "%06llu", (unsigned long long)(t % (1000 * 1000)));
 				break;
 			case TLV_TIME:
 			default:
@@ -286,13 +287,13 @@ static void print_time(unsigned char *buf, size_t len, int prefix_len, int type,
 			tm_info = (conf->timezone) ? localtime(&seconds) : gmtime(&seconds);
 			len = strftime(tmp, sizeof(tmp), "%Y-%m-%d %H:%M:%S", tm_info);
 			if (fract[0] != '\0') {
-				len += snprintf(tmp + len, sizeof(tmp) - len, ".%s", fract);
+				len += GT_snprintf(tmp + len, sizeof(tmp) - len, ".%s", fract);
 			}
 
 			if (conf->timezone) {
 				strftime(tmp + len, sizeof(tmp) - len, " %Z", tm_info);
 			} else {
-				snprintf(tmp + len, sizeof(tmp) - len, " UTC+00");
+				GT_snprintf(tmp + len, sizeof(tmp) - len, " UTC+00");
 			}
 			printf("(%llu) %s\n", (unsigned long long)t, tmp);
 		}
@@ -486,7 +487,7 @@ static int read_desc_dir(struct desc_st *desc, const char *dir_name, bool overri
 		if (len > 5 && !strcmp(name + len - 5, ".desc")) {
 			char buf[PATH_SIZE];
 
-			snprintf(buf, sizeof(buf), "%s/%s", dir_name, name);
+			GT_snprintf(buf, sizeof(buf), "%s/%s", dir_name, name);
 
 			res = desc_add_file(desc, buf, override);
 			if (res != GT_OK) {

@@ -61,6 +61,7 @@ DUMP_OBJ = \
 	$(OBJ_DIR)\desc.obj \
 	$(OBJ_DIR)\dir.obj \
 	$(OBJ_DIR)\encoding.obj \
+	$(OBJ_DIR)\compatibility.obj \
 	$(OBJ_DIR)\file_io.obj
 
 WRAP_OBJ = \
@@ -75,6 +76,7 @@ GREP_OBJ = \
 	$(OBJ_DIR)\fast_tlv.obj \
 	$(OBJ_DIR)\getopt.obj \
 	$(OBJ_DIR)\encoding.obj \
+	$(OBJ_DIR)\compatibility.obj \
 	$(OBJ_DIR)\file_io.obj
 
 UNDUMP_OBJ = \
@@ -82,6 +84,7 @@ UNDUMP_OBJ = \
 	$(OBJ_DIR)\getopt.obj \
 	$(OBJ_DIR)\fast_tlv.obj \
 	$(OBJ_DIR)\hash.obj \
+	$(OBJ_DIR)\compatibility.obj \
 	$(OBJ_DIR)\grep_tlv.obj
 
 #Selecting hash provider

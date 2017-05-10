@@ -105,8 +105,7 @@ static int hmacGetScriptTokens(char *args, size_t aLen, char *alg, char *key, ch
 
 	/* Make a temporary copy of the func script for further manipulation. */
 	tmp = malloc(aLen + 1);
-	strncpy(tmp, args, aLen);
-	tmp[aLen] = '\0';
+	GT_strncpy(tmp, args, aLen + 1);
 
 	/* Break the arguments up into tokens. */
 
@@ -543,7 +542,11 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 					tlv->dat[tlv->dat_len++] |= HEXCHAR_TO_DEC(c);
 					state = ST_DATA_HEX_1;
 				} else {
-					error(GT_PARSER_ERROR, "Hex strings must contain even number of characters.");
+						char message[256];
+						if (c == EOF) GT_snprintf(message, sizeof(message), "Hex strings must contain even number of characters.");
+						else if (isprint(c)) GT_snprintf(message, sizeof(message), "Hex string contains unknown character '%c'.", c);
+						else GT_snprintf(message, sizeof(message), "Hex string contains unknown character (hex value) 0x%02x.", c);
+						error(GT_PARSER_ERROR, message);
 				}
 				break;
 
