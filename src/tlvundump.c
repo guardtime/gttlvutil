@@ -542,7 +542,16 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 					tlv->dat[tlv->dat_len++] |= HEXCHAR_TO_DEC(c);
 					state = ST_DATA_HEX_1;
 				} else {
-					error(GT_PARSER_ERROR, "Hex strings must contain even number of characters.");
+					if (!IS_HEX(c) && !iscntrl(c) && !isspace(c)) {
+						char message[64];
+						if (c == EOF) GT_snprintf(message, sizeof(message), "Hex strings must contain even number of characters.");
+						else if (isprint(c)) GT_snprintf(message, sizeof(message), "Hex string contains unknown character '%c'.", c);
+						else GT_snprintf(message, sizeof(message), "Hex string contains unknown character 0x%0x.", c);
+
+						error(GT_PARSER_ERROR, message);
+					} else {
+						error(GT_PARSER_ERROR, "Undefined behaviour.");
+					}
 				}
 				break;
 
