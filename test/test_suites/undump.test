@@ -132,13 +132,13 @@ TESTCASE: echo "TLV[1]234567890" | {GTTLVUNDUMP}
 TESTCASE: echo "TLV[1]:q234567890" | {GTTLVUNDUMP}
 >>>
 >>>2
-<stdin>:1 - Unexpected character: q.
+<stdin>:1 - Unexpected character: 'q'.
 >>>= 8
 
 TESTCASE: echo "TLV[1]:2345q67890" | {GTTLVUNDUMP}
 >>>
 >>>2
-<stdin>:1 - Unexpected character: q.
+<stdin>:1 - Unexpected character: 'q'.
 >>>= 8
 
 TESTCASE: echo -n -e 'TLV[1]:234567890\x00' | {GTTLVUNDUMP}
