@@ -544,8 +544,8 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 				} else {
 						char message[256];
 						if (c == EOF) GT_snprintf(message, sizeof(message), "Hex strings must contain even number of characters.");
-						else if (isprint(c)) GT_snprintf(message, sizeof(message), "Hex string contains unknown character '%c'.", c);
-						else GT_snprintf(message, sizeof(message), "Hex string contains unknown character (hex value) 0x%02x.", c);
+						else if (isprint(c)) GT_snprintf(message, sizeof(message), "Hex string contains unknown character: '%c'.", c);
+						else GT_snprintf(message, sizeof(message), "Hex string contains unknown character (hex value): 0x%02x.", c);
 						error(GT_PARSER_ERROR, message);
 				}
 				break;
@@ -598,7 +598,7 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 				} else {
 					char buf[40];
 					if (isprint(c)) {
-						sprintf(buf, "Unexpected character: %c.", (unsigned char)c);
+						sprintf(buf, "Unexpected character: '%c'.", (unsigned char)c);
 					} else {
 						sprintf(buf, "Unexpected character (hex value): %02x.", (unsigned char)c);
 					}
