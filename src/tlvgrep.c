@@ -2,36 +2,61 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
+#	include <io.h>
+#	include <fcntl.h>
+#endif
 
-#include "common.h"
 #include "fast_tlv.h"
 #include "grep_tlv.h"
+#include "file_io.h"
 
 
 static int grepFile(GT_GrepTlvConf *conf, FILE *f) {
 	int res = GT_OK;
 	GT_FTLV t;
-	size_t len;
-	unsigned char buf[0xffff + 4];
-	int idx[IDX_MAP_LEN];
+	unsigned char *buf = NULL;
+	GT_ElementCounter *idx = NULL;
+	size_t len = 0;
 
-	memset(idx, 0, sizeof(idx));
+	idx = calloc(sizeof(GT_ElementCounter), 1);
+	if (idx == NULL) {
+		res = GT_OUT_OF_MEMORY;
+		goto cleanup;
+	}
 
-	while (!feof(f)) {
-		res = GT_FTLV_fileRead(f, buf, sizeof(buf), &len, &t);
-		if (len == 0) {
-			/* Reached the end of file. */
-			res = GT_OK;
-			break;
-		}
+	if ((res = GT_fread(conf->in_enc, &buf, &len, f)) != GT_OK) goto cleanup;
+
+	/* Handle binary TLV data. */
+	while (len) {
+		size_t consumed;
+
+		res = GT_FTLV_memRead(buf, len, &t);
+		consumed = t.hdr_len + t.dat_len;
+		len -= consumed;
 		if (res != GT_OK) {
-			fprintf(stderr, "%s: Failed to parse TLV.\n", conf->file_name);
-			return res;
+			if (consumed == 0) {
+				if (len == 0) break;
+				continue;
+			}
+			fprintf(stderr, "%s: Failed to parse %llu bytes.\n", conf->file_name, (unsigned long long) len);
+			res = GT_INVALID_FORMAT;
+			goto cleanup;
 		}
 
 		res = GT_grepTlv(conf, conf->pattern, NULL, idx, buf, &t, NULL, NULL);
-		if (res != GT_OK) return res;
+		if (res != GT_OK) goto cleanup;
+
+		memmove(buf, buf + consumed, len);
 	}
+
+	res = GT_OK;
+
+cleanup:
+
+	free(buf);
+	free(idx);
+
 	return res;
 }
 
@@ -57,6 +82,7 @@ void printHelp(FILE *f) {
 			" -n       Print path of TLV type in human-readable format (has no effect with\n"
 			"          -r).\n"
 			" -i       Print index of the TLV element (has no effect without -n).\n"
+			" -E enc   Input data encoding. Available: 'bin', 'hex', 'base64'.\n"
 			" -v       Print TLV utility version.\n"
 			"\n");
 
@@ -69,16 +95,16 @@ int main(int argc, char **argv) {
 	FILE *f = NULL;
 	int c;
 
+	/* Default conf. */
+	GT_GrepTlv_initConf(&conf);
+
 	if (argc < 2) {
 		printHelp(stderr);
 		res = GT_INVALID_CMD_PARAM;
 		goto cleanup;
 	}
 
-	/* Default conf. */
-	GT_GrepTlv_initConf(&conf);
-
-	while ((c = getopt(argc, argv, "hH:oenriT:L:v")) != -1) {
+	while ((c = getopt(argc, argv, "hH:oenriT:L:vE:")) != -1) {
 		switch(c) {
 			case 'H':
 				conf.magic_len = atoi(optarg);
@@ -95,11 +121,19 @@ int main(int argc, char **argv) {
 			case 'r':
 				conf.print_raw = true;
 				conf.print_path = false;
+				setBinaryMode(stdout);
 				break;
 			case 'i':
 				conf.print_path_index = true;
 				break;
-
+			case 'E':
+				conf.in_enc = GT_ParseEncoding(optarg);
+				if (conf.in_enc == GT_BASE_NA) {
+					fprintf(stderr, "Unknown input data encoding: '%s'\n", optarg);
+					res = GT_INVALID_CMD_PARAM;
+					goto cleanup;
+				}
+				break;
 			case 'h':
 				printHelp(stdout);
 				res = GT_OK;
@@ -121,9 +155,13 @@ int main(int argc, char **argv) {
 		goto cleanup;
 	}
 
-	conf.pattern = argv[optind++];
+	res = GT_GrepPattern_parse(argv[optind++], &conf.pattern);
+	if (res != GT_OK) {
+		goto cleanup;
+	}
 
 	if (optind >= argc) {
+		if (conf.in_enc == GT_BASE_2) setBinaryMode(stdin);
 		f = stdin;
 		conf.file_name = "<stdin>";
 		res = grepFile(&conf, f);
@@ -156,6 +194,9 @@ int main(int argc, char **argv) {
 	res = GT_OK;
 
 cleanup:
+
+	GT_GrepPattern_free(conf.pattern);
+
 	if (f != NULL && f != stdin) fclose(f);
 
 	return res;

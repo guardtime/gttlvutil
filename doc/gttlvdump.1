@@ -43,8 +43,8 @@ Some parameters depend on known TLV elements (\fB-s\fR, \fB-a\fR, \fB-P\fR, \fB-
 Print help text.
 .\"
 .TP
-\fB-H \fIint\fR
-Ignore specified number of bytes in the beginning of the input while TLV parsing. The skipped part is printed in hex followed by the decoded TLV.
+\fB-H \fIlen\fR
+Skip the number of bytes in the beginning of the input. The skipped bytes are printed in hex followed by the decoded TLVs. Additionally the value "auto" (\fB -H auto\fR) can be used to automatically detect known magic bytes. If the automatic detection is not successful the header length is set to zero (same as \fB-H 0\fR) and no bytes are skipped.
 .\"
 .TP
 \fB-d \fIint\fR
@@ -106,15 +106,7 @@ Output format of binary value. Available: 'hex', 'base64'. If \fB-e\fR is not se
 .\"
 .TP
 \fB-D \fIpth\fR
-Set TLV description files directory. Description files will be loaded additionally to the default files. Only files with \fI*.desc\fR extention are loaded.
-.\"
-.TP
-\fB-o\fR
-Override default TLV description files. If set, the default descriptions will be overridden by user descriptions in case of a duplicate entry. Option is valid with \fB-D\fR and has no effect with \fB-i\fR.
-.\"
-.TP
-\fB-i\fR
-Ignore default TLV description files. If set, only description files provided with \fB-D\fR will be loaded.
+Set TLV description files directory. Only files with \fI*.desc\fR extention are loaded.
 .\"
 .TP
 \fB-v\fR

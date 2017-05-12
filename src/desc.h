@@ -20,8 +20,16 @@ enum {
 	TLV_UTIME,
 	/** Imprint value. */
 	TLV_IMPRINT,
+	/** File header magic bytes.*/
+	TLV_FILE_MAGIC,
 	/** A value, that is not parsable. */
 	TLV_UNKNOWN
+};
+
+struct file_magic_st {
+	size_t len;
+	char val[256];
+	char *desc;
 };
 
 /**
@@ -39,6 +47,10 @@ struct desc_st {
 
 	/** Sparse table of pointers. */
 	struct desc_st *map[0xff];
+
+	size_t magics_size;
+	size_t magics_len;
+	struct file_magic_st *magics;
 };
 
 

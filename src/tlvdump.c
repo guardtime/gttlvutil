@@ -6,24 +6,25 @@
 #include <time.h>
 #include <ctype.h>
 #include <errno.h>
-#include "fast_tlv.h"
-#include "desc.h"
-#include "common.h"
-#include "dir.h"
-
 #ifdef _WIN32
 #	include <io.h>
 #	include <fcntl.h>
 #endif
 
+#include "common.h"
+#include "fast_tlv.h"
+#include "desc.h"
+#include "dir.h"
+#include "file_io.h"
+
+
 #define INDENT_LEN 2
 #define DEFAULT_WRAP 32
 #define PATH_SIZE 2048
 
-enum out_enc_en { ENCODE_HEX, ENCODE_BASE64 };
-
 struct conf_st {
 	const char *file_name;
+	bool auto_hdr;
 	size_t hdr_len;
 	size_t max_depth;
 	bool print_off;
@@ -36,10 +37,9 @@ struct conf_st {
 	bool pretty_val;
 	bool pretty_key;
 	bool timezone;
-	bool override_def;
-	bool ignore_def;
 	struct desc_st desc;
-	enum out_enc_en out_enc;
+	GT_Encoding out_enc;
+	GT_Encoding in_enc;
 };
 
 static char *hash_alg[] = {
@@ -62,7 +62,7 @@ void setDescriptionFileDir(const char *dir) {
 		return;
 	}
 
-	strncpy(descriptionDir, dir, sizeof(descriptionDir));
+	GT_strncpy(descriptionDir, dir, sizeof(descriptionDir));
 	descriptionDir[sizeof(descriptionDir) - 1] = '\0';
 }
 
@@ -81,8 +81,16 @@ static uint64_t get_uint64(unsigned char *buf, size_t len) {
 
 
 #define wrap_offset(l)	printf("\n%*s", (l), "")
-#define wrap_line(p)	if (conf->wrap_width && line_len > 0 && line_len % (conf->wrap_width * 2) == 0 ) { wrap_offset(prefix_len); line_len = 0; } line_len += p
-static void print_hex(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
+#define wrap_line(p)                                   \
+	if (conf->wrap_width && line_len > 0 &&            \
+			line_len % (conf->wrap_width * 2) == 0 ) { \
+		wrap_offset(prefix_len);                       \
+		line_len = 0;                                  \
+	}                                                  \
+	line_len += p
+
+
+static void print_hex(unsigned char *buf, size_t len, int prefix_len, bool enable_convert, struct conf_st *conf) {
 	size_t i;
 	size_t line_len = 0;
 
@@ -90,13 +98,13 @@ static void print_hex(unsigned char *buf, size_t len, int prefix_len, struct con
 		wrap_line(printf("%02x", buf[i]));
 	}
 
-	if (conf->convert && len <= 8) {
+	if (enable_convert && conf->convert && len <= 8) {
 		printf(" (dec = %llu)", (unsigned long long) get_uint64(buf, len));
 	}
 	putchar('\n');
 }
 
-static void print_base64(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
+static void print_base64(unsigned char *buf, size_t len, int prefix_len, bool enable_convert, struct conf_st *conf) {
 	size_t i;
 	size_t line_len = 0;
 	static char tab[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -122,20 +130,20 @@ static void print_base64(unsigned char *buf, size_t len, int prefix_len, struct 
 		}
 	}
 
-	if (conf->convert && len <= 8) {
+	if (enable_convert && conf->convert && len <= 8) {
 		printf(" (dec = %llu)", (unsigned long long)get_uint64(buf, len));
 	}
 	putchar('\n');
 }
 
-static void print_raw_data(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
+static void print_raw_data(unsigned char *buf, size_t len, int prefix_len, bool enable_convert, struct conf_st *conf) {
 	switch (conf->out_enc) {
-		case ENCODE_BASE64:
-			print_base64(buf, len, prefix_len, conf);
+		case GT_BASE_64:
+			print_base64(buf, len, prefix_len, enable_convert, conf);
 			break;
-		case ENCODE_HEX:
+		case GT_BASE_16:
 		default:
-			print_hex(buf, len, prefix_len, conf);
+			print_hex(buf, len, prefix_len, enable_convert, conf);
 	}
 }
 
@@ -198,7 +206,7 @@ static void print_int(unsigned char *buf, size_t len, int prefix_len, struct con
 
 	if (len > 8) {
 		printf("0x");
-		print_raw_data(buf, len, prefix_len, conf);
+		print_raw_data(buf, len, prefix_len, true, conf);
 	} else {
 		printf("%llu\n", (unsigned long long)get_uint64(buf, len));
 	}
@@ -233,22 +241,21 @@ static void print_imprint(unsigned char *buf, size_t len, int prefix_len, struct
 			if (conf->wrap_width) {
 				wrap_offset(prefix_len);
 			}
-			print_raw_data(buf + 1, len - 1, prefix_len, conf);
-		} else if (conf->wrap_width && conf->out_enc == ENCODE_HEX) {
+			print_raw_data(buf + 1, len - 1, prefix_len, true, conf);
+		} else if (conf->wrap_width && conf->out_enc == GT_BASE_16) {
 			printf("%02x", buf[0]);
 			wrap_offset(prefix_len);
-			print_raw_data(buf + 1, len - 1, prefix_len, conf);
+			print_raw_data(buf + 1, len - 1, prefix_len, true, conf);
 		} else {
-			print_raw_data(buf, len, prefix_len, conf);
+			print_raw_data(buf, len, prefix_len, true, conf);
 		}
 	}
 }
 
 static void print_time(unsigned char *buf, size_t len, int prefix_len, int type, struct conf_st *conf) {
 	if (len > 8) {
-		print_raw_data(buf, len, prefix_len, conf);
+		print_raw_data(buf, len, prefix_len, true, conf);
 	} else {
-		char tmp[0xff];
 		char fract[0x1f];
 		struct tm *tm_info;
 		uint64_t t = get_uint64(buf, len);
@@ -256,16 +263,15 @@ static void print_time(unsigned char *buf, size_t len, int prefix_len, int type,
 		size_t len;
 
 		fract[0] = '\0';
-		tmp[0] = '\0';
 
 		switch (type) {
 			case TLV_MTIME:
 				seconds = (time_t) t / 1000;
-				snprintf(fract, sizeof(fract), "%03llu", (unsigned long long)(t % 1000));
+				GT_snprintf(fract, sizeof(fract), "%03llu", (unsigned long long)(t % 1000));
 				break;
 			case TLV_UTIME:
 				seconds = (time_t) t / 1000 / 1000;
-				snprintf(fract, sizeof(fract), "%06llu", (unsigned long long)(t % (1000 * 1000)));
+				GT_snprintf(fract, sizeof(fract), "%06llu", (unsigned long long)(t % (1000 * 1000)));
 				break;
 			case TLV_TIME:
 			default:
@@ -274,21 +280,23 @@ static void print_time(unsigned char *buf, size_t len, int prefix_len, int type,
 		}
 
 		if (seconds >= 0xffffffff) {
-			fprintf(stderr, "Invalid time value.\n");
+			printf("%llu\n", (unsigned long long)t);
 		} else {
+			char tmp[0xff];
+			tmp[0] = '\0';
 			tm_info = (conf->timezone) ? localtime(&seconds) : gmtime(&seconds);
 			len = strftime(tmp, sizeof(tmp), "%Y-%m-%d %H:%M:%S", tm_info);
 			if (fract[0] != '\0') {
-				len += snprintf(tmp + len, sizeof(tmp) - len, ".%s", fract);
+				len += GT_snprintf(tmp + len, sizeof(tmp) - len, ".%s", fract);
 			}
 
 			if (conf->timezone) {
 				strftime(tmp + len, sizeof(tmp) - len, " %Z", tm_info);
 			} else {
-				snprintf(tmp + len, sizeof(tmp) - len, " UTC+00");
+				GT_snprintf(tmp + len, sizeof(tmp) - len, " UTC+00");
 			}
+			printf("(%llu) %s\n", (unsigned long long)t, tmp);
 		}
-		printf("(%llu) %s\n", (unsigned long long)t, tmp);
 	}
 }
 
@@ -385,55 +393,75 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 		if (type == TLV_IMPRINT && conf->wrap_width) {
 			print_imprint(ptr, len, prefix_len, conf);
 		} else {
-			print_raw_data(ptr, len, prefix_len, conf);
+			print_raw_data(ptr, len, prefix_len, true, conf);
 		}
 	}
 }
 
 static int read_from(FILE *f, struct conf_st *conf) {
 	int res;
-	unsigned char *header = NULL;
 	GT_FTLV t;
-	unsigned char buf[0xffff + 4];
+	unsigned char *buf = NULL;
 	size_t len;
 	size_t off = 0;
+	struct file_magic_st *pMagic = NULL;
+	size_t hdr_len = 0;
 
-	if (conf->hdr_len > 0) {
-		header = calloc(conf->hdr_len, 1);
-		if (header == NULL) {
-			res = GT_OUT_OF_MEMORY;
-			goto cleanup;
-		}
-		if (fread(header, conf->hdr_len, 1, f) != 1) {
-			res = GT_INVALID_FORMAT;
-			goto cleanup;
-		}
+	if ((res = GT_fread(conf->in_enc, &buf, &len, f)) != GT_OK) goto cleanup;
 
-		for (len = 0; len < conf->hdr_len; len++) {
-			printf("%02x", header[len]);
+	if (conf->auto_hdr) {
+		size_t i;
+		for (i = 0; i < conf->desc.magics_len; i++) {
+			size_t hdr_len = conf->desc.magics[i].len;
+			if (hdr_len < len && !memcmp(conf->desc.magics[i].val, buf, hdr_len)) {
+				pMagic = conf->desc.magics + i;
+				break;
+			}
 		}
-		printf("\n");
 	}
 
-	while (1) {
-		res = GT_FTLV_fileRead(f, buf, sizeof(buf), &len, &t);
+	hdr_len = pMagic != NULL ? pMagic->len : conf->hdr_len;
+
+	if (hdr_len > 0) {
+		if (conf->pretty_key && pMagic != NULL) {
+			printf("%s: ", pMagic->desc);
+		}
+		print_raw_data(buf, hdr_len, 0, false, conf);
+
+		len -= hdr_len;
+		/* Shift the contents. */
+		memmove(buf, buf + hdr_len, len);
+	}
+
+	while (len > 0) {
+		size_t consumed;
+
+		res = GT_FTLV_memRead(buf, len, &t);
+		consumed = t.hdr_len + t.dat_len;
 		if (res != GT_OK) {
-			if (len == 0) break;
+			if (consumed == 0) {
+				if (feof(f)) break;
+				continue;
+			}
 			fprintf(stderr, "%s: Failed to parse %llu bytes.\n", conf->file_name, (unsigned long long) len);
-			break;
+			res = GT_INVALID_FORMAT;
+			goto cleanup;
 		}
 
 		t.off = off;
 
 		printTlv(buf, len, &t, 0, conf, NULL);
-		off += len;
+		off += consumed;
+
+		len -= consumed;
+		memmove(buf, buf + consumed, len);
 	}
 
 	res = GT_OK;
 
 cleanup:
 
-	if (header != NULL) free(header);
+	free(buf);
 
 	return res;
 }
@@ -459,7 +487,7 @@ static int read_desc_dir(struct desc_st *desc, const char *dir_name, bool overri
 		if (len > 5 && !strcmp(name + len - 5, ".desc")) {
 			char buf[PATH_SIZE];
 
-			snprintf(buf, sizeof(buf), "%s/%s", dir_name, name);
+			GT_snprintf(buf, sizeof(buf), "%s/%s", dir_name, name);
 
 			res = desc_add_file(desc, buf, override);
 			if (res != GT_OK) {
@@ -488,7 +516,7 @@ static void initDefaultDescriptionFileDir(char *arg0) {
 	if (!set) {
 		char buf[PATH_SIZE];
 
-		if(DIRECTORY_getMyPath(buf, sizeof(buf), arg0) != GT_OK) {
+		if (DIRECTORY_getMyPath(buf, sizeof(buf), arg0) != GT_OK) {
 			fprintf(stderr, "Unable to get path to gttlvdump.\n");
 		}
 		setDescriptionFileDir(buf);
@@ -511,6 +539,7 @@ static int getOptionDecValue(char opt, char *arg, size_t *val, char *excstr, siz
 	int res = GT_INVALID_ARGUMENT;
 	char *endptr = NULL;
 	long int li = strtol(arg, &endptr, 10);
+	size_t tmp = 0;
 
 	if (errno == ERANGE) {
 		fprintf(stderr, "Option %c is out of range.\n", opt);
@@ -520,15 +549,17 @@ static int getOptionDecValue(char opt, char *arg, size_t *val, char *excstr, siz
 		goto cleanup;
 	} else if (li == 0 && endptr != NULL && *endptr != '\0') {
 		if (excstr && strcmp(endptr, excstr) == 0) {
-			li = excval;
+			tmp = excval;
 		} else {
 			fprintf(stderr, "Option %c must be a decimal integer.\n", opt);
 			goto cleanup;
 		}
+	} else {
+		tmp = (size_t)li;
 	}
 
+	*val = tmp;
 	res = GT_OK;
-	*val = li;
 cleanup:
 	return res;
 }
@@ -543,13 +574,23 @@ int main(int argc, char **argv) {
 
 	memset(&conf, 0, sizeof(conf));
 
+	/* Set the auto header value to true. */
+	conf.auto_hdr = true;
+	/* Set default output encoding. */
+	conf.out_enc = GT_BASE_16;
+
 	initDefaultDescriptionFileDir(argv[0]);
 
-	while ((c = getopt(argc, argv, "hH:d:xw:yzaspPte:vD:oi")) != -1) {
+	while ((c = getopt(argc, argv, "hH:d:xw:yzaspPte:E:vD:oi")) != -1) {
 		switch(c) {
 			case 'H': {
-				res = getOptionDecValue((char)c, optarg, &conf.hdr_len, NULL, 0);
-				if (res != GT_OK) goto cleanup;
+				if (!strcmp(optarg, "auto")) {
+					conf.auto_hdr = true;
+				} else {
+					conf.auto_hdr = false;
+					res = getOptionDecValue((char)c, optarg, &conf.hdr_len, NULL, 0);
+					if (res != GT_OK) goto cleanup;
+				}
 				break;
 			case 'd':
 				res = getOptionDecValue((char)c, optarg, &conf.max_depth, NULL, 0);
@@ -586,28 +627,19 @@ int main(int argc, char **argv) {
 				conf.timezone = true;
 				break;
 			case 'e': {
-				struct {
-					const char *alias;
-					enum out_enc_en enc;
-				} enc_map[] = {
-					{"hex", ENCODE_HEX },
-					{"base16", ENCODE_HEX },
-					{"16", ENCODE_HEX },
-					{"base64", ENCODE_BASE64 },
-					{"64", ENCODE_BASE64 },
-					{ NULL, 0 }
-				};
-				size_t i = 0;
-				while (enc_map[i].alias != NULL) {
-					if (!strcmp(enc_map[i].alias, optarg)) {
-						conf.out_enc = enc_map[i].enc;
-						break;
-					}
-					++i;
-				}
-				if (enc_map[i].alias == NULL) {
+				conf.out_enc = GT_ParseEncoding(optarg);
+				if (conf.out_enc == GT_BASE_NA) {
 					fprintf(stderr, "Unknown encoding '%s', defaulting to 'hex'.\n", optarg);
-					conf.out_enc = ENCODE_HEX;
+					conf.out_enc = GT_BASE_16;
+				}
+				break;
+			}
+			case 'E': {
+				conf.in_enc = GT_ParseEncoding(optarg);
+				if (conf.in_enc == GT_BASE_NA) {
+					fprintf(stderr, "Unknown input data encoding: '%s'\n", optarg);
+					res = GT_INVALID_CMD_PARAM;
+					goto cleanup;
 				}
 				break;
 			}
@@ -618,13 +650,6 @@ int main(int argc, char **argv) {
 					goto cleanup;
 				}
 				strcpy(usr_desc_path, optarg);
-				break;
-			case 'o':
-				conf.override_def = true;
-				break;
-			case 'i':
-				conf.ignore_def = true;
-				conf.override_def = false;
 				break;
 
 			case 'h':
@@ -648,9 +673,8 @@ int main(int argc, char **argv) {
 						"             override -z).\n"
 						"    -t       Print time in local timezone (valid with -p).\n"
 						"    -e enc   Output format of binary value. Available: 'hex', 'base64'.\n"
+						"    -E enc   Input data encoding. Available: 'bin', 'hex', 'base64'.\n"
 						"    -D <pth> Set TLV description files directory.\n"
-						"    -o       Override default descriptions (valid with -D). Has no effect with -i.\n"
-						"    -i       Ignore default descriptions (valid with -D).\n"
 						"    -v       Print TLV utility version..\n"
 						"\n"
 						"Default description files directory:\n"
@@ -674,8 +698,16 @@ int main(int argc, char **argv) {
 	}
 
 	/* Read descriptions from default files. */
-	if (!conf.ignore_def) {
-		res = loadDescriptions(&conf.desc, getDescriptionFileDir(), false);
+	{
+		const char *descDir = NULL;
+
+		if (usr_desc_path != NULL) {
+			descDir = usr_desc_path;
+		} else {
+			descDir = getDescriptionFileDir();
+		}
+
+		res = loadDescriptions(&conf.desc, descDir, false);
 		if (res != GT_OK) {
 			/* As there was an error in loading data, clear all descriptions. */
 			desc_cleanup(&conf.desc);
@@ -684,31 +716,9 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	/* Read descriptions from user files. */
-	if (usr_desc_path != NULL) {
-		struct desc_st tmp;
-		memset(&tmp, 0, sizeof(tmp));
-		/* Verify user descriptions. */
-		res = loadDescriptions(&tmp, usr_desc_path, false);
-		desc_cleanup(&tmp);
-		/* If there were no issues, load the descriptions into common buffer. */
-		if (res == GT_OK) {
-			res = loadDescriptions(&conf.desc, usr_desc_path, conf.override_def);
-			if (res != GT_OK) {
-				/* As there was an error in loading data, clear all descriptions. */
-				desc_cleanup(&conf.desc);
-			} else {
-
-				desc_loaded = true;
-			}
-		}
-	}
-
 	/* If there are no input files, read from the standard in. */
 	if (optind >= argc) {
-#ifdef _WIN32
-		_setmode(_fileno(stdin), _O_BINARY);
-#endif
+		if (conf.in_enc == GT_BASE_2) setBinaryMode(stdin);
 		res = read_from(stdin, &conf);
 		if (res != GT_OK) goto cleanup;
 	} else {

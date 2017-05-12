@@ -1,4 +1,7 @@
-
+4b5349454d465354	@MAGIC	KSIE manifest file magic bytes 
+4b53494544414d46	@MAGIC	KSIE data manifest file magic bytes
+4b534945414e4d46	@MAGIC	KSIE annotation manifest file magic bytes
+4b534945414e4e54	@MAGIC	KSIE annotation file magic bytes 
 0b01			*			Manifest file
 0b01.01			STR			File URI
 0b01.02			IMPRINT		File hash

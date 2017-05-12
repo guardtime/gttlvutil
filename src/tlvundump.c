@@ -23,10 +23,6 @@
 #define error_log(s, lineNr) { fprintf(stderr, "%s:%llu - %s\n", fileName, (unsigned long long)(lineNr), (s)); }
 #define line_error(err, s, lineNr) { error_log(s, lineNr); return err; }
 #define error(err, s) line_error(err, (s), lineNr)
-#define IS_SPACE(c) ((c) == ' ' || (c) == '\t')
-#define IS_DIGIT(c) ((c) >= '0' && (c) <= '9')
-#define IS_HEX(c) (IS_DIGIT(c) || (toupper(c) >= 'A' && toupper(c) <= 'F'))
-#define HEX_TO_DEC(c) (IS_DIGIT(c) ? ((c) - '0') : (toupper((c)) - 'A' + 10))
 
 /* Supported function scripts. */
 #define HMAC_CALC_FUNC "HMAC"
@@ -34,11 +30,6 @@
 #define HMAC_TOKEN_BUF 64
 #define FUNC_SCRIPT_BUF 1024
 #define HMAC_CALC_ARG_DEL "|"
-
-typedef struct {
-	unsigned char buf[0xffff + 4];
-	size_t len;
-} Buffer;
 
 size_t lineNr = 0;
 char *fileName = "<stdin>";
@@ -114,8 +105,7 @@ static int hmacGetScriptTokens(char *args, size_t aLen, char *alg, char *key, ch
 
 	/* Make a temporary copy of the func script for further manipulation. */
 	tmp = malloc(aLen + 1);
-	strncpy(tmp, args, aLen);
-	tmp[aLen] = '\0';
+	GT_strncpy(tmp, args, aLen + 1);
 
 	/* Break the arguments up into tokens. */
 
@@ -174,35 +164,46 @@ cleanup:
 
 static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size_t stack_len, int isLastTlv) {
 	int res = GT_UNKNOWN_ERROR;
-	Buffer raw;
+	unsigned char *raw = NULL;
+	size_t raw_len = 0;
 	size_t calc_len = 0;
 	unsigned char tmp[GT_HASH_MAX_LEN];
 	unsigned int tmp_len;
 	GT_Hash_AlgorithmId algId;
+	GT_GrepPattern *pattern = NULL;
+	unsigned char *buf = NULL;
+
+	GT_ElementCounter *idx = NULL;
 
 	if (stack == NULL || stack_len == 0) {
 		res = GT_FORMAT_ERROR;
 		goto cleanup;
 	}
 
+	raw = calloc(GT_TLV_BUF_SIZE, 1);
+	if (raw == NULL) {
+		res = GT_OUT_OF_MEMORY;
+		goto cleanup;
+	}
+
 	/* Verify that HMAC is PDU child in first level. */
 	if (stack[hmacCalcInfo.stack_pos].level != 1) {
 		res = GT_FORMAT_ERROR;
-		error_log("HMAC TLV is not first level PDU child.", hmacCalcInfo.stack_pos+1);
+		error_log("HMAC TLV is not first level PDU child.", hmacCalcInfo.stack_pos + 1);
 		goto cleanup;
 	}
 
 	/* Serialize current stack. */
-	res = serializeStack(stack, stack_len, raw.buf, sizeof(raw.buf), &raw.len);
+	res = serializeStack(stack, stack_len, raw, GT_TLV_BUF_SIZE, &raw_len);
 	if (res != GT_OK) {
-		error_log("Failed to generate raw data.", hmacCalcInfo.stack_pos+1);
+		error_log("Failed to generate raw data.", hmacCalcInfo.stack_pos + 1);
 		goto cleanup;
 	}
 
 
 	res = GT_Hash_getAlgorithmId(hmacCalcInfo.algId, &algId);
 	if (res != GT_OK) {
-		error_log("Failed to get hash algorith id.", hmacCalcInfo.stack_pos+1);
+		error_log("Failed to get hash algorith id.", hmacCalcInfo.stack_pos + 1);
 		goto cleanup;
 	}
 
@@ -212,13 +213,13 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 				/* HMAC in v2 approach should be last in PDU. */
 				if (!isLastTlv) {
 					res = GT_FORMAT_ERROR;
-					error_log("HMAC TLV is not last in PDU.", hmacCalcInfo.stack_pos+1);
+					error_log("HMAC TLV is not last in PDU.", hmacCalcInfo.stack_pos + 1);
 					goto cleanup;
 				}
 
-				calc_len = raw.len - GT_Hash_getAlgorithmLenght(algId);
+				calc_len = raw_len - GT_Hash_getAlgorithmLenght(algId);
 
-				res = GT_Hmac_Calculate(algId, hmacCalcInfo.key, strlen(hmacCalcInfo.key), raw.buf + sizeof(raw.buf) - raw.len, calc_len, tmp, &tmp_len);
+				res = GT_Hmac_Calculate(algId, hmacCalcInfo.key, strlen(hmacCalcInfo.key), raw + GT_TLV_BUF_SIZE - raw_len, calc_len, tmp, &tmp_len);
 				if (res != GT_OK) goto cleanup;
 			}
 			break;
@@ -227,32 +228,47 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 		default:
 			{
 				GT_GrepTlvConf conf;
-				int idx[IDX_MAP_LEN];
 				GT_FTLV t;
-				unsigned char buf[0xffff + 4];
-				unsigned char *raw_buf_ptr = raw.buf + sizeof(raw.buf) - raw.len;
+				unsigned char *raw_buf_ptr = raw + GT_TLV_BUF_SIZE - raw_len;
 
-				memset(idx, 0, sizeof(idx));
+				buf = calloc(GT_TLV_BUF_SIZE, 1);
+				if (buf == NULL) {
+					res = GT_OUT_OF_MEMORY;
+					goto cleanup;
+				}
+
+				idx = calloc(sizeof(GT_ElementCounter), 1);
+				if (idx == NULL) {
+					res = GT_OUT_OF_MEMORY;
+					goto cleanup;
+				}
 
 				GT_GrepTlv_initConf(&conf);
 				conf.print_raw = true;
 				conf.print_path = false;
 				conf.print_tlv_hdr = true;
 
-				res = GT_FTLV_memRead(raw_buf_ptr, raw.len, &t);
+				res = GT_FTLV_memRead(raw_buf_ptr, raw_len, &t);
 				if (res != GT_OK) {
-					error_log("Failed to init raw TLV.", hmacCalcInfo.stack_pos+1);
+					error_log("Failed to init raw TLV.", hmacCalcInfo.stack_pos + 1);
 					goto cleanup;
 				}
 
-				res = GT_grepTlv(&conf, hmacCalcInfo.pattern, NULL, idx, raw_buf_ptr, &t, buf, &calc_len);
+				/* Parse the pattern. */
+				res = GT_GrepPattern_parse(hmacCalcInfo.pattern, &pattern);
 				if (res != GT_OK) {
-					error_log("Failed to grep pattern.", hmacCalcInfo.stack_pos+1);
+					error_log("Invalid pattern.", hmacCalcInfo.stack_pos + 1);
+					goto cleanup;
+				}
+
+				res = GT_grepTlv(&conf, pattern, NULL, idx, raw_buf_ptr, &t, buf, &calc_len);
+				if (res != GT_OK) {
+					error_log("Failed to grep pattern.", hmacCalcInfo.stack_pos + 1);
 					goto cleanup;
 				}
 
 				if (calc_len == 0) {
-					error_log("Pattern not found.", hmacCalcInfo.stack_pos+1);
+					error_log("Pattern not found.", hmacCalcInfo.stack_pos + 1);
 					res = GT_FORMAT_ERROR;
 					goto cleanup;
 				}
@@ -269,12 +285,17 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 	res = GT_OK;
 cleanup:
 
+	free(buf);
+	free(idx);
+	free(raw);
+	GT_GrepPattern_free(pattern);
+
 	return res;
 }
 
 int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 	int state = ST_BEGIN;
-	TlvLine *tlv = &stack[stackLen];
+	TlvLine *tlv = stack + stackLen;
 	int c;
 
 	memset(tlv, 0, sizeof(TlvLine));
@@ -508,7 +529,7 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 			case ST_DATA_HEX_1:
 				if (IS_SPACE(c)) break;
 				if (IS_HEX(c)) {
-					tlv->dat[tlv->dat_len] = HEX_TO_DEC(c) << 4;
+					tlv->dat[tlv->dat_len] = HEXCHAR_TO_DEC(c) << 4;
 					state = ST_DATA_HEX_2;
 				} else {
 					state = ST_END;
@@ -518,10 +539,14 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 			case ST_DATA_HEX_2:
 				if (IS_SPACE(c)) break;
 				if (IS_HEX(c)) {
-					tlv->dat[tlv->dat_len++] |= HEX_TO_DEC(c);
+					tlv->dat[tlv->dat_len++] |= HEXCHAR_TO_DEC(c);
 					state = ST_DATA_HEX_1;
 				} else {
-					error(GT_PARSER_ERROR, "Hex strings must contain even number of characters.");
+						char message[256];
+						if (c == EOF) GT_snprintf(message, sizeof(message), "Hex strings must contain even number of characters.");
+						else if (isprint(c)) GT_snprintf(message, sizeof(message), "Hex string contains unknown character: '%c'.", c);
+						else GT_snprintf(message, sizeof(message), "Hex string contains unknown character (hex value): 0x%02x.", c);
+						error(GT_PARSER_ERROR, message);
 				}
 				break;
 
@@ -573,7 +598,7 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 				} else {
 					char buf[40];
 					if (isprint(c)) {
-						sprintf(buf, "Unexpected character: %c.", (unsigned char)c);
+						sprintf(buf, "Unexpected character: '%c'.", (unsigned char)c);
 					} else {
 						sprintf(buf, "Unexpected character (hex value): %02x.", (unsigned char)c);
 					}
@@ -626,7 +651,7 @@ static int serializeStack(TlvLine *stack, size_t stack_len, unsigned char *buf, 
 		goto cleanup;
 	}
 
-	if (stack[0].tag > 0x1f || subLen > 0xff || stack[0].force == 16) {
+	if (stack[0].tag > GT_TLV_TYPE_1ST_BYTE_MASK || subLen > 0xff || stack[0].force == 16) {
 		/* TLV16 */
 		if (buf_len - len < 4) {
 			line_error(GT_BUFFER_OVERFLOW, "TLV16 buffer overflow.", stack[0].lineNr);
@@ -638,22 +663,22 @@ static int serializeStack(TlvLine *stack, size_t stack_len, unsigned char *buf, 
 		buf[buf_len - len - 1] = subLen & 0xff;
 		buf[buf_len - len - 2] = (subLen >> 8) & 0xff;
 		buf[buf_len - len - 3] = stack[0].tag & 0xff;
-		buf[buf_len - len - 4] = (stack[0].tag >> 8) & 0x1f;
+		buf[buf_len - len - 4] = (stack[0].tag >> 8) & GT_TLV_TYPE_1ST_BYTE_MASK;
 		len += 4;
 
-		buf[buf_len - len] |= 0x80;
+		buf[buf_len - len] |= GT_TLV_MASK_TLV16;
 
 	} else {
 		if (buf_len - len < 2) {
 			line_error(GT_BUFFER_OVERFLOW, "TLV8 buffer overflow.", stack[0].lineNr);
 		}
 		buf[buf_len - len - 1] = subLen & 0xff;
-		buf[buf_len - len - 2] = stack[0].tag & 0x1f;
+		buf[buf_len - len - 2] = stack[0].tag & GT_TLV_TYPE_1ST_BYTE_MASK;
 		len += 2;
 	}
 
-	if (stack[0].isNc) buf[buf_len - len] |= 0x40;
-	if (stack[0].isFw) buf[buf_len - len] |= 0x20;
+	if (stack[0].isNc) buf[buf_len - len] |= GT_TLV_MASK_NON_CRITICAL;
+	if (stack[0].isFw) buf[buf_len - len] |= GT_TLV_MASK_FORWARD;
 
 	res = GT_OK;
 cleanup:
@@ -663,11 +688,9 @@ cleanup:
 }
 
 static int writeStream(const void *raw, size_t size, size_t count, FILE *f) {
-#ifdef _WIN32
 	if (f != NULL) {
-		_setmode(_fileno(f), _O_BINARY);
+		setBinaryMode(f);
 	}
-#endif
 
 	if (fwrite(raw, size, count, f) != count) {
 		error(GT_IO_ERROR, "Failed to write to stream.");
@@ -700,11 +723,18 @@ static int convertStream(FILE *f) {
 	size_t stack_size = 100;
 	size_t stack_len = 0;
 	size_t i;
+	unsigned char *buf = NULL;
+
+	buf = calloc(GT_TLV_BUF_SIZE, 1);
+	if (buf == NULL) {
+		res = GT_OUT_OF_MEMORY;
+		goto cleanup;
+	}
 
 	stack = calloc(stack_size, sizeof(TlvLine));
 	if (stack == NULL) {
-		fprintf(stderr, "Out of memory!\n");
-		return GT_OUT_OF_MEMORY;
+		res = GT_OUT_OF_MEMORY;
+		goto cleanup;
 	}
 
 	while (1) {
@@ -758,16 +788,15 @@ static int convertStream(FILE *f) {
 
 		/* Serialize the TLV if there level returned to 0. */
 		if (stack_len != 0 && stack[stack_len].level == 0) {
-			unsigned char buf[0xffff + 4];
 			size_t buf_len = 0;
 
 			res = runPostponedTasks(stack, stack_len);
 			if (res != GT_OK) goto cleanup;
 
-			res = serializeStack(stack, stack_len, buf, sizeof(buf), &buf_len);
+			res = serializeStack(stack, stack_len, buf, GT_TLV_BUF_SIZE, &buf_len);
 			if (res != GT_OK) goto cleanup;
 
-			res = writeStream(buf + sizeof(buf) - buf_len, 1, buf_len, stdout);
+			res = writeStream(buf + GT_TLV_BUF_SIZE - buf_len, 1, buf_len, stdout);
 			if (res != GT_OK) goto cleanup;
 
 			stack[0] = stack[stack_len];
@@ -791,27 +820,31 @@ static int convertStream(FILE *f) {
 	}
 
 	if (stack_len > 0) {
-		unsigned char buf[0xffff + 4];
 		size_t buf_len = 0;
 
 		res = runPostponedTasks(stack, stack_len);
 		if (res != GT_OK) goto cleanup;
 
-		res = serializeStack(stack, stack_len, buf, sizeof(buf), &buf_len);
+		res = serializeStack(stack, stack_len, buf, GT_TLV_BUF_SIZE, &buf_len);
 		if (res != GT_OK) goto cleanup;
 
-		res = writeStream(buf + sizeof(buf) - buf_len, 1, buf_len, stdout);
+		res = writeStream(buf + GT_TLV_BUF_SIZE - buf_len, 1, buf_len, stdout);
 		if (res != GT_OK) goto cleanup;
 	}
+
 	res = GT_OK;
+
 cleanup:
-	if (stack != NULL) free(stack);
+
+	free(buf);
+	free(stack);
+
 	return res;
 }
 
 int getListOfSupportedHashAlgs(char *buf, size_t bufLen) {
 	int res = GT_UNKNOWN_ERROR;
-	int len = 1;
+	size_t len = 1;
 	int i;
 
 	if (bufLen < len) {

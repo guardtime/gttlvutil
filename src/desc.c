@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "common.h"
+
 void desc_cleanup(struct desc_st *desc) {
 	if (desc != NULL) {
 		size_t i;
@@ -21,6 +23,10 @@ void desc_cleanup(struct desc_st *desc) {
 				desc->map[i] = NULL;
 			}
 		}
+		for (i = 0; i < desc->magics_len; i++) {
+			free(desc->magics[i].desc);
+		}
+		free(desc->magics);
 	}
 }
 
@@ -53,7 +59,7 @@ static int desc_get(struct desc_st *in, unsigned tag, bool create, struct desc_s
 		}
 	}
 
-	if (in->map[pos] != NULL && in->map[pos]->key != tag) {
+	if (pos >= arr_len || (in->map[pos] != NULL && in->map[pos]->key != tag)) {
 		res = GT_BUFFER_OVERFLOW;
 		goto cleanup;
 	}
@@ -88,7 +94,7 @@ int desc_find(struct desc_st *in, unsigned tag, struct desc_st **out) {
 	return desc_get(in, tag, false, out, NULL);
 }
 
-static int store_nested(struct desc_st *map_in, char *key, int type, char *val, bool override) {
+static int store_nested(struct desc_st *map_in, const char *key, int type, const char *val, bool override) {
 	int res = GT_UNKNOWN_ERROR;
 	long tag;
 	char *ptr;
@@ -105,7 +111,7 @@ static int store_nested(struct desc_st *map_in, char *key, int type, char *val, 
 	tag = strtol(key, &ptr, 16);
 
 	/* Validate tag value and reminder. */
-	if (key == ptr || tag < 0 || tag > ((GT_TLV_MASK_TLV8_TYPE << 8) | 0xff) || (*ptr && *ptr != '.')) {
+	if (key == ptr || tag < 0 || tag > ((GT_TLV_TYPE_1ST_BYTE_MASK << 8) | 0xff) || (*ptr && *ptr != '.')) {
 		res = GT_INVALID_FORMAT;
 		goto cleanup;
 	}
@@ -131,8 +137,11 @@ static int store_nested(struct desc_st *map_in, char *key, int type, char *val, 
 			res = desc_get(map_in, tag, true, &map, &isNew);
 			if (res != GT_OK) goto cleanup;
 		}
-		map->val = val;
+
 		map->type = type;
+		res = GT_strdup(val, &map->val);
+		if (res != GT_OK) goto cleanup;
+
 	}
 
 	res = GT_OK;
@@ -146,7 +155,7 @@ cleanup:
 /**
  * Convert textual string into enum values or -1 if unknown.
  */
-static int get_type(char *ts) {
+static int get_type(const char *ts) {
 	if (!strcmp("*", ts)) return TLV_COMPOSITE;
 	if (!strcmp("INT", ts)) return TLV_INT;
 	if (!strcmp("RAW", ts)) return TLV_RAW;
@@ -155,14 +164,86 @@ static int get_type(char *ts) {
 	if (!strcmp("MTIME", ts)) return TLV_MTIME;
 	if (!strcmp("UTIME", ts)) return TLV_UTIME;
 	if (!strcmp("IMPRINT", ts)) return TLV_IMPRINT;
-
+	if (!strcmp("@MAGIC", ts)) return TLV_FILE_MAGIC;
 	return -1;
 }
 
-static int store_line(struct desc_st *map_in, char *key, char *ts, char *val, bool override) {
+static int store_magic(struct desc_st *map_in, const char *key, const char *desc) {
+	int res = GT_UNKNOWN_ERROR;
+	struct file_magic_st *magic;
+	size_t i;
+	char octet;
+
+	if (map_in == NULL || key == NULL) {
+		res = GT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	if (map_in->magics == NULL) {
+		map_in->magics_size = 10;
+		map_in->magics = malloc(sizeof(struct file_magic_st) * map_in->magics_size);
+	} else if (map_in->magics_size <= map_in->magics_len) {
+		map_in->magics_size += 10;
+		map_in->magics = realloc(map_in->magics, sizeof(struct file_magic_st) * map_in->magics_size);
+	}
+
+	if (map_in->magics == NULL) {
+		fprintf(stderr, "Out of memory.\n");
+		res = GT_OUT_OF_MEMORY;
+		goto cleanup;
+	}
+
+	magic = map_in->magics + map_in->magics_len++;
+
+	memset(magic, 0, sizeof(struct file_magic_st));
+
+	res = GT_strdup(desc, &magic->desc);
+	if (res != GT_OK) goto cleanup;
+
+	/* Assume the key is represented as hex. */
+	octet = 0;
+	for (i = 0; key[i] != '\0'; i++) {
+		char c = tolower(key[i]);
+
+		/* Sanity check. */
+		if (magic->len >= sizeof(magic->val)) {
+			res = GT_INVALID_FORMAT;
+			goto cleanup;
+		}
+
+		if (isdigit(c)) {
+			octet = (octet << 4) + (c - '0');
+		} else if (c >= 'a' && c <= 'f') {
+			octet = (octet << 4) + (c - 'a') + 10;
+		} else {
+			fprintf(stderr, "Unexpected character '%c' (%d) while processing magic header value.\n", c, c);
+			res = GT_INVALID_FORMAT;
+			goto cleanup;
+		}
+
+		/* Store the value for every second input. */
+		if ((i + 1) % 2 == 0) {
+			magic->val[magic->len++] = octet;
+			octet = 0;
+		}
+	}
+
+	/* Make sure there was no partial octet in the end. */
+	if ((i + 1) %2 == 0) {
+		/* The last octet was only one character. We assume, the trailing zero was omitted. */
+		magic->val[magic->len++] = octet << 4;
+	}
+
+	res = GT_OK;
+
+cleanup:
+
+	return res;
+}
+
+static int store_tag(struct desc_st *map_in, const char *key, int type, char *val, bool override) {
 	int res = GT_UNKNOWN_ERROR;
 	long tag;
-	int type;
 	char *ptr;
 	struct desc_st *map = NULL;
 	bool isNew = false;
@@ -173,14 +254,7 @@ static int store_line(struct desc_st *map_in, char *key, char *ts, char *val, bo
 	}
 
 	tag = strtol(key, &ptr, 16);
-	if (key == ptr || tag < 0 || tag > ((GT_TLV_MASK_TLV8_TYPE << 8) | 0xff) || (*ptr && *ptr != '.')) {
-		res = GT_INVALID_FORMAT;
-		goto cleanup;
-	}
-
-	/* Convert the type into a number .*/
-	type = get_type(ts);
-	if (type < 0) {
+	if (key == ptr || tag < 0 || tag > ((GT_TLV_TYPE_1ST_BYTE_MASK << 8) | 0xff) || (*ptr && *ptr != '.')) {
 		res = GT_INVALID_FORMAT;
 		goto cleanup;
 	}
@@ -204,11 +278,41 @@ static int store_line(struct desc_st *map_in, char *key, char *ts, char *val, bo
 			res = desc_get(map_in, tag, true, &map, &isNew);
 			if (res != GT_OK) goto cleanup;
 		}
-		map->val = val;
+
 		map->type = type;
+		res = GT_strdup(val, &map->val);
+		if (res != GT_OK) goto cleanup;
 	}
 
 	res = GT_OK;
+
+cleanup:
+
+	return res;
+}
+
+static int store_line(struct desc_st *map_in, const char *key, const char *ts, char *val, bool override) {
+	int res = GT_UNKNOWN_ERROR;
+	int type;
+
+	if (map_in == NULL || key == NULL || *key == '\0' || ts == NULL || val == NULL) {
+		res = GT_INVALID_ARGUMENT;
+		goto cleanup;
+	}
+
+	/* Convert the type into a number .*/
+	type = get_type(ts);
+	if (type < 0) {
+		fprintf(stderr, "Unexpected type: '%s'\n", ts);
+		res = GT_INVALID_FORMAT;
+		goto cleanup;
+	}
+
+	if (type == TLV_FILE_MAGIC) {
+		res = store_magic(map_in, key, val);
+	} else {
+		res = store_tag(map_in, key, type, val, override);
+	}
 
 cleanup:
 
@@ -258,11 +362,8 @@ static int read_line(FILE *f, struct desc_st *map, bool override) {
 		rd = sscanf(line, " %256s %16s %1024[^\n]\n", key, type, val);
 		if (rd == 3) {
 			trim_line(val, strlen(val));
-#ifdef _WIN32
-			res = store_line(map, key, type, _strdup(val), override);
-#else
-			res = store_line(map, key, type, strdup(val), override);
-#endif
+
+			res = store_line(map, key, type, val, override);
 			if (res != GT_OK) goto cleanup;
 		}
 	}

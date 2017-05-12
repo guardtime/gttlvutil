@@ -1,16 +1,10 @@
 #ifndef DIR_H
 #define	DIR_H
 
-#ifdef	__cplusplus
-extern "C" {
-#endif
-
-
 typedef struct DIRECTORY_st DIRECTORY;
 typedef struct ENTITY_st ENTITY;
 
-
-enum DIR_STATUS{
+enum DIR_STATUS {
 	DIR_OK = 0,
 	DIR_UNABLE_TO_OPEN,
 	DIR_NOT_OPEND,
@@ -34,10 +28,6 @@ int DIRECTORY_getNextEntity(DIRECTORY *dir, ENTITY **next);
 const char *ENTITY_getName(ENTITY *entity);
 int ENTITY_getType(ENTITY *entity);
 int DIRECTORY_getMyPath(char *path, size_t path_len, char *arg0);
-
-#ifdef	__cplusplus
-}
-#endif
 
 #endif	/* DIR_H */
 

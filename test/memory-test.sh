@@ -20,7 +20,7 @@
 #
 
 # Temporary directory to be used for executing shell tests.
-TEST_DIR=test/tmp/test
+TEST_DIR=test/tmp/memory_test
 
 # Original test suites directory.
 ORIG_TEST_SUITES=test/test_suites
@@ -54,6 +54,11 @@ fi
 # Copy the original test suites to the temporary execution folder.
 cp -r $ORIG_TEST_SUITES $EXEC_TEST_SUITES
 
+# Convert test suites to memory tests.
+for test_suite in $EXEC_TEST_SUITES/*.test; do
+	test/convert-to-memory-test.sh $test_suite
+done
+
 # Prepare test cases.
 sed -i -- "s|TESTCASE:||g" $EXEC_TEST_SUITES/*.test
 sed -i -- "s|TESTUTIL:||g" $EXEC_TEST_SUITES/*.test
@@ -65,13 +70,13 @@ sed -i -- "s|{GTTLVDUMP}|$TLVDUMP_CMD|g"     $EXEC_TEST_SUITES/*.test
 sed -i -- "s|{GTTLVUNDUMP}|$TLVUNDUMP_CMD|g" $EXEC_TEST_SUITES/*.test
 
 # Excecute automated tests.
-shelltest -c $EXEC_TEST_SUITES -- -j1
+valgrind --leak-check=full --trace-children=yes -- shelltest -c $EXEC_TEST_SUITES
 # Get execution exit code.
-exit_code=$?
+EXIT_CODE=$?
 
 # Cleanup if not failed.
-if [ $exit_code -eq 0 ] ; then
+if [ $EXIT_CODE -eq 0 ] ; then
 	rm -rf $TEST_DIR 2> /dev/null
 fi
 
-exit $exit_code
+exit $EXIT_CODE

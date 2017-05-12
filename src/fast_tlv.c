@@ -34,7 +34,7 @@ static int parseHdr(const unsigned char *hdr, size_t hdrLen, struct fast_tlv_s *
 		goto cleanup;
 	}
 
-	t->tag = hdr[0] & GT_TLV_MASK_TLV8_TYPE;
+	t->tag = hdr[0] & GT_TLV_TYPE_1ST_BYTE_MASK;
 
 	if (hdr[0] & GT_TLV_MASK_TLV16) {
 		if (hdrLen != 4) {
@@ -63,7 +63,7 @@ static int parseHdr(const unsigned char *hdr, size_t hdrLen, struct fast_tlv_s *
 
 	/* Set the force flag to indicate TLV that could be TLV8,
 	 * but for some reason are encoded as TLV16. */
-	if (t->tag <= 0x1f && t->hdr_len <= 0xff) {
+	if (t->tag <= GT_TLV_TYPE_1ST_BYTE_MASK && t->hdr_len <= 0xff) {
 		t->force16 = (hdr[0] & GT_TLV_MASK_TLV16) != 0;
 	}
 
