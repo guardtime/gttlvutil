@@ -407,7 +407,7 @@ static int read_from(FILE *f, struct conf_st *conf) {
 	struct file_magic_st *pMagic = NULL;
 	size_t hdr_len = 0;
 
-	if ((res = GT_fread(conf->in_enc, &buf, &len, f)) != GT_OK) goto cleanup;
+	if ((res = GT_fread(conf->in_enc, &buf, &len, f)) != GT_OK || buf == NULL) goto cleanup;
 
 	if (conf->auto_hdr) {
 		size_t i;
