@@ -402,7 +402,7 @@ static int read_from(FILE *f, struct conf_st *conf) {
 	int res;
 	GT_FTLV t;
 	unsigned char *buf = NULL;
-	size_t len;
+	size_t len = 0;
 	size_t off = 0;
 	struct file_magic_st *pMagic = NULL;
 	size_t hdr_len = 0;
