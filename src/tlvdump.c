@@ -402,12 +402,12 @@ static int read_from(FILE *f, struct conf_st *conf) {
 	int res;
 	GT_FTLV t;
 	unsigned char *buf = NULL;
-	size_t len;
+	size_t len = 0;
 	size_t off = 0;
 	struct file_magic_st *pMagic = NULL;
 	size_t hdr_len = 0;
 
-	if ((res = GT_fread(conf->in_enc, &buf, &len, f)) != GT_OK) goto cleanup;
+	if ((res = GT_fread(conf->in_enc, &buf, &len, f)) != GT_OK || buf == NULL) goto cleanup;
 
 	if (conf->auto_hdr) {
 		size_t i;
