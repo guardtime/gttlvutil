@@ -29,7 +29,7 @@ static int grepFile(GT_GrepTlvConf *conf, FILE *f) {
 	if ((res = GT_fread(conf->in_enc, &buf, &len, f)) != GT_OK) goto cleanup;
 
 	/* Handle binary TLV data. */
-	while (len - off != 0) {
+	while (len - off > 0) {
 		size_t consumed;
 
 		res = GT_FTLV_memRead(buf + off, len - off, &t);

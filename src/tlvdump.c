@@ -428,11 +428,10 @@ static int read_from(FILE *f, struct conf_st *conf) {
 		}
 		print_raw_data(buf + off, hdr_len - off, 0, false, conf);
 
-		/* Shift the contents. */
 		off += hdr_len;
 	}
 
-	while (len - off != 0) {
+	while (len - off > 0) {
 		size_t consumed;
 
 		res = GT_FTLV_memRead(buf + off, len - off, &t);
