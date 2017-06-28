@@ -18,6 +18,7 @@ static int grepFile(GT_GrepTlvConf *conf, FILE *f) {
 	unsigned char *buf = NULL;
 	GT_ElementCounter *idx = NULL;
 	size_t len = 0;
+	size_t off = 0;
 
 	idx = calloc(sizeof(GT_ElementCounter), 1);
 	if (idx == NULL) {
@@ -28,26 +29,25 @@ static int grepFile(GT_GrepTlvConf *conf, FILE *f) {
 	if ((res = GT_fread(conf->in_enc, &buf, &len, f)) != GT_OK) goto cleanup;
 
 	/* Handle binary TLV data. */
-	while (len) {
+	while (len - off != 0) {
 		size_t consumed;
 
-		res = GT_FTLV_memRead(buf, len, &t);
+		res = GT_FTLV_memRead(buf + off, len - off, &t);
 		consumed = t.hdr_len + t.dat_len;
-		len -= consumed;
 		if (res != GT_OK) {
 			if (consumed == 0) {
 				if (len == 0) break;
 				continue;
 			}
-			fprintf(stderr, "%s: Failed to parse %llu bytes.\n", conf->file_name, (unsigned long long) len);
+			fprintf(stderr, "%s: Failed to parse %llu bytes.\n", conf->file_name, (unsigned long long) (len - off));
 			res = GT_INVALID_FORMAT;
 			goto cleanup;
 		}
 
-		res = GT_grepTlv(conf, conf->pattern, NULL, idx, buf, &t, NULL, NULL);
+		res = GT_grepTlv(conf, conf->pattern, NULL, idx, buf + off, &t, NULL, NULL);
 		if (res != GT_OK) goto cleanup;
 
-		memmove(buf, buf + consumed, len);
+		off += consumed;
 	}
 
 	res = GT_OK;
