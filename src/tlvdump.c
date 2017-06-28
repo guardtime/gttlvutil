@@ -426,17 +426,15 @@ static int read_from(FILE *f, struct conf_st *conf) {
 		if (conf->pretty_key && pMagic != NULL) {
 			printf("%s: ", pMagic->desc);
 		}
-		print_raw_data(buf, hdr_len, 0, false, conf);
+		print_raw_data(buf + off, hdr_len - off, 0, false, conf);
 
-		len -= hdr_len;
-		/* Shift the contents. */
-		memmove(buf, buf + hdr_len, len);
+		off += hdr_len;
 	}
 
-	while (len > 0) {
+	while (len - off > 0) {
 		size_t consumed;
 
-		res = GT_FTLV_memRead(buf, len, &t);
+		res = GT_FTLV_memRead(buf + off, len - off, &t);
 		consumed = t.hdr_len + t.dat_len;
 		if (res != GT_OK) {
 			if (consumed == 0) {
@@ -448,13 +446,8 @@ static int read_from(FILE *f, struct conf_st *conf) {
 			goto cleanup;
 		}
 
-		t.off = off;
-
-		printTlv(buf, len, &t, 0, conf, NULL);
+		printTlv(buf + off, len - off, &t, 0, conf, NULL);
 		off += consumed;
-
-		len -= consumed;
-		memmove(buf, buf + consumed, len);
 	}
 
 	res = GT_OK;
