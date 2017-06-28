@@ -2,6 +2,7 @@
 4c4f475349473132 @MAGIC Log signature version 12 magic bytes
 4c4f473132534947 @MAGIC Log signature version 12 separate signatures file magic bytes
 4c4f473132424c4b @MAGIC Log signature version 12 separate blocks file magic bytes
+5245435349473132 @MAGIC Log signature version 12 record integrity proof file magic bytes
 0901		*			Header record of the log block
 0901.01		INT			Hash algorithm used for aggregation
 0901.02		RAW			Random seed for the blinding mask
