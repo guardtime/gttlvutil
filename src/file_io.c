@@ -21,8 +21,151 @@
 
 #include <string.h>
 
+static unsigned char buffer[0xffff + 4];
 
- int GT_fread(GT_Encoding enc, unsigned char **raw, size_t *size, FILE *file) {
+/* Length of the data in buffer. */
+static size_t buffer_len = 0;
+
+static void shift_buffer(size_t consumed) {
+	if (consumed > 0) {
+		buffer_len -= consumed;
+		memmove(buffer, buffer + consumed, buffer_len);
+	}
+}
+
+long GT_consume_raw(unsigned char **buf, size_t consumed, FILE *file) {
+	if  (buf == NULL || consumed > buffer_len || file == NULL) {
+		return -1;
+	}
+
+	shift_buffer(consumed);
+
+	if (buffer_len < sizeof(buffer) && !feof(file)) {
+		buffer_len += fread(buffer + buffer_len, 1, sizeof(buffer) - buffer_len, file);
+	}
+
+	*buf = buffer;
+	return buffer_len;
+}
+
+long GT_consume_hex(unsigned char **buf, size_t consumed, FILE *file) {
+	size_t i;
+	bool init = true;
+
+	if  (buf == NULL || consumed > buffer_len || file == NULL) {
+		return -1;
+	}
+
+	shift_buffer(consumed);
+
+	if (buffer_len < sizeof(buffer)) {
+		buffer[buffer_len] = 0;
+	}
+
+	while (buffer_len < sizeof(buffer) && !feof(file)) {
+		int c = fgetc(file);
+		if (c == EOF) break;
+
+		if (c >= '0' && c <= '9') {
+			if (init) {
+				++buffer_len;
+				buffer[buffer_len - 1] = 0;
+			}
+			init = !init;
+
+			buffer[buffer_len - 1] = (buffer[buffer_len - 1] << 4) | (c - '0');
+
+		} else if (tolower(c) >= 'a' && tolower(c <= 'f')) {
+			if (init) {
+				++buffer_len;
+				buffer[buffer_len - 1] = 0;
+			}
+			init = !init;
+
+			buffer[buffer_len - 1] = (buffer[buffer_len - 1] << 4) | (10 + (tolower(c) - 'a'));
+		} else if (!isspace(c)) {
+			fprintf(stderr, "Invalid hex character '%c'.\n", c);
+			return -1;
+		}
+
+	}
+
+	*buf = buffer;
+	return buffer_len;
+}
+
+signed char b64map[0xff] = {
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63,
+		52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1,
+		-1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,
+		15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1,
+		-1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+		41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, -1, -1, -1, -1, -1,
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+
+long GT_consume_b64(unsigned char **buf, size_t consumed, FILE *file) {
+	static int state = 0;
+	static char last = 0;
+	char current;
+	if  (buf == NULL || consumed > buffer_len || file == NULL) {
+		return -1;
+	}
+
+	shift_buffer(consumed);
+
+	while (buffer_len < sizeof(buffer) && !feof(file)) {
+		int c = fgetc(file);
+		if (c == EOF) break;
+
+		if (isspace(c)) continue;
+
+		if (c == '=') {
+			switch(state) {
+				case 0:
+				case 1:
+					fprintf(stderr, "Invalid base64 format: unexpected '=' character.\n");
+					return -1;
+			}
+		} else {
+			current = b64map[c];
+			if (current < 0) {
+				fprintf(stderr, "Invalid base64 format; unexpected character '%c'\n", c);
+				return -1;
+			}
+
+			switch(state) {
+				case 0:
+					last = (current << 2) & 0xff;
+					break;
+				case 1:
+					buffer[buffer_len++] = last | (current >> 4);
+					last = (current << 4) & 0xff;
+					break;
+				case 2:
+					buffer[buffer_len++] = last | (current >> 2);
+					last = (current << 6 ) & 0xff;
+					break;
+				case 3:
+					buffer[buffer_len++] = last | (current & 0x3f);
+					break;
+			}
+			state = (state + 1) % 4;
+		}
+	}
+	*buf = buffer;
+	return buffer_len;
+}
+
+int GT_fread(GT_Encoding enc, unsigned char **raw, size_t *size, FILE *file) {
 	int res = GT_UNKNOWN_ERROR;
 	unsigned char *decoded = NULL;
 	unsigned char *readBuf = NULL;

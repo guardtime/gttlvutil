@@ -294,7 +294,7 @@ int GT_grepTlv(GT_GrepTlvConf *conf, struct pattern_st *pattern, char *prefix, G
 
 			while (len > 0) {
 				res = GT_FTLV_memRead(ptr, len, &n);
-				if (res != GT_OK) break;
+				if (res != GT_OK || len < n.hdr_len + n.dat_len) break;
 
 				res = GT_grepTlv(conf, pt->match, pre, idx_map, ptr, &n, raw, rlen);
 				if (res != GT_OK) goto cleanup;

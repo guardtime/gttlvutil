@@ -40,6 +40,7 @@ struct conf_st {
 	struct desc_st desc;
 	GT_Encoding out_enc;
 	GT_Encoding in_enc;
+	long (*consume_stream)(unsigned char **buf, size_t consumed, FILE *file);
 };
 
 static char *hash_alg[] = {
@@ -175,7 +176,13 @@ static int get_payload_type(unsigned char *buf, size_t buf_len, struct conf_st *
 			struct desc_st *d = NULL;
 
 			res = GT_FTLV_memRead(ptr, len, &n);
+			if (res == GT_OK && len < n.hdr_len + n.dat_len) {
+				res = GT_INVALID_FORMAT;
+			}
 			if (res != GT_OK) goto cleanup;
+
+
+
 
 			/* Try to find sub type. */
 			if (desc != NULL) {
@@ -401,19 +408,26 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 static int read_from(FILE *f, struct conf_st *conf) {
 	int res;
 	GT_FTLV t;
-	unsigned char *buf = NULL;
 	size_t len = 0;
 	size_t off = 0;
+	size_t global_off = 0;
 	struct file_magic_st *pMagic = NULL;
 	size_t hdr_len = 0;
+	unsigned char *ptr = NULL;
+	long read_len;
 
-	if ((res = GT_fread(conf->in_enc, &buf, &len, f)) != GT_OK || buf == NULL) goto cleanup;
+	read_len = conf->consume_stream(&ptr, 0, f);
+	if (read_len < 0 || (read_len == 0 && !feof(f))) {
+		res = GT_IO_ERROR;
+		goto cleanup;
+	}
+	len = read_len;
 
 	if (conf->auto_hdr) {
 		size_t i;
 		for (i = 0; i < conf->desc.magics_len; i++) {
 			size_t hdr_len = conf->desc.magics[i].len;
-			if (hdr_len < len && !memcmp(conf->desc.magics[i].val, buf, hdr_len)) {
+			if (hdr_len < len && !memcmp(conf->desc.magics[i].val, ptr, hdr_len)) {
 				pMagic = conf->desc.magics + i;
 				break;
 			}
@@ -426,35 +440,51 @@ static int read_from(FILE *f, struct conf_st *conf) {
 		if (conf->pretty_key && pMagic != NULL) {
 			printf("%s: ", pMagic->desc);
 		}
-		print_raw_data(buf + off, hdr_len - off, 0, false, conf);
+		print_raw_data(ptr, hdr_len, 0, false, conf);
 
-		off += hdr_len;
+		len -= hdr_len;
+		ptr += hdr_len;
 	}
 
-	while (len - off > 0) {
+	while (len > off) {
 		size_t consumed;
 
-		res = GT_FTLV_memRead(buf + off, len - off, &t);
+		/* Try to read the next TLV. */
+		res = GT_FTLV_memRead(ptr + off, len - off, &t);
 		consumed = t.hdr_len + t.dat_len;
+		t.off = global_off + off;
+
+		if ((len - off < 2 && off != 0) || (res == GT_OK && consumed > len - off && off != 0)) {
+			/* We have reached the end of the buffer, we need to shift. */
+			read_len = conf->consume_stream(&ptr, off, f);
+			if (read_len < 0 || (read_len == 0 && !feof(f))) {
+				res = GT_IO_ERROR;
+				goto cleanup;
+			}
+			len = read_len;
+			global_off += off;
+			off = 0;
+
+			continue;
+		}
+
 		if (res != GT_OK) {
 			if (consumed == 0) {
 				if (feof(f)) break;
 				continue;
 			}
-			fprintf(stderr, "%s: Failed to parse %llu bytes.\n", conf->file_name, (unsigned long long) len);
+			fprintf(stderr, "%s: Failed to parse %llu bytes.\n", conf->file_name, (unsigned long long) len - off);
 			res = GT_INVALID_FORMAT;
 			goto cleanup;
 		}
 
-		printTlv(buf + off, len - off, &t, 0, conf, NULL);
+		printTlv(ptr + off, len - off, &t, 0, conf, NULL);
 		off += consumed;
 	}
 
 	res = GT_OK;
 
 cleanup:
-
-	free(buf);
 
 	return res;
 }
@@ -567,6 +597,8 @@ int main(int argc, char **argv) {
 
 	memset(&conf, 0, sizeof(conf));
 
+	conf.consume_stream = GT_consume_raw;
+
 	/* Set the auto header value to true. */
 	conf.auto_hdr = true;
 	/* Set default output encoding. */
@@ -627,15 +659,23 @@ int main(int argc, char **argv) {
 				}
 				break;
 			}
-			case 'E': {
-				conf.in_enc = GT_ParseEncoding(optarg);
-				if (conf.in_enc == GT_BASE_NA) {
-					fprintf(stderr, "Unknown input data encoding: '%s'\n", optarg);
-					res = GT_INVALID_CMD_PARAM;
-					goto cleanup;
+			case 'E':
+				switch(GT_ParseEncoding(optarg)) {
+					case GT_BASE_2:
+						conf.consume_stream = GT_consume_raw;
+						break;
+					case GT_BASE_16:
+						conf.consume_stream = GT_consume_hex;
+						break;
+					case GT_BASE_64:
+						conf.consume_stream = GT_consume_b64;
+						break;
+					default:
+						fprintf(stderr, "Unknown input data encoding: '%s'\n", optarg);
+						res = GT_INVALID_CMD_PARAM;
+						goto cleanup;
 				}
 				break;
-			}
 			case 'D':
 				usr_desc_path = calloc(PATH_SIZE, sizeof(char));
 				if (!usr_desc_path) {

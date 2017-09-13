@@ -164,11 +164,6 @@ int GT_FTLV_memRead(const unsigned char *m, size_t l, GT_FTLV *t) {
 		if (res != GT_OK) goto cleanup;
 	}
 
-	if (l < t->hdr_len + t->dat_len) {
-		res = GT_INVALID_FORMAT;
-		goto cleanup;
-	}
-
 	res = GT_OK;
 
 cleanup:
@@ -198,6 +193,11 @@ int GT_FTLV_memReadN(const unsigned char *buf, size_t buf_len, GT_FTLV *arr, siz
 		/* Read the next tlv. */
 		res = GT_FTLV_memRead(ptr, len, target);
 		if (res != GT_OK) goto cleanup;
+
+		if (len < target->hdr_len + target->dat_len) {
+			res = GT_INVALID_FORMAT;
+			goto cleanup;
+		}
 
 		target->off = off;
 

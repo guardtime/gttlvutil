@@ -34,7 +34,7 @@ static int grepFile(GT_GrepTlvConf *conf, FILE *f) {
 
 		res = GT_FTLV_memRead(buf + off, len - off, &t);
 		consumed = t.hdr_len + t.dat_len;
-		if (res != GT_OK) {
+		if (res != GT_OK || len - off < t.hdr_len + t.dat_len) {
 			if (consumed == 0) {
 				if (len == 0) break;
 				continue;

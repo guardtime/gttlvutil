@@ -216,6 +216,7 @@ static const encoding_map enc_map[] = {
 	{ "base16",	GT_BASE_16 },
 	{ "64",		GT_BASE_64 },
 	{ "base64", GT_BASE_64 },
+	{ "b64",	GT_BASE_64 },
 	{ NULL,     GT_BASE_NA }
 };
 

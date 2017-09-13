@@ -249,6 +249,9 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 				conf.print_tlv_hdr = true;
 
 				res = GT_FTLV_memRead(raw_buf_ptr, raw_len, &t);
+				if (res == GT_OK && raw_len < t.hdr_len + t.dat_len) {
+					res = GT_INVALID_ARGUMENT;
+				}
 				if (res != GT_OK) {
 					error_log("Failed to init raw TLV.", hmacCalcInfo.stack_pos + 1);
 					goto cleanup;

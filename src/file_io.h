@@ -26,6 +26,13 @@
 #include "encoding.h"
 
 /**
+ * TODO!
+ */
+long GT_consume_raw(unsigned char **buf, size_t consumed, FILE *file);
+long GT_consume_hex(unsigned char **buf, size_t consumed, FILE *file);
+long GT_consume_b64(unsigned char **buf, size_t consumed, FILE *file);
+
+/**
  * Read file stream. The stream is buffered till eof is reached.
  * \param enc	File stream data encoding.
  * \param raw	Buffer containing content of the \c file stream.
