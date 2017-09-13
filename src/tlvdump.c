@@ -473,7 +473,7 @@ static int read_from(FILE *f, struct conf_st *conf) {
 				if (feof(f)) break;
 				continue;
 			}
-			fprintf(stderr, "%s: Failed to parse %llu bytes.\n", conf->file_name, (unsigned long long) len - off);
+			print_error("%s: Failed to parse %llu bytes.\n", conf->file_name, (unsigned long long) len - off);
 			res = GT_INVALID_FORMAT;
 			goto cleanup;
 		}
@@ -495,7 +495,7 @@ static int read_desc_dir(struct desc_st *desc, const char *dir_name, bool overri
 	ENTITY *ent;
 
 	if (DIRECTORY_open(dir_name, &dir) != DIR_OK) {
-		fprintf(stderr, "%s:Unable to access description directory.\n", dir_name);
+		print_error("%s:Unable to access description directory.\n", dir_name);
 		res = GT_IO_ERROR;
 		goto cleanup;
 	}
@@ -514,7 +514,7 @@ static int read_desc_dir(struct desc_st *desc, const char *dir_name, bool overri
 
 			res = desc_add_file(desc, buf, override);
 			if (res != GT_OK) {
-				fprintf(stderr, "%s/%s: Unable to read description file.\n", dir_name, name);
+				print_error("%s/%s: Unable to read description file.\n", dir_name, name);
 			}
 		}
 	}
@@ -540,7 +540,7 @@ static void initDefaultDescriptionFileDir(char *arg0) {
 		char buf[PATH_SIZE];
 
 		if (DIRECTORY_getMyPath(buf, sizeof(buf), arg0) != GT_OK) {
-			fprintf(stderr, "Unable to get path to gttlvdump.\n");
+			print_error("Unable to get path to gttlvdump.\n");
 		}
 		setDescriptionFileDir(buf);
 	}
@@ -552,7 +552,7 @@ static int loadDescriptions(struct desc_st *desc, const char *path, bool overrid
 	/* Read user description files. */
 	res = read_desc_dir(desc, path, override);
 	if (res != GT_OK) {
-		fprintf(stderr, "Unable to load descriptions from '%s'.\n", path);
+		print_error("Unable to load descriptions from '%s'.\n", path);
 	}
 
 	return res;
@@ -565,16 +565,16 @@ static int getOptionDecValue(char opt, char *arg, size_t *val, char *excstr, siz
 	size_t tmp = 0;
 
 	if (errno == ERANGE) {
-		fprintf(stderr, "Option %c is out of range.\n", opt);
+		print_error("Option %c is out of range.\n", opt);
 		goto cleanup;
 	} else if (li < 0) {
-		fprintf(stderr, "Option %c cannot be negative.\n", opt);
+		print_error("Option %c cannot be negative.\n", opt);
 		goto cleanup;
 	} else if (li == 0 && endptr != NULL && *endptr != '\0') {
 		if (excstr && strcmp(endptr, excstr) == 0) {
 			tmp = excval;
 		} else {
-			fprintf(stderr, "Option %c must be a decimal integer.\n", opt);
+			print_error("Option %c must be a decimal integer.\n", opt);
 			goto cleanup;
 		}
 	} else {
@@ -594,6 +594,9 @@ int main(int argc, char **argv) {
 	struct conf_st conf;
 	bool desc_loaded = false;
 	char *usr_desc_path = NULL;
+
+	/* Change the output and cache mode. */
+	setvbuf(stdout, NULL, _IOFBF, 0xffff);
 
 	memset(&conf, 0, sizeof(conf));
 
@@ -654,7 +657,7 @@ int main(int argc, char **argv) {
 			case 'e': {
 				conf.out_enc = GT_ParseEncoding(optarg);
 				if (conf.out_enc == GT_BASE_NA) {
-					fprintf(stderr, "Unknown encoding '%s', defaulting to 'hex'.\n", optarg);
+					print_error("Unknown encoding '%s', defaulting to 'hex'.\n", optarg);
 					conf.out_enc = GT_BASE_16;
 				}
 				break;
@@ -671,7 +674,7 @@ int main(int argc, char **argv) {
 						conf.consume_stream = GT_consume_b64;
 						break;
 					default:
-						fprintf(stderr, "Unknown input data encoding: '%s'\n", optarg);
+						print_error("Unknown input data encoding: '%s'\n", optarg);
 						res = GT_INVALID_CMD_PARAM;
 						goto cleanup;
 				}
@@ -724,7 +727,7 @@ int main(int argc, char **argv) {
 				goto cleanup;
 				break;
 			default:
-				fprintf(stderr, "Unknown parameter, try -h.\n");
+				print_error("Unknown parameter, try -h.\n");
 				res = GT_INVALID_CMD_PARAM;
 				goto cleanup;
 		}
@@ -757,13 +760,13 @@ int main(int argc, char **argv) {
 	} else {
 		int i;
 
-		/* Loop over all the inputfiles. */
+		/* Loop over all the input files. */
 		for (i = 0; optind + i < argc; i++) {
 			conf.file_name = argv[optind + i];
 
 			input = fopen(conf.file_name, "rb");
 			if (input == NULL) {
-				fprintf(stderr, "%s: Unable to open file.\n", argv[optind + i]);
+				print_error("%s: Unable to open file.\n", argv[optind + i]);
 				res = GT_IO_ERROR;
 				goto cleanup;
 			}
@@ -776,6 +779,8 @@ int main(int argc, char **argv) {
 	}
 
 cleanup:
+
+	fflush(stdout);
 
 	if (input != NULL) fclose(input);
 	if (desc_loaded) desc_cleanup(&conf.desc);

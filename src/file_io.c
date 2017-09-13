@@ -84,10 +84,9 @@ long GT_consume_hex(unsigned char **buf, size_t consumed, FILE *file) {
 
 			buffer[buffer_len - 1] = (buffer[buffer_len - 1] << 4) | (10 + (tolower(c) - 'a'));
 		} else if (!isspace(c)) {
-			fprintf(stderr, "Invalid hex character '%c'.\n", c);
+			print_error("Invalid hex character '%c'.\n", c);
 			return -1;
 		}
-
 	}
 
 	*buf = buffer;
@@ -128,17 +127,13 @@ long GT_consume_b64(unsigned char **buf, size_t consumed, FILE *file) {
 
 		if (isspace(c)) continue;
 
-		if (c == '=') {
-			switch(state) {
-				case 0:
-				case 1:
-					fprintf(stderr, "Invalid base64 format: unexpected '=' character.\n");
-					return -1;
-			}
+		if (c == '=' && state < 2) {
+			print_error("Invalid base64 format: unexpected '=' character.\n");
+			return -1;
 		} else {
 			current = b64map[c];
 			if (current < 0) {
-				fprintf(stderr, "Invalid base64 format; unexpected character '%c'\n", c);
+				print_error("Invalid base64 format: unexpected character '%c'\n", c);
 				return -1;
 			}
 
@@ -160,6 +155,11 @@ long GT_consume_b64(unsigned char **buf, size_t consumed, FILE *file) {
 			}
 			state = (state + 1) % 4;
 		}
+	}
+
+	if (feof(file) && state != 0) {
+		print_error("Invalid base64 format: unexpected end of stream.");
+		return -1;
 	}
 	*buf = buffer;
 	return buffer_len;
@@ -183,7 +183,7 @@ int GT_fread(GT_Encoding enc, unsigned char **raw, size_t *size, FILE *file) {
 		bufSize += GT_TLV_BUF_SIZE;
 		tmp = realloc(readBuf, bufSize);
 		if (tmp == NULL) {
-			fprintf(stderr, "Out of memory.\n");
+			print_error("Out of memory.\n");
 			res = GT_OUT_OF_MEMORY;
 			goto cleanup;
 		}
@@ -192,7 +192,7 @@ int GT_fread(GT_Encoding enc, unsigned char **raw, size_t *size, FILE *file) {
 		read += fread(readBuf + read, 1, bufSize - read, file);
 
 		if (ferror(file)) {
-			fprintf(stderr, "Failed to read input stream.\n");
+			print_error("Failed to read input stream.\n");
 			res = GT_IO_ERROR;
 			goto cleanup;
 		}
@@ -212,7 +212,7 @@ int GT_fread(GT_Encoding enc, unsigned char **raw, size_t *size, FILE *file) {
 			decLen = GT_GetDecodedSize(enc, encoded);
 			decoded = calloc(decLen, sizeof(char));
 			if (decoded == NULL) {
-				fprintf(stderr, "Out of memory.\n");
+				print_error("Out of memory.\n");
 				goto cleanup;
 			}
 
@@ -222,7 +222,7 @@ int GT_fread(GT_Encoding enc, unsigned char **raw, size_t *size, FILE *file) {
 				default:			res = GT_INVALID_ARGUMENT; break;
 			}
 			if (res != GT_OK) {
-				fprintf(stderr, "Unable to decode string.\n");
+				print_error("Unable to decode string.\n");
 				goto cleanup;
 			}
 

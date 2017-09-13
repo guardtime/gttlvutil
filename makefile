@@ -63,12 +63,14 @@ DUMP_OBJ = \
 	$(OBJ_DIR)\encoding.obj \
 	$(OBJ_DIR)\compatibility.obj \
 	$(OBJ_DIR)\file_io.obj
+	$(OBJ_DIR)\common.obj \
 
 WRAP_OBJ = \
 	$(OBJ_DIR)\tlvwrap.obj \
 	$(OBJ_DIR)\getopt.obj \
 	$(OBJ_DIR)\encoding.obj \
 	$(OBJ_DIR)\file_io.obj
+	$(OBJ_DIR)\common.obj \
 
 GREP_OBJ = \
 	$(OBJ_DIR)\tlvgrep.obj \
@@ -78,6 +80,7 @@ GREP_OBJ = \
 	$(OBJ_DIR)\encoding.obj \
 	$(OBJ_DIR)\compatibility.obj \
 	$(OBJ_DIR)\file_io.obj
+	$(OBJ_DIR)\common.obj \
 
 UNDUMP_OBJ = \
 	$(OBJ_DIR)\tlvundump.obj \
@@ -86,6 +89,7 @@ UNDUMP_OBJ = \
 	$(OBJ_DIR)\hash.obj \
 	$(OBJ_DIR)\compatibility.obj \
 	$(OBJ_DIR)\grep_tlv.obj
+	$(OBJ_DIR)\common.obj \
 
 #Selecting hash provider
 !IF "$(HASH_PROVIDER)" == "OPENSSL"
