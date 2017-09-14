@@ -32,6 +32,8 @@
  * \param buf		Output buffer - do not free.
  * \param consumed	Number of bytes to shift the buffer to the left.
  * \param file		Stream to read from.
+ * \return The number of bytes ready to be processed. If an error occurs, a negative number is
+ * 		returned.
  */
 long GT_consume_raw(unsigned char **buf, size_t consumed, FILE *file);
 

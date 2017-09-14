@@ -19,6 +19,7 @@
 
 #include "common.h"
 #include <stdio.h>
+#include <stdarg.h>
 
 int print_error(const char *format, ...) {
 	int ret;
