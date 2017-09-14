@@ -443,7 +443,7 @@ static int read_from(FILE *f, struct conf_st *conf) {
 		print_raw_data(ptr, hdr_len, 0, false, conf);
 
 		len -= hdr_len;
-		ptr += hdr_len;
+		off += hdr_len;
 	}
 
 	while (len > off) {

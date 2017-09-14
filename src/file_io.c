@@ -49,7 +49,6 @@ long GT_consume_raw(unsigned char **buf, size_t consumed, FILE *file) {
 }
 
 long GT_consume_hex(unsigned char **buf, size_t consumed, FILE *file) {
-	size_t i;
 	bool init = true;
 
 	if  (buf == NULL || consumed > buffer_len || file == NULL) {
