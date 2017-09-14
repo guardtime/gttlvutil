@@ -468,7 +468,7 @@ static int read_from(FILE *f, struct conf_st *conf) {
 			continue;
 		}
 
-		if (res != GT_OK) {
+		if (res != GT_OK || consumed > len - off) {
 			if (consumed == 0) {
 				if (feof(f)) break;
 				continue;

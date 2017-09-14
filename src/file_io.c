@@ -83,7 +83,7 @@ long GT_consume_hex(unsigned char **buf, size_t consumed, FILE *file) {
 
 			buffer[buffer_len - 1] = (buffer[buffer_len - 1] << 4) | (10 + (tolower(c) - 'a'));
 		} else if (!isspace(c)) {
-			print_error("Invalid hex character '%c'.\n", c);
+			print_error("Invalid hex character 0x%02x.\n", c);
 			return -1;
 		}
 	}
@@ -126,9 +126,11 @@ long GT_consume_b64(unsigned char **buf, size_t consumed, FILE *file) {
 
 		if (isspace(c)) continue;
 
-		if (c == '=' && state < 2) {
-			print_error("Invalid base64 format: unexpected '=' character.\n");
-			return -1;
+		if (c == '=') {
+			if (state < 2) {
+				print_error("Invalid base64 format: unexpected '=' character.\n");
+				return -1;
+			}
 		} else {
 			current = b64map[c];
 			if (current < 0) {
@@ -152,8 +154,8 @@ long GT_consume_b64(unsigned char **buf, size_t consumed, FILE *file) {
 					buffer[buffer_len++] = last | (current & 0x3f);
 					break;
 			}
-			state = (state + 1) % 4;
 		}
+		state = (state + 1) % 4;
 	}
 
 	if (feof(file) && state != 0) {

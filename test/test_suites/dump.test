@@ -105,8 +105,8 @@ TESTCASE: {GTTLVDUMP} -E raw test/resources/sig/ok-sig-2014-08-01.1.ksig
 TESTCASE: {GTTLVDUMP} -E 16 test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 >>>2
-Unable to decode string.
->>>= 6
+Invalid hex character 0x88.
+>>>= 4 
 
 ###############################################################################
 # Tlvdump KSI signature which is in hex format.
