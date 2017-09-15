@@ -454,7 +454,7 @@ static int read_from(FILE *f, struct conf_st *conf) {
 		consumed = t.hdr_len + t.dat_len;
 		t.off = global_off + off;
 
-		if ((len - off < 2 && off != 0) || (res == GT_OK && consumed > len - off && off != 0)) {
+		if ((len - off < 2 && off != 0) || (consumed > len - off && off != 0)) {
 			/* We have reached the end of the buffer, we need to shift. */
 			read_len = conf->consume_stream(&ptr, off, f);
 			if (read_len < 0 || (read_len == 0 && !feof(f))) {
