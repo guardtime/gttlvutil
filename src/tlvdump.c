@@ -446,7 +446,7 @@ static int read_from(FILE *f, struct conf_st *conf) {
 		off += hdr_len;
 	}
 
-	while (len > off) {
+	while (1) {
 		size_t consumed;
 
 		/* Try to read the next TLV. */
@@ -454,10 +454,11 @@ static int read_from(FILE *f, struct conf_st *conf) {
 		consumed = t.hdr_len + t.dat_len;
 		t.off = global_off + off;
 
-		if (((res != GT_OK) || (len - off < 2) || (consumed > len - off)) && off != 0) {
+		if (((res != GT_OK) || (len - off < 2) || ((res == GT_OK) && (consumed > len - off))) && off != 0) {
 			/* We have reached the end of the buffer, we need to shift. */
 			read_len = conf->consume_stream(&ptr, off, f);
 			if (read_len < 0 || (read_len == 0 && !feof(f))) {
+				print_error("Error reading input.\n");
 				res = GT_IO_ERROR;
 				goto cleanup;
 			}
@@ -468,11 +469,12 @@ static int read_from(FILE *f, struct conf_st *conf) {
 			continue;
 		}
 
+		/* If the code did not enter the previous block, exit if there's nothing left to do. */
+		if (len == off) {
+			break;
+		}
+
 		if (res != GT_OK || consumed > len - off) {
-			if (consumed == 0) {
-				if (feof(f)) break;
-				continue;
-			}
 			print_error("%s: Failed to parse %llu bytes.\n", conf->file_name, (unsigned long long) len - off);
 			res = GT_INVALID_FORMAT;
 			goto cleanup;
