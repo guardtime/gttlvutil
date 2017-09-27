@@ -88,6 +88,11 @@ long GT_consume_hex(unsigned char **buf, size_t consumed, FILE *file) {
 		}
 	}
 
+	/* Just shift the last byte, if the input consisted of uneven number of hex characters. */
+	if (!init) {
+		buffer[buffer_len - 1] <<= 4;
+	}
+
 	*buf = buffer;
 	return buffer_len;
 }

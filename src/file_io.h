@@ -28,7 +28,7 @@
 /**
  * This function reads binary data to a buffer from the stream. The contents of the internal
  * buffer is shifted \c consume elements to the right and if the stream is not closed reads
- * as many bytes as possible to populate the remaining empty space on the right.
+ * as many bytes as possible to populate the remaining empty space on the left.
  * \param buf		Output buffer - do not free.
  * \param consumed	Number of bytes to shift the buffer to the left.
  * \param file		Stream to read from.
@@ -38,15 +38,16 @@
 long GT_consume_raw(unsigned char **buf, size_t consumed, FILE *file);
 
 /**
- * Same as #GT_consume_raw, but interprets the input as a hex string. It will
- * fail if the input does contain anything that is not a whitespace or hex character.
- * If the input consists of an uneven number of hex characters the last byte is
- * interpreted as it was followed by a zero.
+ * Same as #GT_consume_raw, but interprets the input as a hex string. The decoded binary
+ * is stored in the buffer instead. It will fail if the input does contain anything
+ * that is not a whitespace or hex character. If the input consists of an uneven number of
+ * hex characters the last byte is interpreted as it was followed by a zero (ffa is interpreted as ffa0).
  */
 long GT_consume_hex(unsigned char **buf, size_t consumed, FILE *file);
 
 /**
- * Same as #GT_consume_raw, but it interprets the input as one or more base64 strings.
+ * Same as #GT_consume_raw, but it interprets the input as one or more base64 strings. The decoded binary
+ * is stored in the buffer instead.
  */
 long GT_consume_b64(unsigned char **buf, size_t consumed, FILE *file);
 
