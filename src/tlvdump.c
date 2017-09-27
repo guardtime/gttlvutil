@@ -665,7 +665,7 @@ int main(int argc, char **argv) {
 				break;
 			}
 			case 'E':
-				switch(GT_ParseEncoding(optarg)) {
+				switch(conf.in_enc = GT_ParseEncoding(optarg)) {
 					case GT_BASE_2:
 						conf.consume_stream = GT_consume_raw;
 						break;
