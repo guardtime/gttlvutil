@@ -41,7 +41,8 @@ long GT_consume_raw(unsigned char **buf, size_t consumed, FILE *file);
  * Same as #GT_consume_raw, but interprets the input as a hex string. The decoded binary
  * is stored in the buffer instead. It will fail if the input does contain anything
  * that is not a whitespace or hex character. If the input consists of an uneven number of
- * hex characters the last byte is interpreted as it was followed by a zero (ffa is interpreted as ffa0).
+ * hex characters the last byte the behavior is unspecified - the current implementation interprets
+ * this case as the last hex character was followed by a zero (ffa is interpreted as ffa0).
  */
 long GT_consume_hex(unsigned char **buf, size_t consumed, FILE *file);
 
