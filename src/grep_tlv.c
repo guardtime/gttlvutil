@@ -5,6 +5,7 @@
 
 #include "common.h"
 #include "fast_tlv.h"
+#include "file_io.h"
 
 struct pattern_st {
 	bool match_tag;
@@ -199,6 +200,7 @@ void GT_GrepTlv_initConf(GT_GrepTlvConf *conf) {
 	conf->print_tlv_hdr_only = false;
 	conf->pattern = NULL;
 	conf->in_enc = GT_BASE_2;
+	conf->consume_stream = NULL;
 }
 
 int GT_grepTlv(GT_GrepTlvConf *conf, struct pattern_st *pattern, char *prefix, GT_ElementCounter *map, unsigned char *buf, GT_FTLV *t, unsigned char *raw, size_t *rlen) {
