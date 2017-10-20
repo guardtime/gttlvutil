@@ -46,6 +46,7 @@ typedef struct {
 	unsigned trunc_tlv_tag;
 	size_t trunc_len;
 	GT_Encoding in_enc;
+	long (*consume_stream)(unsigned char **buf, size_t consumed, FILE *file);
 } GT_GrepTlvConf;
 
 void GT_GrepTlv_initConf(GT_GrepTlvConf *conf);

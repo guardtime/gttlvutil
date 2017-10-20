@@ -107,8 +107,8 @@ TESTCASE: {GTTLVGREP} -E raw 800.801[1].07[1],08[1] test/resources/sig/ok-sig-20
 TESTCASE: {GTTLVGREP} -E 16 800.801[1].07[1],08[1] test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 >>>2
-Unable to decode string.
->>>= 6
+Invalid hex character 0x88.
+>>>= 4
 
 ###############################################################################
 # Tlvgrep 2nd aggregation hash chain 2nd right and left links.

@@ -105,8 +105,8 @@ TESTCASE: {GTTLVDUMP} -E raw test/resources/sig/ok-sig-2014-08-01.1.ksig
 TESTCASE: {GTTLVDUMP} -E 16 test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 >>>2
-Unable to decode string.
->>>= 6
+Invalid hex character 0x88.
+>>>= 4 
 
 ###############################################################################
 # Tlvdump KSI signature which is in hex format.
@@ -159,6 +159,18 @@ TESTCASE: {GTTLVDUMP} -E 64 test/resources/sig/ok-sig-2014-08-01.1.b64
 .*TLV.02.*53dc2a00.*
 .*TLV.04.*01e4fc0853cacb3c888ee4d2f843083acb1a822e60403a6af7167f70d0ca8eee61.*/
 >>>= 0
+
+###############################################################################
+# Tlvdump a TLV in hex format which has an un even number of hex characters.
+# Use -E key to set input data encoding.
+# Encoding parameter 'hex'.
+
+TESTCASE: echo "812300041102bb8" | {GTTLVDUMP} -E hex
+>>>  /TLV\[0123\]:
+  TLV\[11\]: bb80
+/
+>>>= 0
+
 
 ###############################################################################
 # Tlvdump KSI signature which is in Base64 format.
