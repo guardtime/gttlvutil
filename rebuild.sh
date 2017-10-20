@@ -20,9 +20,7 @@
 
 PRF=gttlvutil-$(tr -d [:space:] < VERSION)
 
-if [ $# -eq 0 ]; then
-  conf_args="--with-data-dir=-"
-else
+if [ $# -gt  0 ]; then
   conf_args=$* 
 fi
 
