@@ -84,7 +84,7 @@ static int64_t get_int64(unsigned char *buf, size_t len) {
 
 	for (i = 0; i < len; i++) {
 		val = (val << 8);
-		val += buf[i]
+		val += buf[i];
 	}
 
 	if (val == 0x01) {
@@ -96,6 +96,7 @@ static int64_t get_int64(unsigned char *buf, size_t len) {
 	}
 	else {
 		val = (int64_t)(val >> 1);
+
 	}
 
 	return val;
@@ -238,7 +239,7 @@ static void print_signed_int(unsigned char *buf, size_t len, int prefix_len, str
 		printf("0x");
 		print_raw_data(buf, len, prefix_len, true, conf);
 	} else {
-		printf("%d\n", get_int64(buf, len));
+		printf("%d\n", (int64_t)get_int64(buf, len));
 	}
 }
 
