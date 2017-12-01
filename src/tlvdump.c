@@ -78,6 +78,29 @@ static uint64_t get_uint64(unsigned char *buf, size_t len) {
 	return val;
 }
 
+static int64_t get_int64(unsigned char *buf, size_t len) {
+	int64_t val = 0;
+	size_t i;
+
+	for (i = 0; i < len; i++) {
+		val = (val << 8);
+		val += buf[i]
+	}
+
+	if (val == 0x01) {
+		val = (int64_t) 0x8000000000000000;
+	}
+
+	if (val & 0x01) {
+		val = -(int64_t)(val >> 1);
+	}
+	else {
+		val = (int64_t)(val >> 1);
+	}
+
+	return val;
+}
+
 
 #define wrap_offset(l)	printf("\n%*s", (l), "")
 #define wrap_line(p)                                   \
@@ -208,6 +231,16 @@ static void print_int(unsigned char *buf, size_t len, int prefix_len, struct con
 		print_raw_data(buf, len, prefix_len, true, conf);
 	} else {
 		printf("%llu\n", (unsigned long long)get_uint64(buf, len));
+	}
+}
+
+static void print_signed_int(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
+
+	if (len > 8) {
+		printf("0x");
+		print_raw_data(buf, len, prefix_len, true, conf);
+	} else {
+		printf("%d\n", get_int64(buf, len));
 	}
 }
 
@@ -375,6 +408,9 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 		switch (type) {
 			case TLV_INT:
 				print_int(ptr, len, prefix_len, conf);
+				break;
+			case TLV_SINT:
+				print_signed_int(ptr, len, prefix_len, conf);
 				break;
 			case TLV_STR:
 				print_str(ptr, len, prefix_len, conf);
