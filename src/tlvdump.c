@@ -225,7 +225,6 @@ cleanup:
 }
 
 static void print_int(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
-
 	if (len > 8) {
 		printf("0x");
 		print_raw_data(buf, len, prefix_len, true, conf);
@@ -235,7 +234,6 @@ static void print_int(unsigned char *buf, size_t len, int prefix_len, struct con
 }
 
 static void print_signed_int(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
-
 	if (len > 8) {
 		printf("0x");
 		print_raw_data(buf, len, prefix_len, true, conf);
