@@ -159,7 +159,7 @@ TESTCASE: echo -n -e 'TLV[1]:234567890z' | {GTTLVUNDUMP}
 # Correct TLV value is given
 TESTCASE: {GTTLVUNDUMP} test/resources/tlv/dummy.txt | {GTTLVDUMP}
 >>>
-TLV[0123]:
+TLV[0123]: 
   TLV[1f]: 1a
 >>>= 0
 
