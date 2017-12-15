@@ -87,17 +87,15 @@ static int64_t get_int64(unsigned char *buf, size_t len) {
 		val += buf[i];
 	}
 
-	if (val == 0x01) {
-		val = (int64_t) 0x8000000000000000;
+	if (val & 0x01)
+	{
+		val = -(int64_t)(val >> 1) - 1;
 	}
-
-	if (val & 0x01) {
-		val = -(int64_t)(val >> 1);
-	}
-	else {
+	else
+	{
 		val = (int64_t)(val >> 1);
-
 	}
+
 
 	return val;
 }
