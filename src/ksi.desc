@@ -163,7 +163,7 @@
 0221.05.03		UTIME		ACK time
 0221.05.04		INT			Aggregation delay ms
 0221.05.05		INT			Aggregation period ms
-0221.05.06		INT			Aggregation drift ms
+0221.05.06		SINT		Aggregation drift ms
 
 0200			*			Aggregation PDU
 0200.01			*			PDU header
