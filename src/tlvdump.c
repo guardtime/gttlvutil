@@ -78,24 +78,25 @@ static uint64_t get_uint64(unsigned char *buf, size_t len) {
 	return val;
 }
 
-static int64_t get_int64(unsigned char *buf, size_t len) {
-	int64_t val = 0;
+static signed long long get_int64(unsigned char *buf, size_t len) {
+	signed long long val = 0;
 	size_t i;
 
 	for (i = 0; i < len; i++) {
 		val = (val << 8);
 		val += buf[i];
 	}
-
-	if (val & 0x01)
-	{
-		val = -(int64_t)(val >> 1) - 1;
+	/* ZigZag encoded integer decoding (0x00 => 0, 0x01 => -1, 0x02 => 1, ...)*/
+	/*Negative values:*/
+	if (val & 0x01) {
+		/*Set sign to "-" and shift right*/
+		val = -(signed long long)(val >> 1) - 1;
 	}
-	else
-	{
-		val = (int64_t)(val >> 1);
+	/*Positive valies:*/
+	else {
+		/*Just shift right*/
+		val = (signed long long)(val >> 1);
 	}
-
 
 	return val;
 }
@@ -237,7 +238,7 @@ static void print_signed_int(unsigned char *buf, size_t len, int prefix_len, str
 		printf("0x");
 		print_raw_data(buf, len, prefix_len, true, conf);
 	} else {
-		printf("%d\n", (int64_t)get_int64(buf, len));
+		printf("%lld\n", (signed long long)get_int64(buf, len));
 	}
 }
 
