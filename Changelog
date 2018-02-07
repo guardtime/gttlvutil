@@ -1,3 +1,4 @@
+* IMPROVEMENT: Corrected alignment when using '-y' flag.
 * BUGFIX: Fixed rebuild.sh default behaviour.
 * IMPROVEMENT: Optimized gttlvgrep for large TLV files.
 * IMPROVEMENT: Optimized gttlvdump for large TLV files.
