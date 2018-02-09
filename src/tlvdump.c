@@ -375,7 +375,7 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 	prefix_len += printf("%*s", level * INDENT_LEN, "");
 
 	if (t->tag > 31 || t->dat_len > 255) {
-		prefix_len += printf("TLV[%04x%s%s]:", t->tag, (t->is_fwd ? ",F" : ""), (t->is_nc ? ",N" : ""));
+		prefix_len += printf("TLV[%04x%s%s]: ", t->tag, (t->is_fwd ? ",F" : ""), (t->is_nc ? ",N" : ""));
 	} else {
 		prefix_len += printf("TLV%s[%02x%s%s]: ", t->force16 ? "16" : "", t->tag, (t->is_fwd ? ",F" : ""), (t->is_nc ? ",N" : ""));
 	}
@@ -531,7 +531,7 @@ static int read_desc_dir(struct desc_st *desc, const char *dir_name, bool overri
 	ENTITY *ent;
 
 	if (DIRECTORY_open(dir_name, &dir) != DIR_OK) {
-		print_error("%s:Unable to access description directory.\n", dir_name);
+		print_error("%s: Unable to access description directory.\n", dir_name);
 		res = GT_IO_ERROR;
 		goto cleanup;
 	}
