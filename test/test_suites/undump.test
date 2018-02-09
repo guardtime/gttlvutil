@@ -77,68 +77,57 @@ TESTCASE: {GTTLVUNDUMP} test/resources/tlv/test2-extend_response-reqId_1.txt tes
 
 TESTCASE: echo "T1234567890" | {GTTLVUNDUMP}
 >>>
->>>2
-<stdin>:1 - Expected 'L'.
+>>>2 /<stdin>:1 - Expected 'L'./
 >>>= 8
 
 TESTCASE: echo "TL1234567890" | {GTTLVUNDUMP}
 >>>
->>>2
-<stdin>:1 - Expected 'V'.
+>>>2 /<stdin>:1 - Expected 'V'./
 >>>= 8
 
 TESTCASE: echo "TLV01234567890" | {GTTLVUNDUMP}
 >>>
->>>2
-<stdin>:1 - Expected '['.
+>>>2 /<stdin>:1 - Expected '\['./
 >>>= 8
 
 TESTCASE: echo "TLV1234567890" | {GTTLVUNDUMP}
 >>>
->>>2
-<stdin>:1 - Expected '6'.
+>>>2 /<stdin>:1 - Expected '6'./
 >>>= 8
 
 TESTCASE: echo "TLV16234567890" | {GTTLVUNDUMP}
 >>>
->>>2
-<stdin>:1 - Expected '['.
+>>>2 /<stdin>:1 - Expected '\['./
 >>>= 8
 
 TESTCASE: echo "TLV[q1234567890" | {GTTLVUNDUMP}
 >>>
->>>2
-<stdin>:1 - Expected hex tag value.
+>>>2 /<stdin>:1 - Expected hex tag value./
 >>>= 8
 
 TESTCASE: echo "TLV[1234567890" | {GTTLVUNDUMP}
 >>>
->>>2
-<stdin>:1 - TLV tag value may not exceed 0x1fff.
+>>>2 /<stdin>:1 - TLV tag value may not exceed 0x1fff./
 >>>= 8
 
 TESTCASE: echo "TLV[1 234567890" | {GTTLVUNDUMP}
 >>>
->>>2
-<stdin>:1 - Expected ']'.
+>>>2 /<stdin>:1 - Expected ']'./
 >>>= 8
 
 TESTCASE: echo "TLV[1]234567890" | {GTTLVUNDUMP}
 >>>
->>>2
-<stdin>:1 - Expected ':'.
+>>>2 /<stdin>:1 - Expected ':'./
 >>>= 8
 
 TESTCASE: echo "TLV[1]:q234567890" | {GTTLVUNDUMP}
 >>>
->>>2
-<stdin>:1 - Unexpected character: 'q'.
+>>>2 /<stdin>:1 - Unexpected character: 'q'./
 >>>= 8
 
 TESTCASE: echo "TLV[1]:2345q67890" | {GTTLVUNDUMP}
 >>>
->>>2
-<stdin>:1 - Unexpected character: 'q'.
+>>>2 /<stdin>:1 - Unexpected character: 'q'./
 >>>= 8
 
 TESTCASE: echo -n -e 'TLV[1]:234567890\x00' | {GTTLVUNDUMP}
