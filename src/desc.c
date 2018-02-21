@@ -158,6 +158,7 @@ cleanup:
 static int get_type(const char *ts) {
 	if (!strcmp("*", ts)) return TLV_COMPOSITE;
 	if (!strcmp("INT", ts)) return TLV_INT;
+	if (!strcmp("SINT", ts)) return TLV_SINT;
 	if (!strcmp("RAW", ts)) return TLV_RAW;
 	if (!strcmp("STR", ts)) return TLV_STR;
 	if (!strcmp("TIME", ts)) return TLV_TIME;

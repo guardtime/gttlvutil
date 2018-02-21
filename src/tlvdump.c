@@ -80,6 +80,29 @@ static uint64_t get_uint64(unsigned char *buf, size_t len) {
 	return val;
 }
 
+static long long get_int64(unsigned char *buf, size_t len) {
+	long long val = 0;
+	size_t i;
+
+	for (i = 0; i < len; i++) {
+		val = (val << 8);
+		val += buf[i];
+	}
+	/* ZigZag encoded integer decoding (0x00 => 0, 0x01 => -1, 0x02 => 1, ...)*/
+	/*Negative values:*/
+	if (val & 0x01) {
+		/*Set sign to "-" and shift right*/
+		val = -(long long)(val >> 1) - 1;
+	}
+	/*Positive values:*/
+	else {
+		/*Just shift right*/
+		val = (long long)(val >> 1);
+	}
+
+	return val;
+}
+
 
 #define wrap_offset(l)	printf("\n%*s", (l), "")
 #define wrap_line(p)                                   \
@@ -210,12 +233,20 @@ cleanup:
 }
 
 static void print_int(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
-
 	if (len > 8) {
 		printf("0x");
 		print_raw_data(buf, len, prefix_len, true, conf);
 	} else {
 		printf("%llu\n", (unsigned long long)get_uint64(buf, len));
+	}
+}
+
+static void print_signed_int(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
+	if (len > 8) {
+		printf("0x");
+		print_raw_data(buf, len, prefix_len, true, conf);
+	} else {
+		printf("%lld\n", (long long)get_int64(buf, len));
 	}
 }
 
@@ -384,6 +415,9 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 			case TLV_INT:
 				print_int(ptr, len, prefix_len, conf);
 				break;
+			case TLV_SINT:
+				print_signed_int(ptr, len, prefix_len, conf);
+				break;
 			case TLV_STR:
 				print_str(ptr, len, prefix_len, conf);
 				break;
@@ -497,7 +531,7 @@ static int read_desc_dir(struct desc_st *desc, const char *dir_name, bool overri
 	ENTITY *ent;
 
 	if (DIRECTORY_open(dir_name, &dir) != DIR_OK) {
-		print_error("%s:Unable to access description directory.\n", dir_name);
+		print_error("%s: Unable to access description directory.\n", dir_name);
 		res = GT_IO_ERROR;
 		goto cleanup;
 	}
