@@ -166,9 +166,9 @@ TESTCASE: {GTTLVDUMP} -E 64 test/resources/sig/ok-sig-2014-08-01.1.b64
 # Encoding parameter 'hex'.
 
 TESTCASE: echo "812300041102bb8" | {GTTLVDUMP} -E hex
->>>
-TLV[0123]: 
-  TLV[11]: bb80
+>>>  /TLV\[0123\]: 
+  TLV\[11\]: bb80
+/
 >>>= 0
 
 

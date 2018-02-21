@@ -187,7 +187,7 @@ TESTUTIL: diff test/resources/sig/ok-sig-2014-08-01.1.ksig.txt {TEST_DIR}/dump_o
 # original binary file.
 
 TESTCASE: {GTTLVDUMP} test/resources/sig/ok-sig-2014-08-01.1.ksig | {GTTLVUNDUMP} | {GTTLVDUMP} | diff test/resources/sig/ok-sig-2014-08-01.1.ksig.txt -
->>>
+>>>	
 >>>= 0
 
 ###############################################################################
