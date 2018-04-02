@@ -45,6 +45,6 @@ AC_ARG_WITH([data-dir],
 AM_CONDITIONAL([USE_DATA_DIR], [test x$use_datadir = xtrue])
 AM_CONDITIONAL([USE_PKG_DATA_DIR], [test x$use_pkgdatadir = xtrue])
 
-AC_CONFIG_FILES([GNUmakefile src/GNUmakefile])
+AC_CONFIG_FILES([GNUmakefile src/GNUmakefile packaging/redhat/gttlvutil.spec])
 AC_OUTPUT
 
