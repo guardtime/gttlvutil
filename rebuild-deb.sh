@@ -32,8 +32,3 @@ debuild -D -e LIBS -us -uc
 #$debuild_flags
 cd ..
 
-# suffix=${version}-${PKG_VERSION}.${RELEASE_VERSION}_${ARCH}
-# mv ksi-tools_${version}_${ARCH}.changes ksi-tools_$suffix.changes
-# mv ksi-tools_${version}_${ARCH}.deb ksi-tools_$suffix.deb
-
-# rm -rf ksi-tools-$version
