@@ -1,3 +1,4 @@
+* IMPROVEMENT: Debian packaging implemented.
 * IMPROVEMENT: Redhat packaging files moved to 'packaging/redhat'.
 * IMPROVEMENT: Corrected alignment when using '-y' flag.
 * BUGFIX: Fixed rebuild.sh default behaviour.
