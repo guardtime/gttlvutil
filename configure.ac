@@ -22,6 +22,15 @@ AC_TYPE_UINT8_T
 # Add more compile time warnings
 CFLAGS+=" -Wall"
 
+AC_ARG_WITH([openssl],
+  [AC_HELP_STRING([--with-openssl=PATH],
+                 [build with OpenSSL installed at specified location.])],
+:, with_openssl=)
+if test ! -z "$with_openssl" ; then
+	CFLAGS="-I$with_openssl/include $CFLAGS"
+	LDFLAGS="-L$with_openssl/lib $LDFLAGS"
+fi
+
 AC_ARG_WITH([data-dir],  
   [AC_HELP_STRING([--with-data-dir=PATH], 
                   [path to directory containing desc files. Use '-' to search the files from the directory where executable is located.])], 
