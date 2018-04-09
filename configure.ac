@@ -22,8 +22,9 @@ AC_TYPE_UINT8_T
 # Add more compile time warnings
 CFLAGS+=" -Wall"
 
-AC_ARG_WITH(openssl,
-[  --with-openssl=path       build with OpenSSL installed at specified location],
+AC_ARG_WITH([openssl],
+  [AC_HELP_STRING([--with-openssl=PATH],
+                 [build with OpenSSL installed at specified location.])],
 :, with_openssl=)
 if test ! -z "$with_openssl" ; then
 	CFLAGS="-I$with_openssl/include $CFLAGS"
