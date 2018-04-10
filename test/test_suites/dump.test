@@ -367,7 +367,7 @@ TESTCASE: {GTTLVDUMP} -H auto test/resources/pub/ksi-publications.bin
 ###############################################################################
 # Try to dump garbage.
 
-TESTCASE: echo -en "\x12\x34\x56" | {GTTLVDUMP}
+TESTCASE: test/echo.sh "\x12\x34\x56" | {GTTLVDUMP}
 >>>
 >>>2
 (null): Failed to parse 3 bytes.
