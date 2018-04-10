@@ -72,7 +72,7 @@ TESTCASE: ((echo -en "\x61\x6e\x6f\x6e\x00" | {GTTLVWRAP} -t 01; echo -en "\x54\
 
 ###############################################################################
 # Create an aggregation error response. Compare it to the original file.
-# Use -E flag for using input data with various encoding. 
+# Use -E flag for using input data with various encoding.
 # TLV[0200]:
 #   TLV[01]:
 #     TLV[01]: 616e6f6e00

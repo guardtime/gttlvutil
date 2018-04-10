@@ -15,7 +15,7 @@
 # "Guardtime" and "KSI" are trademarks or registered trademarks of
 # Guardtime, Inc., and no license to trademarks is granted; Guardtime
 # reserves and retains all trademark rights.
-# # Depends: libc libssl1.0.2 | libssl1.0.0 | libssl0.9.8
+
 
 Source: @PACKAGE@
 Section: utils
@@ -29,7 +29,7 @@ Architecture: any
 Section: utils
 Priority: optional
 Depends: ${shlibs:Depends}
-Description: type-length-value (TLV) encoded data utility
+Description: KSI type-length-value (TLV) encoded data utility
  The gttlvutil is a collection of utils for working with the KSI
  type-length-value (TLV) encoded binary data. This encoding is used throughout
  the KSI infrastructure: for KSI signature, publications file and network
