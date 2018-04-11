@@ -130,15 +130,15 @@ TESTCASE: echo "TLV[1]:2345q67890" | {GTTLVUNDUMP}
 >>>2 /<stdin>:1 - Unexpected character: 'q'./
 >>>= 8
 
-TESTCASE: test/echo.sh 'TLV[1]:234567890\x00' | {GTTLVUNDUMP}
+TESTCASE: echo "54 4c 56 5b 31 5d 3a 32 33 34 35 36 37 38 39 30 00" | xxd -r -p | {GTTLVUNDUMP}
 >>>2 /(.*Hex string contains unknown character.*)(.*0x00.*)/
 >>>= 8
 
-TESTCASE: test/echo.sh 'TLV[1]:234567890\x0a' | {GTTLVUNDUMP}
+TESTCASE: echo "54 4c 56 5b 31 5d 3a 32 33 34 35 36 37 38 39 30 0a" | xxd -r -p | {GTTLVUNDUMP}
 >>>2 /(.*Hex string contains unknown character.*)(.*0x0a.*)/
 >>>= 8
 
-TESTCASE: test/echo.sh 'TLV[1]:234567890z' | {GTTLVUNDUMP}
+TESTCASE: echo 'TLV[1]:234567890z' | {GTTLVUNDUMP}
 >>>2 /(.*Hex string contains unknown character.*)(.*z.*)/
 >>>= 8
 

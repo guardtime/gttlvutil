@@ -106,7 +106,7 @@ TESTCASE: {GTTLVDUMP} -E 16 test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 >>>2
 Invalid hex character 0x88.
->>>= 4 
+>>>= 4
 
 ###############################################################################
 # Tlvdump KSI signature which is in hex format.
@@ -367,7 +367,7 @@ TESTCASE: {GTTLVDUMP} -H auto test/resources/pub/ksi-publications.bin
 ###############################################################################
 # Try to dump garbage.
 
-TESTCASE: test/echo.sh "\x12\x34\x56" | {GTTLVDUMP}
+TESTCASE: echo "123456" | xxd -r -p | {GTTLVDUMP}
 >>>
 >>>2
 (null): Failed to parse 3 bytes.
