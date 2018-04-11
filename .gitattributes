@@ -7,6 +7,7 @@ Changelog merge=union
 *.am          text eol=lf
 *.in          text eol=lf
 *.test        text eol=lf
+*.txt         text eol=lf
 VERSION       text eol=lf
 
 # Files that are not text files. Normalization is never performed.
