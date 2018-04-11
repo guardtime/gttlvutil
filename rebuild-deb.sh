@@ -29,6 +29,9 @@ chmod +x gttlvutil-$version/debian/rules
 cd gttlvutil-$version
 # debuild cleans some environment variables, to keep LIBS -e is used.
 debuild -D -e LIBS -us -uc
-#$debuild_flags
 cd ..
+
+suffix=${version}-${PKG_VERSION}.${RELEASE_VERSION}_${ARCH}
+mv gttlvutil_${version}_${ARCH}.changes gttlvutil_$suffix.changes
+mv gttlvutil_${version}_${ARCH}.deb gttlvutil_$suffix.deb
 
