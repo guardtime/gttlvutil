@@ -35,9 +35,8 @@ TESTCASE: {GTTLVGREP} -v | grep -f VERSION
 # Invalid parameter.
 TESTCASE: {GTTLVGREP} -V
 >>>
->>>2
-{GTTLVGREP}: invalid option -- 'V'
-Unknown parameter, try -h.
+>>>2 /(invalid option)|(illegal option).*--.*V.*
+.*Unknown parameter, try -h./
 >>>= 1
 
 ###############################################################################

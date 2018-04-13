@@ -34,9 +34,8 @@ TESTCASE: {GTTLVWRAP} -v | grep -f VERSION
 # Invalid parameter.
 TESTCASE: {GTTLVWRAP} -V
 >>>
->>>2
-{GTTLVWRAP}: invalid option -- 'V'
-Unknown parameter, try -h.
+>>>2 /(invalid option)|(illegal option).*--.*V.*
+.*Unknown parameter, try -h./
 >>>= 1
 
 # Missing mandatory -t.
