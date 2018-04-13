@@ -54,7 +54,7 @@ TLV\[0123\]:.*
 # Set -i flag to ignore default descriptions.
 # Provide a modified description file with duplicate entries.
 
-TESTCASE: {GTTLVDUMP} test/resources/sig/ok-sig-2014-08-01.1.ksig -D test/resources/desc/duplicate_in_file -pP
+TESTCASE: {GTTLVDUMP} -D test/resources/desc/duplicate_in_file -pP test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>> /TLV\[0800\]:.*/
 >>>2 /.*duplicate_in_file\/ksi.desc:22 - duplicate description.*/
 >>>= 0
