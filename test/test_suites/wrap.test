@@ -34,9 +34,8 @@ TESTCASE: {GTTLVWRAP} -v | grep -f VERSION
 # Invalid parameter.
 TESTCASE: {GTTLVWRAP} -V
 >>>
->>>2
-{GTTLVWRAP}: invalid option -- 'V'
-Unknown parameter, try -h.
+>>>2 /(invalid option)|(illegal option).*--.*V.*
+.*Unknown parameter, try -h./
 >>>= 1
 
 # Missing mandatory -t.
@@ -66,7 +65,7 @@ Unable to open input file '{TEST_DIR}/missing/file'.
 #     TLV[05]: 546865207265717565737420636f6e7461696e656420696e76616c6964207061796c6f616400
 #   TLV[1f]: 01c4aaaff79bab9137d2c1d8c43e4fcd09c3bce28e19079be36bb0d211864e2a3e
 
-TESTCASE: ((echo "61 6e 6f 6e 00" | xxd -r -p | {GTTLVWRAP} -t 01; echo "54 ca 47 b5" | xxd -r -p | {GTTLVWRAP} -t 02; echo "01" | xxd -r -p | {GTTLVWRAP} -t 03) | {GTTLVWRAP} -t 01; (echo -n "" | {GTTLVWRAP} -t 01; echo "01 03" | xxd -r -p | {GTTLVWRAP} -t 04; (echo -n "The request contained invalid payload"; echo "00" | xxd -r -p) | {GTTLVWRAP} -t 05) | {GTTLVWRAP} -t 0202; (echo "01 c4 aa af f7 9b ab 91 37 d2 c1 d8 c4 3e 4f cd 09 c3 bc e2 8e 19 07 9b e3 6b b0 d2 11 86 4e 2a 3e"  | xxd -r -p) | {GTTLVWRAP} -t 1f) | {GTTLVWRAP} -t 0200 | diff test/resources/tlv/ok_aggr_err_response-1.tlv -
+TESTCASE: ((echo "61 6e 6f 6e 00" | xxd -r -p | {GTTLVWRAP} -t 01; echo "54 ca 47 b5" | xxd -r -p | {GTTLVWRAP} -t 02; echo "01" | xxd -r -p | {GTTLVWRAP} -t 03) | {GTTLVWRAP} -t 01; (printf "" | {GTTLVWRAP} -t 01; echo "01 03" | xxd -r -p | {GTTLVWRAP} -t 04; (printf "The request contained invalid payload"; echo "00" | xxd -r -p) | {GTTLVWRAP} -t 05) | {GTTLVWRAP} -t 0202; (echo "01 c4 aa af f7 9b ab 91 37 d2 c1 d8 c4 3e 4f cd 09 c3 bc e2 8e 19 07 9b e3 6b b0 d2 11 86 4e 2a 3e"  | xxd -r -p) | {GTTLVWRAP} -t 1f) | {GTTLVWRAP} -t 0200 | diff test/resources/tlv/ok_aggr_err_response-1.tlv -
 >>>
 >>>= 0
 
@@ -84,7 +83,7 @@ TESTCASE: ((echo "61 6e 6f 6e 00" | xxd -r -p | {GTTLVWRAP} -t 01; echo "54 ca 4
 #     TLV[05]: 546865207265717565737420636f6e7461696e656420696e76616c6964207061796c6f616400
 #   TLV[1f]: 01c4aaaff79bab9137d2c1d8c43e4fcd09c3bce28e19079be36bb0d211864e2a3e
 
-TESTCASE: ((echo "61 6e 6f 6e 00" | {GTTLVWRAP} -t 01 -E hex; echo -n "54ca47b5" | {GTTLVWRAP} -t 02 -E 16; echo "01" | {GTTLVWRAP} -t 03 -E hex) | {GTTLVWRAP} -t 01; (echo -n "" | {GTTLVWRAP} -t 01; echo "01 03" | xxd -r -p | {GTTLVWRAP} -t 04; (echo -n "The request contained invalid payload"; echo "00" | xxd -r -p) | {GTTLVWRAP} -t 05) | {GTTLVWRAP} -t 0202; (echo -n "AcSqr/ebq5E30sHYxD5PzQnDvOKOGQeb42uw0hGGTio+") | {GTTLVWRAP} -t 1f -E 64) | {GTTLVWRAP} -t 0200 | diff test/resources/tlv/ok_aggr_err_response-1.tlv -
+TESTCASE: ((echo "61 6e 6f 6e 00" | {GTTLVWRAP} -t 01 -E hex; printf "54ca47b5" | {GTTLVWRAP} -t 02 -E 16; echo "01" | {GTTLVWRAP} -t 03 -E hex) | {GTTLVWRAP} -t 01; (printf "" | {GTTLVWRAP} -t 01; echo "01 03" | xxd -r -p | {GTTLVWRAP} -t 04; (printf "The request contained invalid payload"; echo "00" | xxd -r -p) | {GTTLVWRAP} -t 05) | {GTTLVWRAP} -t 0202; (printf "AcSqr/ebq5E30sHYxD5PzQnDvOKOGQeb42uw0hGGTio+") | {GTTLVWRAP} -t 1f -E 64) | {GTTLVWRAP} -t 0200 | diff test/resources/tlv/ok_aggr_err_response-1.tlv -
 >>>
 >>>= 0
 
@@ -92,7 +91,7 @@ TESTCASE: ((echo "61 6e 6f 6e 00" | {GTTLVWRAP} -t 01 -E hex; echo -n "54ca47b5"
 # Create an aggregation error response (see above test case). Save the resulting
 # steam to a temporary file and compare it to the original file.
 
-TESTCASE: ((echo "61 6e 6f 6e 00" | xxd -r -p | {GTTLVWRAP} -t 01; echo "54 ca 47 b5" | xxd -r -p | {GTTLVWRAP} -t 02; echo "01" | xxd -r -p | {GTTLVWRAP} -t 03) | {GTTLVWRAP} -t 01; (echo -n "" | {GTTLVWRAP} -t 01; echo "01 03" | xxd -r -p | {GTTLVWRAP} -t 04; (echo -n "The request contained invalid payload"; echo "00" | xxd -r -p) | {GTTLVWRAP} -t 05) | {GTTLVWRAP} -t 0202; (echo "01 c4 aa af f7 9b ab 91 37 d2 c1 d8 c4 3e 4f cd 09 c3 bc e2 8e 19 07 9b e3 6b b0 d2 11 86 4e 2a 3e") | xxd -r -p | {GTTLVWRAP} -t 1f) | {GTTLVWRAP} -t 0200 -o {TEST_DIR}/wrap_ok_aggr_err_response.tlv
+TESTCASE: ((echo "61 6e 6f 6e 00" | xxd -r -p | {GTTLVWRAP} -t 01; echo "54 ca 47 b5" | xxd -r -p | {GTTLVWRAP} -t 02; echo "01" | xxd -r -p | {GTTLVWRAP} -t 03) | {GTTLVWRAP} -t 01; (printf "" | {GTTLVWRAP} -t 01; echo "01 03" | xxd -r -p | {GTTLVWRAP} -t 04; (printf "The request contained invalid payload"; echo "00" | xxd -r -p) | {GTTLVWRAP} -t 05) | {GTTLVWRAP} -t 0202; (echo "01 c4 aa af f7 9b ab 91 37 d2 c1 d8 c4 3e 4f cd 09 c3 bc e2 8e 19 07 9b e3 6b b0 d2 11 86 4e 2a 3e") | xxd -r -p | {GTTLVWRAP} -t 1f) | {GTTLVWRAP} -t 0200 -o {TEST_DIR}/wrap_ok_aggr_err_response.tlv
 >>>
 >>>= 0
 

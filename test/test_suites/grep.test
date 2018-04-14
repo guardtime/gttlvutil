@@ -35,9 +35,8 @@ TESTCASE: {GTTLVGREP} -v | grep -f VERSION
 # Invalid parameter.
 TESTCASE: {GTTLVGREP} -V
 >>>
->>>2
-{GTTLVGREP}: invalid option -- 'V'
-Unknown parameter, try -h.
+>>>2 /(invalid option)|(illegal option).*--.*V.*
+.*Unknown parameter, try -h./
 >>>= 1
 
 ###############################################################################
@@ -280,7 +279,7 @@ TESTCASE: {GTTLVGREP} 300.1f test/resources/tlv/ok-sig-2014-04-30.1-extend_respo
 # Using '-i' option for printing TLV index in path. Should have no effect
 # without '-n' option.
 
-TESTCASE: {GTTLVGREP} 300.1f -i test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv
+TESTCASE: {GTTLVGREP} -i 300.1f test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv
 >>>
 01a4219f8f80f31a6640d9634c25035998282e057f21d12628584199f6c91c6532
 >>>= 0
@@ -290,7 +289,7 @@ TESTCASE: {GTTLVGREP} 300.1f -i test/resources/tlv/ok-sig-2014-04-30.1-extend_re
 # Using '-i' option for printing TLV index in path.
 # Using '-n' option for printing TLV path.
 
-TESTCASE: {GTTLVGREP} 300.1f -in test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv
+TESTCASE: {GTTLVGREP} -in 300.1f test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv
 >>>
 300[0].1f[0]: 01a4219f8f80f31a6640d9634c25035998282e057f21d12628584199f6c91c6532
 >>>= 0
@@ -304,7 +303,7 @@ TESTCASE: {GTTLVGREP} 300.1f test/resources/tlv/ok-sig-2014-04-30.1-extend_respo
 >>>
 >>>= 0
 
-TESTCASE: {GTTLVGREP} 300.1f -i test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv > {TEST_DIR}/tmp-digest2.txt
+TESTCASE: {GTTLVGREP} -i 300.1f test/resources/tlv/ok-sig-2014-04-30.1-extend_response.tlv > {TEST_DIR}/tmp-digest2.txt
 >>>
 >>>= 0
 
@@ -324,7 +323,7 @@ TESTCASE: {GTTLVGREP} 800.802.01 test/resources/sig/ok-sig-2014-08-01.1.ksig
 # Tlvgrep calendar hash chain publication time from KSI signature.
 # Using '-e' option for printing TLV header.
 
-TESTCASE: {GTTLVGREP} 800.802.01 -e test/resources/sig/ok-sig-2014-08-01.1.ksig
+TESTCASE: {GTTLVGREP} -e 800.802.01 test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 010453dc2a00
 >>>= 0
@@ -335,7 +334,7 @@ TESTCASE: {GTTLVGREP} 800.802.01 -e test/resources/sig/ok-sig-2014-08-01.1.ksig
 # Using '-i' option for printing TLV index in path. Should have no effect
 # without '-n' option.
 
-TESTCASE: {GTTLVGREP} 800.802.01 -ei test/resources/sig/ok-sig-2014-08-01.1.ksig
+TESTCASE: {GTTLVGREP} -ei 800.802.01 test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 010453dc2a00
 >>>= 0
@@ -345,7 +344,7 @@ TESTCASE: {GTTLVGREP} 800.802.01 -ei test/resources/sig/ok-sig-2014-08-01.1.ksig
 # Using '-i' option for printing TLV index in path.
 # Using '-n' option for printing TLV path.
 
-TESTCASE: {GTTLVGREP} 800.802.01 -ein test/resources/sig/ok-sig-2014-08-01.1.ksig
+TESTCASE: {GTTLVGREP} -ein 800.802.01 test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 800[0].802[0].01[0]: 010453dc2a00
 >>>= 0

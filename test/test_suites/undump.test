@@ -35,9 +35,8 @@ TESTCASE: {GTTLVUNDUMP} -v | grep -f VERSION
 # Invalid parameter.
 TESTCASE: {GTTLVUNDUMP} -V
 >>>
->>>2
-{GTTLVUNDUMP}: invalid option -- 'V'
-Unknown parameter, try -h.
+>>>2 /(invalid option)|(illegal option).*--.*V.*
+.*Unknown parameter, try -h./
 >>>= 1
 
 # Missing file.
