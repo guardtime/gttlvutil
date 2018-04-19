@@ -1,4 +1,5 @@
 * IMPROVEMENT: Added --with-openssl flag to configure.
+* IMPROVEMENT: Added support for OpenSSL 1.1.
 * IMPROVEMENT: Debian packaging implemented.
 * IMPROVEMENT: Redhat packaging files moved to 'packaging/redhat'.
 * IMPROVEMENT: Corrected alignment when using '-y' flag.
