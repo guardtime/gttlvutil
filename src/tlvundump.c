@@ -765,10 +765,14 @@ static int convertStream(FILE *f) {
 
 				for (i = stack_len; i > 0; i--) {
 					if (stack[stack_len].indent_len > stack[i - 1].indent_len) {
-						error(GT_PARSER_ERROR, "Bad backwards indentation - no matching level.");
+						res = GT_PARSER_ERROR;
+						error_log("Bad backwards indentation - no matching level.", stack[stack_len].lineNr);
+						goto cleanup;
 					} else if (stack[stack_len].indent_len == stack[i - 1].indent_len) {
 						if (memcmp(stack[stack_len].indent, stack[i - 1].indent, stack[stack_len].indent_len)) {
-							error(GT_PARSER_ERROR, "Bad backwards indentation - whitespace mismatch.");
+							res = GT_PARSER_ERROR;
+							error_log("Bad backwards indentation - whitespace mismatch.", stack[stack_len].lineNr);
+							goto cleanup;
 						}
 						stack[stack_len].level = stack[i - 1].level;
 						break;
@@ -776,12 +780,16 @@ static int convertStream(FILE *f) {
 				}
 
 				if (stack[stack_len].level < 0) {
-					error(GT_PARSER_ERROR, "Bad backwards indentation - previous level not found.");
+					res = GT_PARSER_ERROR;
+					error_log("Bad backwards indentation - previous level not found.", stack[stack_len].lineNr);
+					goto cleanup;
 				}
 			} else {
 				/* Make sure the indentation matches. */
 				if (memcmp(stack[stack_len].indent, stack[stack_len - 1].indent, stack[stack_len - 1].indent_len)) {
-					error(GT_PARSER_ERROR, "Indentation not a subset.");
+					res = GT_PARSER_ERROR;
+					error_log("Indentation not a subset.", stack[stack_len].lineNr);
+					goto cleanup;
 				}
 
 				stack[stack_len].level = stack[stack_len - 1].level;
@@ -789,7 +797,9 @@ static int convertStream(FILE *f) {
 				if (stack[stack_len].indent_len > stack[stack_len - 1].indent_len) {
 					/* A subset of the previous. */
 					if (stack[stack_len - 1].dat_len > 0) {
-						error(GT_PARSER_ERROR, "A TLV with explicit data may not have nested elements.");
+						res = GT_PARSER_ERROR;
+						error_log("A TLV with explicit data may not have nested elements.", stack[stack_len].lineNr);
+						goto cleanup;
 					}
 					stack[stack_len].level++;
 				}
@@ -824,7 +834,9 @@ static int convertStream(FILE *f) {
 
 			tmp = realloc(stack, stack_size * sizeof(TlvLine));
 			if (tmp == NULL) {
-				error(GT_OUT_OF_MEMORY, "Unable to reallocate internal buffer.");
+				res = GT_OUT_OF_MEMORY;
+				error_log("Unable to reallocate internal buffer.", stack[stack_len].lineNr);
+				goto cleanup;
 			}
 			stack = tmp;
 		}
