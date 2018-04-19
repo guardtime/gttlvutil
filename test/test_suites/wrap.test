@@ -43,7 +43,7 @@ TESTCASE: {GTTLVWRAP} -i {TEST_DIR}/missing/file
 >>>
 >>>2
 Tlv tag (-t) must be specified.
->>>= 6
+>>>= 1
 
 # Missing file.
 TESTCASE: {GTTLVWRAP} -t 01 -i {TEST_DIR}/missing/file
@@ -113,34 +113,34 @@ Binary file (standard input) matches
 TESTCASE: {GTTLVWRAP} -i VERSION
 >>>2
 Tlv tag (-t) must be specified.
->>>= 6
+>>>= 1
 
 ###############################################################################
 # Wrap with type out of the range 1.
 
 TESTCASE: {GTTLVWRAP} -i VERSION -t -6
 >>>2 /(.*Tag value out of range.*)/
->>>= 6
+>>>= 1
 
 ###############################################################################
 # Wrap with type out of the range 2.
 
 TESTCASE: {GTTLVWRAP} -i VERSION -t 2000
 >>>2 /(.*Tag value out of range.*)/
->>>= 6
+>>>= 1
 
 ###############################################################################
 # Wrap with invalid type 1.
 
 TESTCASE: {GTTLVWRAP} -i VERSION -t ppp
 >>>2 /(.*Bad tag value.*)(.*ppp.*)/
->>>= 6
+>>>= 1
 
 ###############################################################################
 # Wrap with invalid type 2.
 
 TESTCASE: {GTTLVWRAP} -i VERSION -t 1p
 >>>2 /(.*Bad tag value.*)(.*1p.*)/
->>>= 6
+>>>= 1
 
 ###############################################################################

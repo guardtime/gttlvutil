@@ -217,8 +217,8 @@ static int store_magic(struct desc_st *map_in, const char *key, const char *desc
 		} else if (c >= 'a' && c <= 'f') {
 			octet = (octet << 4) + (c - 'a') + 10;
 		} else {
-			fprintf(stderr, "Unexpected character '%c' (%d) while processing magic header value.\n", c, c);
-			res = GT_INVALID_FORMAT;
+			fprintf(stderr, "Unexpected hex character '%c' (%d) while processing magic header value.\n", c, c);
+			res = GT_PARSER_ERROR;
 			goto cleanup;
 		}
 
@@ -304,8 +304,8 @@ static int store_line(struct desc_st *map_in, const char *key, const char *ts, c
 	/* Convert the type into a number .*/
 	type = get_type(ts);
 	if (type < 0) {
-		fprintf(stderr, "Unexpected type: '%s'\n", ts);
-		res = GT_INVALID_FORMAT;
+		fprintf(stderr, "Unknown value format: '%s'\n", ts);
+		res = GT_PARSER_ERROR;
 		goto cleanup;
 	}
 
@@ -397,6 +397,8 @@ int desc_add_file(struct desc_st *desc, const char *descFile, bool override) {
 		if (res != GT_OK) {
 			if (res == GT_INVALID_FORMAT) {
 				fprintf(stderr, "%s:%llu - invalid format.\n", descFile, (unsigned long long)ln);
+			} else if (res == GT_PARSER_ERROR) {
+				fprintf(stderr, "%s:%llu - parser error.\n", descFile, (unsigned long long)ln);
 			} else if (res == GT_DUPLICATE_ERROR) {
 				fprintf(stderr, "%s:%llu - duplicate description.\n", descFile, (unsigned long long)ln);
 				goto cleanup;

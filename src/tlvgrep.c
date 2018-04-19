@@ -67,7 +67,7 @@ static int grepFile(GT_GrepTlvConf *conf, FILE *f) {
 
 		if (res != GT_OK || consumed > len - off) {
 			print_error("%s: Failed to parse %llu bytes.\n", conf->file_name, (unsigned long long) len - off);
-			res = GT_INVALID_FORMAT;
+			res = GT_PARSER_ERROR;
 			goto cleanup;
 		}
 
@@ -124,7 +124,7 @@ int main(int argc, char **argv) {
 	/* Default conf. */
 	GT_GrepTlv_initConf(&conf);
 	conf.consume_stream = GT_consume_raw;
-
+	conf.pattern = NULL;
 
 	if (argc < 2) {
 		printHelp(stderr);
@@ -188,6 +188,10 @@ int main(int argc, char **argv) {
 
 	if (optind >= argc) {
 		fprintf(stderr, "Error: no pattern provided!\n");
+		res = GT_INVALID_CMD_PARAM;
+		goto cleanup;
+	} else if (*(argv[optind]) == '\0') {
+		fprintf(stderr, "Invalid pattern: the pattern must not be empty.\n");
 		res = GT_INVALID_CMD_PARAM;
 		goto cleanup;
 	}

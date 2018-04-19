@@ -81,19 +81,78 @@ typedef enum {
 int print_error(const char *fmt, ...);
 
 enum StatusCodes {
+	/**
+	 * Everything is OK!
+	 */
 	GT_OK = 0,
+
+	/**
+	 * Invalid or unknown command-line parameter or its argument.
+	 */
 	GT_INVALID_CMD_PARAM,
+
+	/**
+	 * Memory allocation failed. Possibly system out of memory.
+	 */
 	GT_OUT_OF_MEMORY,
-	GT_FORMAT_ERROR,
+
+	/**
+	 * Not used.
+	 */
+	GT_ERR_RESERVED_0,
+
+	/**
+	 * Input/Output error. May be caused by invalid paths, restricted access to
+	 * files or when resource is locked.
+	 */
 	GT_IO_ERROR,
+
+	/**
+	 * Invalid function argument. May be caused by NULL pointers, empty strings,
+	 * invalid argument combination and invalid or out of ranges values.
+	 */
 	GT_INVALID_ARGUMENT,
+
+	/**
+	 * Data stream has correct syntax but something is wrong with the format, e.g.
+	 * HMAC TLV order, input stream is too large for wrapping or description file
+	 * contains not suitable values.
+	 */
 	GT_INVALID_FORMAT,
+
+	/**
+	 * Buffer too small to perform operation.
+	 */
 	GT_BUFFER_OVERFLOW,
+
+	/**
+	 * Parser error is used when it is not possible to perform any further parsing
+	 * of a data stream due to unexpected context. E.g. invalid indentation or
+	 * unexpected syntax in gttlvundump input, invalid gttlvgrep pattern, corrupted
+	 * or invalid TLV binary input, unreadable input encoding or unknown syntax in
+	 * TLV description files.
+	 */
 	GT_PARSER_ERROR,
+
+	/**
+	 * Cryptographic operation could not be performed. Likely causes are
+	 * unsupported or unknown cryptographic algorithms. Is related with HMAC.
+	 */
 	GT_CRYPTO_FAILURE,
+
+	/**
+	 * Description file contains duplicated records.
+	 */
 	GT_DUPLICATE_ERROR,
 
+	/**
+	 * Expected End of data stream.
+	 */
 	GT_END_OF_STREAM,
+
+	/**
+	 * Unknown error occurred.
+	 */
 	GT_UNKNOWN_ERROR = 0xffff
 };
 

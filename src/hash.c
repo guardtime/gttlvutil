@@ -43,7 +43,7 @@ int GT_Hash_getAlgorithmId(char *arg, GT_Hash_AlgorithmId *id) {
 			return GT_OK;
 		}
 	}
-	return GT_FORMAT_ERROR;
+	return GT_CRYPTO_FAILURE;
 }
 
 size_t GT_Hash_getAlgorithmLenght(GT_Hash_AlgorithmId id) {

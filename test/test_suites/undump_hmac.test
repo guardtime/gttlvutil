@@ -83,7 +83,7 @@ TESTCASE: {GTTLVUNDUMP} test/resources/hmac/extend_request-hmac_is_not_last-hmac
 >>>
 >>>2 /.*:4 - HMAC TLV is not last in PDU.
 .*:4 - Failed to calculate HMAC./
->>>= 3
+>>>= 6
 
 # Verify that it is working with the same PDU when HMAC last.
 TESTCASE: {GTTLVUNDUMP} test/resources/hmac/extend_request-hmac_is_last-hmac_func_v2.txt | {GTTLVDUMP}
@@ -105,7 +105,7 @@ TESTCASE: {GTTLVUNDUMP} test/resources/hmac/extend_request-hmac_is_last-indent_l
 >>>
 >>>2 /.*HMAC TLV is not first level PDU child.*
 .*Failed to calculate HMAC./
->>>= 3
+>>>= 6
 
 ###############################################################################
 # Test supported hash algorithms. Verify with KSI algorithm ID.
@@ -155,7 +155,7 @@ TESTCASE: (cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:
 
 TESTCASE: (cat test/resources/hmac/extend_response-no_hmac.txt; echo "  TLV[1f]:\$HMAC(v1|sha256|anon|800)") | {GTTLVUNDUMP}
 >>>2 /.*Failed to calculate HMAC./
->>>= 3
+>>>= 6
 
 ###############################################################################
 # Function script should start with '$' sign.

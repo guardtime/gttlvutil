@@ -55,7 +55,7 @@ int GT_Base64_decode(const char *encoded, unsigned char *raw, size_t *raw_len) {
 		if (IS_KNOWN_REDUNDANT_CHAR(*p)) gc++;
 		else if (IS_PADDING_CHAR(*p)) pc++;
 		else if (!IS_BASE64(*p)) {
-			res = GT_INVALID_FORMAT;
+			res = GT_PARSER_ERROR;
 			goto cleanup;
 		}
 		p++;
@@ -65,7 +65,7 @@ int GT_Base64_decode(const char *encoded, unsigned char *raw, size_t *raw_len) {
 
 	/* Check if base64 string has a specified length. */
 	if ((inLen - gc) % 4 != 0) {
-		res = GT_INVALID_FORMAT;
+		res = GT_PARSER_ERROR;
 		goto cleanup;
 	}
 
@@ -90,7 +90,7 @@ int GT_Base64_decode(const char *encoded, unsigned char *raw, size_t *raw_len) {
 					p++;
 				} else {
 					/* Unknown character has occured. */
-					res = GT_INVALID_FORMAT;
+					res = GT_PARSER_ERROR;
 					goto cleanup;
 				}
 			}
@@ -131,7 +131,7 @@ int GT_Base16_decode(const char *encoded, unsigned char *raw, size_t *raw_len) {
 	while (*p) {
 		if (IS_KNOWN_REDUNDANT_CHAR(*p)) gc++;
 		else if (!IS_HEX(*p)) {
-			res = GT_INVALID_FORMAT;
+			res = GT_PARSER_ERROR;
 			goto cleanup;
 		}
 		p++;
@@ -141,7 +141,7 @@ int GT_Base16_decode(const char *encoded, unsigned char *raw, size_t *raw_len) {
 
 	/* Check if encoded string has a specified length. */
 	if ((inLen - gc) % 2 != 0) {
-		res = GT_INVALID_FORMAT;
+		res = GT_PARSER_ERROR;
 		goto cleanup;
 	}
 
@@ -167,7 +167,7 @@ int GT_Base16_decode(const char *encoded, unsigned char *raw, size_t *raw_len) {
 					p++;
 				} else {
 					/* Unknown character has occured. */
-					res = GT_INVALID_FORMAT;
+					res = GT_PARSER_ERROR;
 					goto cleanup;
 				}
 			}

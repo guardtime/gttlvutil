@@ -146,9 +146,8 @@ TESTCASE: echo 'TLV[1]:234567890z' | {GTTLVUNDUMP}
 
 # Correct TLV value is given
 TESTCASE: {GTTLVUNDUMP} test/resources/tlv/dummy.txt | {GTTLVDUMP}
->>>
-TLV[0123]: 
-  TLV[1f]: 1a
+>>> /TLV\[0123\]:[ ]
+  TLV\[1f\]: 1a/
 >>>= 0
 
 # Half of a byte value is given
@@ -161,6 +160,27 @@ TESTCASE: {GTTLVUNDUMP} test/resources/tlv/dummy-half_byte.txt
 TESTCASE: {GTTLVUNDUMP} test/resources/tlv/dummy-one_and_a_half_byte.txt
 >>>
 >>>2 /.*Hex strings must contain even number of characters./
+>>>= 8
+
+###############################################################################
+# Verify that A TLV with explicit data may not have nested elements.
+
+# Correct TLV value is given
+TESTCASE: {GTTLVUNDUMP} test/resources/tlv/nok-nested-tlv-with-data-plus-nested-elements.txt
+>>>2 /.*A TLV with explicit data may not have nested elements.*/
+>>>= 8
+
+###############################################################################
+# Verify that A TLV 8 will hold 255 bytes and more than that will throw error.
+
+# Correct TLV value is given
+TESTCASE: echo "TLV8[1]: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" | {GTTLVUNDUMP} | {GTTLVDUMP}
+>>> /.*TLV\[01\]: a{510}[^a]?/
+>>>= 0
+
+# Correct TLV value is given
+TESTCASE: echo "TLV8[1]: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabb" | {GTTLVUNDUMP}
+>>>2 /.*stdin.*1.*Unable to fit data into TLV8.*/
 >>>= 8
 
 ###############################################################################

@@ -200,7 +200,7 @@ static int get_payload_type(unsigned char *buf, size_t buf_len, struct conf_st *
 
 			res = GT_FTLV_memRead(ptr, len, &n);
 			if (res == GT_OK && len < n.hdr_len + n.dat_len) {
-				res = GT_INVALID_FORMAT;
+				res = GT_PARSER_ERROR;
 			}
 			if (res != GT_OK) goto cleanup;
 
@@ -510,7 +510,7 @@ static int read_from(FILE *f, struct conf_st *conf) {
 
 		if (res != GT_OK || consumed > len - off) {
 			print_error("%s: Failed to parse %llu bytes.\n", conf->file_name, (unsigned long long) len - off);
-			res = GT_INVALID_FORMAT;
+			res = GT_PARSER_ERROR;
 			goto cleanup;
 		}
 

@@ -30,7 +30,7 @@ static int parseHdr(const unsigned char *hdr, size_t hdrLen, struct fast_tlv_s *
 	int res = GT_UNKNOWN_ERROR;
 
 	if (hdr == NULL || t == NULL) {
-		res = GT_INVALID_FORMAT;
+		res = GT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
@@ -38,14 +38,14 @@ static int parseHdr(const unsigned char *hdr, size_t hdrLen, struct fast_tlv_s *
 
 	if (hdr[0] & GT_TLV_MASK_TLV16) {
 		if (hdrLen != 4) {
-			res = GT_INVALID_FORMAT;
+			res = GT_PARSER_ERROR;
 			goto cleanup;
 		}
 		t->tag = ((t->tag << 8) | hdr[1]);
 		t->dat_len = ((hdr[2] << 8) | hdr[3]) & 0xffff;
 	} else {
 		if (hdrLen != 2) {
-			res = GT_INVALID_FORMAT;
+			res = GT_PARSER_ERROR;
 			goto cleanup;
 		}
 		t->dat_len = hdr[1];
@@ -53,7 +53,7 @@ static int parseHdr(const unsigned char *hdr, size_t hdrLen, struct fast_tlv_s *
 
 	/* Eliminate false positives. */
 	if (t->tag == 0 && t->dat_len == 0) {
-		res = GT_INVALID_FORMAT;
+		res = GT_PARSER_ERROR;
 		goto cleanup;
 	}
 
@@ -89,7 +89,7 @@ int GT_FTLV_fileRead(FILE *fd, unsigned char *buf, size_t len, size_t *consumed,
 	count += rd;
 
 	if (rd != 2) {
-		res = GT_INVALID_FORMAT;
+		res = GT_PARSER_ERROR;
 		goto cleanup;
 	}
 
@@ -103,7 +103,7 @@ int GT_FTLV_fileRead(FILE *fd, unsigned char *buf, size_t len, size_t *consumed,
 		count += rd;
 
 		if (rd != 2) {
-			res = GT_INVALID_FORMAT;
+			res = GT_PARSER_ERROR;
 			goto cleanup;
 		}
 
@@ -127,7 +127,7 @@ int GT_FTLV_fileRead(FILE *fd, unsigned char *buf, size_t len, size_t *consumed,
 		count += rd;
 
 		if (rd != t->dat_len) {
-			res = GT_INVALID_FORMAT;
+			res = GT_PARSER_ERROR;
 			goto cleanup;
 		}
 	}
@@ -154,7 +154,7 @@ int GT_FTLV_memRead(const unsigned char *m, size_t l, GT_FTLV *t) {
 
 	if (m[0] & GT_TLV_MASK_TLV16) {
 		if (l < 4) {
-			res = GT_INVALID_FORMAT;
+			res = GT_PARSER_ERROR;
 			goto cleanup;
 		}
 		res = parseHdr(m, 4, t);
@@ -195,7 +195,7 @@ int GT_FTLV_memReadN(const unsigned char *buf, size_t buf_len, GT_FTLV *arr, siz
 		if (res != GT_OK) goto cleanup;
 
 		if (len < target->hdr_len + target->dat_len) {
-			res = GT_INVALID_FORMAT;
+			res = GT_PARSER_ERROR;
 			goto cleanup;
 		}
 
