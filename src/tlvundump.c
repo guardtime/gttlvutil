@@ -414,7 +414,7 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 
 				/* Make sure the tag value does not overflow. */
 				if (tlv->tag > 0x1fff) {
-					error(GT_PARSER_ERROR, "TLV tag value may not exceed 0x1fff.");
+					error(GT_INVALID_FORMAT, "TLV tag value may not exceed 0x1fff.");
 				}
 				break;
 			case ST_FLAG_START:
@@ -436,7 +436,7 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 						tlv->isNc = 1;
 						break;
 					default:
-						error(GT_PARSER_ERROR, "Unexpected flag.");
+						error(GT_INVALID_FORMAT, "Unexpected flag.");
 						break;
 				}
 
@@ -491,7 +491,7 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 					break;
 				} else {
 					if (tlv->dat_len >= sizeof(tlv->dat)) {
-						error(GT_PARSER_ERROR, "String value too large.");
+						error(GT_INVALID_FORMAT, "String value too large.");
 					}
 					tlv->dat[tlv->dat_len++] = c;
 				}
@@ -550,7 +550,7 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 						if (c == EOF) GT_snprintf(message, sizeof(message), "Hex strings must contain even number of characters.");
 						else if (isprint(c)) GT_snprintf(message, sizeof(message), "Hex string contains unknown character: '%c'.", c);
 						else GT_snprintf(message, sizeof(message), "Hex string contains unknown character (hex value): 0x%02x.", c);
-						error(GT_PARSER_ERROR, message);
+						error(GT_INVALID_FORMAT, message);
 				}
 				break;
 
@@ -569,15 +569,15 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 						size_t algSize;
 
 						if (initHmacCalcInfo(funcScript, stackLen) != GT_OK) {
-							error(GT_PARSER_ERROR, "Error in HMAC function call definition.");
+							error(GT_INVALID_FORMAT, "Error in HMAC function call definition.");
 						}
 
 						if (GT_Hash_getAlgorithmId(hmacCalcInfo.algId, &algId) != GT_OK) {
-							error(GT_PARSER_ERROR, "Unable to get hash algorithm id.");
+							error(GT_INVALID_FORMAT, "Unable to get hash algorithm id.");
 						}
 
 						if (!GT_Hmac_IsAlgorithmsSupported(algId)) {
-							error(GT_PARSER_ERROR, "Unsupported hash algorithm.");
+							error(GT_INVALID_FORMAT, "Unsupported hash algorithm.");
 						}
 
 						/* Add algorithm id and init hmac hash value to 0. */
@@ -586,7 +586,7 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 						memset(&tlv->dat[tlv->dat_len], 0, algSize);
 						tlv->dat_len += algSize;
 					} else {
-						error(GT_PARSER_ERROR, "Unknown function script.");
+						error(GT_INVALID_FORMAT, "Unknown function script.");
 					}
 					tlv->lineNr = lineNr;
 					return GT_OK; /* Indicate success. */
@@ -600,7 +600,7 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 					tlv->lineNr = lineNr;
 
 					if (tlv->force == 8 && tlv->dat_len > 0xff) {
-						error(GT_PARSER_ERROR, "Unable to fit data into TLV8.");
+						error(GT_INVALID_FORMAT, "Unable to fit data into TLV8.");
 					}
 
 					return GT_OK; /* Indicate success. */
@@ -611,16 +611,16 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 					} else {
 						sprintf(buf, "Unexpected character (hex value): %02x.", (unsigned char)c);
 					}
-					error(GT_PARSER_ERROR, buf);
+					error(GT_INVALID_FORMAT, buf);
 				}
 				break;
 			default:
-				error(GT_PARSER_ERROR, "Unknown error.");
+				error(GT_UNKNOWN_ERROR, "Unknown error.");
 		}
 		c = fgetc(f);
 	}
 
-	error(GT_PARSER_ERROR, "Unknown format error.");
+	error(GT_UNKNOWN_ERROR, "Unknown format error.");
 }
 
 static int serializeStack(TlvLine *stack, size_t stack_len, unsigned char *buf, size_t buf_len, size_t *total_len) {
@@ -765,12 +765,12 @@ static int convertStream(FILE *f) {
 
 				for (i = stack_len; i > 0; i--) {
 					if (stack[stack_len].indent_len > stack[i - 1].indent_len) {
-						res = GT_PARSER_ERROR;
+						res = GT_INVALID_FORMAT;
 						error_log("Bad backwards indentation - no matching level.", stack[stack_len].lineNr);
 						goto cleanup;
 					} else if (stack[stack_len].indent_len == stack[i - 1].indent_len) {
 						if (memcmp(stack[stack_len].indent, stack[i - 1].indent, stack[stack_len].indent_len)) {
-							res = GT_PARSER_ERROR;
+							res = GT_INVALID_FORMAT;
 							error_log("Bad backwards indentation - whitespace mismatch.", stack[stack_len].lineNr);
 							goto cleanup;
 						}
@@ -780,14 +780,14 @@ static int convertStream(FILE *f) {
 				}
 
 				if (stack[stack_len].level < 0) {
-					res = GT_PARSER_ERROR;
+					res = GT_INVALID_FORMAT;
 					error_log("Bad backwards indentation - previous level not found.", stack[stack_len].lineNr);
 					goto cleanup;
 				}
 			} else {
 				/* Make sure the indentation matches. */
 				if (memcmp(stack[stack_len].indent, stack[stack_len - 1].indent, stack[stack_len - 1].indent_len)) {
-					res = GT_PARSER_ERROR;
+					res = GT_INVALID_FORMAT;
 					error_log("Indentation not a subset.", stack[stack_len].lineNr);
 					goto cleanup;
 				}
@@ -797,7 +797,7 @@ static int convertStream(FILE *f) {
 				if (stack[stack_len].indent_len > stack[stack_len - 1].indent_len) {
 					/* A subset of the previous. */
 					if (stack[stack_len - 1].dat_len > 0) {
-						res = GT_PARSER_ERROR;
+						res = GT_INVALID_FORMAT;
 						error_log("A TLV with explicit data may not have nested elements.", stack[stack_len].lineNr);
 						goto cleanup;
 					}

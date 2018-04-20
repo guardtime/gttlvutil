@@ -115,8 +115,7 @@ enum StatusCodes {
 
 	/**
 	 * Data stream has correct syntax but something is wrong with the format, e.g.
-	 * HMAC TLV order, input stream is too large for wrapping or description file
-	 * contains not suitable values.
+	 * bad HMAC TLV order, value is too large or unknown or not suitable value.
 	 */
 	GT_INVALID_FORMAT,
 
@@ -127,10 +126,10 @@ enum StatusCodes {
 
 	/**
 	 * Parser error is used when it is not possible to perform any further parsing
-	 * of a data stream due to unexpected context. E.g. invalid indentation or
-	 * unexpected syntax in gttlvundump input, invalid gttlvgrep pattern, corrupted
-	 * or invalid TLV binary input, unreadable input encoding or unknown syntax in
-	 * TLV description files.
+	 * of a data stream due to unexpected context. Note that when parser detects
+	 * a token in expected location that has unknown value and it is theoretically
+	 * possible to continue parsing, then it is a format error instead. E.g.
+	 * unexpected end of file or unexpected syntax.
 	 */
 	GT_PARSER_ERROR,
 
