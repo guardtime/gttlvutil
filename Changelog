@@ -10,6 +10,7 @@
 * IMPROVEMENT: Internal error handling refactored.
 * BUGFIX: Fixed input data intake in gttlvdump and gttlvgrep, where data pointer is moved instead of copying.
 * BUGFIX: Fixed gttlvdump input data empty buffer handling.
+* BUGFIX: Memory leak in gttlvundump fixed.
 
 Versioning 1.2
 
