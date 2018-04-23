@@ -99,12 +99,13 @@ static int serializeStack(TlvLine *stack, size_t stack_len, unsigned char *buf, 
 static int writeStream(const void *raw, size_t size, size_t count, FILE *f);
 
 static int hmacGetScriptTokens(char *args, size_t aLen, char *alg, char *key, char *pat, unsigned char *ver) {
-	int res = GT_INVALID_FORMAT;
+	int res = GT_PARSER_ERROR;
 	char *tmp = NULL;
 	char *token = NULL;
 
 	/* Make a temporary copy of the func script for further manipulation. */
 	tmp = malloc(aLen + 1);
+	if (tmp == NULL) goto cleanup;
 	GT_strncpy(tmp, args, aLen + 1);
 
 	/* Break the arguments up into tokens. */
@@ -176,7 +177,7 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 	GT_ElementCounter *idx = NULL;
 
 	if (stack == NULL || stack_len == 0) {
-		res = GT_FORMAT_ERROR;
+		res = GT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
@@ -188,7 +189,7 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 
 	/* Verify that HMAC is PDU child in first level. */
 	if (stack[hmacCalcInfo.stack_pos].level != 1) {
-		res = GT_FORMAT_ERROR;
+		res = GT_INVALID_FORMAT;
 		error_log("HMAC TLV is not first level PDU child.", hmacCalcInfo.stack_pos + 1);
 		goto cleanup;
 	}
@@ -203,7 +204,7 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 
 	res = GT_Hash_getAlgorithmId(hmacCalcInfo.algId, &algId);
 	if (res != GT_OK) {
-		error_log("Failed to get hash algorith id.", hmacCalcInfo.stack_pos + 1);
+		error_log("Failed to get hash algorithm id.", hmacCalcInfo.stack_pos + 1);
 		goto cleanup;
 	}
 
@@ -212,7 +213,7 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 			{
 				/* HMAC in v2 approach should be last in PDU. */
 				if (!isLastTlv) {
-					res = GT_FORMAT_ERROR;
+					res = GT_INVALID_FORMAT;
 					error_log("HMAC TLV is not last in PDU.", hmacCalcInfo.stack_pos + 1);
 					goto cleanup;
 				}
@@ -250,7 +251,7 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 
 				res = GT_FTLV_memRead(raw_buf_ptr, raw_len, &t);
 				if (res == GT_OK && raw_len < t.hdr_len + t.dat_len) {
-					res = GT_INVALID_ARGUMENT;
+					res = GT_BUFFER_OVERFLOW;
 				}
 				if (res != GT_OK) {
 					error_log("Failed to init raw TLV.", hmacCalcInfo.stack_pos + 1);
@@ -272,7 +273,7 @@ static int calculateHmac(unsigned char *hmac, size_t *hlen, TlvLine *stack, size
 
 				if (calc_len == 0) {
 					error_log("Pattern not found.", hmacCalcInfo.stack_pos + 1);
-					res = GT_FORMAT_ERROR;
+					res = GT_INVALID_FORMAT;
 					goto cleanup;
 				}
 
@@ -413,7 +414,7 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 
 				/* Make sure the tag value does not overflow. */
 				if (tlv->tag > 0x1fff) {
-					error(GT_PARSER_ERROR, "TLV tag value may not exceed 0x1fff.");
+					error(GT_INVALID_FORMAT, "TLV tag value may not exceed 0x1fff.");
 				}
 				break;
 			case ST_FLAG_START:
@@ -435,7 +436,7 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 						tlv->isNc = 1;
 						break;
 					default:
-						error(GT_PARSER_ERROR, "Unexpected flag.");
+						error(GT_INVALID_FORMAT, "Unexpected flag.");
 						break;
 				}
 
@@ -490,7 +491,7 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 					break;
 				} else {
 					if (tlv->dat_len >= sizeof(tlv->dat)) {
-						error(GT_PARSER_ERROR, "String value too large.");
+						error(GT_INVALID_FORMAT, "String value too large.");
 					}
 					tlv->dat[tlv->dat_len++] = c;
 				}
@@ -549,7 +550,7 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 						if (c == EOF) GT_snprintf(message, sizeof(message), "Hex strings must contain even number of characters.");
 						else if (isprint(c)) GT_snprintf(message, sizeof(message), "Hex string contains unknown character: '%c'.", c);
 						else GT_snprintf(message, sizeof(message), "Hex string contains unknown character (hex value): 0x%02x.", c);
-						error(GT_PARSER_ERROR, message);
+						error(GT_INVALID_FORMAT, message);
 				}
 				break;
 
@@ -568,15 +569,15 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 						size_t algSize;
 
 						if (initHmacCalcInfo(funcScript, stackLen) != GT_OK) {
-							error(GT_PARSER_ERROR, "Error in HMAC function call definition.");
+							error(GT_INVALID_FORMAT, "Error in HMAC function call definition.");
 						}
 
 						if (GT_Hash_getAlgorithmId(hmacCalcInfo.algId, &algId) != GT_OK) {
-							error(GT_PARSER_ERROR, "Unable to get hash algorithm id.");
+							error(GT_INVALID_FORMAT, "Unable to get hash algorithm id.");
 						}
 
 						if (!GT_Hmac_IsAlgorithmsSupported(algId)) {
-							error(GT_PARSER_ERROR, "Unsupported hash algorithm.");
+							error(GT_INVALID_FORMAT, "Unsupported hash algorithm.");
 						}
 
 						/* Add algorithm id and init hmac hash value to 0. */
@@ -585,7 +586,7 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 						memset(&tlv->dat[tlv->dat_len], 0, algSize);
 						tlv->dat_len += algSize;
 					} else {
-						error(GT_PARSER_ERROR, "Unknown function script.");
+						error(GT_INVALID_FORMAT, "Unknown function script.");
 					}
 					tlv->lineNr = lineNr;
 					return GT_OK; /* Indicate success. */
@@ -597,6 +598,11 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 				if (c == '\r') break;
 				if (c == '\n' || c == EOF) {
 					tlv->lineNr = lineNr;
+
+					if (tlv->force == 8 && tlv->dat_len > 0xff) {
+						error(GT_INVALID_FORMAT, "Unable to fit data into TLV8.");
+					}
+
 					return GT_OK; /* Indicate success. */
 				} else {
 					char buf[40];
@@ -605,16 +611,16 @@ int parseTlv(FILE *f, TlvLine *stack, size_t stackLen) {
 					} else {
 						sprintf(buf, "Unexpected character (hex value): %02x.", (unsigned char)c);
 					}
-					error(GT_PARSER_ERROR, buf);
+					error(GT_INVALID_FORMAT, buf);
 				}
 				break;
 			default:
-				error(GT_PARSER_ERROR, "Unknown error.");
+				error(GT_UNKNOWN_ERROR, "Unknown error.");
 		}
 		c = fgetc(f);
 	}
 
-	error(GT_PARSER_ERROR, "Unknown format error.");
+	error(GT_UNKNOWN_ERROR, "Unknown format error.");
 }
 
 static int serializeStack(TlvLine *stack, size_t stack_len, unsigned char *buf, size_t buf_len, size_t *total_len) {
@@ -641,8 +647,9 @@ static int serializeStack(TlvLine *stack, size_t stack_len, unsigned char *buf, 
 
 	/* Serialize payload. */
 	if (stack[0].dat_len > 0) {
+		/* Sanity check - double check in case it was not detected during parsing. */
 		if (subLen != 0) {
-			line_error(GT_INVALID_FORMAT, "Length should be 0 when not a composite.", stack[0].lineNr);
+			line_error(GT_INVALID_FORMAT, "A TLV with explicit data may not have nested elements.", stack[0].lineNr);
 		}
 		memcpy(buf + buf_len - len - stack[0].dat_len, stack[0].dat, stack[0].dat_len);
 		len += subLen = stack[0].dat_len;
@@ -660,6 +667,7 @@ static int serializeStack(TlvLine *stack, size_t stack_len, unsigned char *buf, 
 			line_error(GT_BUFFER_OVERFLOW, "TLV16 buffer overflow.", stack[0].lineNr);
 		}
 
+		/* Sanity check - double check in case it was not detected during parsing. */
 		if (stack[0].force == 8) {
 			line_error(GT_INVALID_FORMAT, "Unable to fit data into TLV8.", stack[0].lineNr);
 		}
@@ -757,10 +765,14 @@ static int convertStream(FILE *f) {
 
 				for (i = stack_len; i > 0; i--) {
 					if (stack[stack_len].indent_len > stack[i - 1].indent_len) {
-						error(GT_INVALID_FORMAT, "Bad backwards indentation - no matching level.");
+						res = GT_INVALID_FORMAT;
+						error_log("Bad backwards indentation - no matching level.", stack[stack_len].lineNr);
+						goto cleanup;
 					} else if (stack[stack_len].indent_len == stack[i - 1].indent_len) {
 						if (memcmp(stack[stack_len].indent, stack[i - 1].indent, stack[stack_len].indent_len)) {
-							error(GT_INVALID_FORMAT, "Bad backwards indentation - whitespace mismatch.");
+							res = GT_INVALID_FORMAT;
+							error_log("Bad backwards indentation - whitespace mismatch.", stack[stack_len].lineNr);
+							goto cleanup;
 						}
 						stack[stack_len].level = stack[i - 1].level;
 						break;
@@ -768,12 +780,16 @@ static int convertStream(FILE *f) {
 				}
 
 				if (stack[stack_len].level < 0) {
-					error(GT_INVALID_FORMAT, "Bad backwards indentation - previous level not found.");
+					res = GT_INVALID_FORMAT;
+					error_log("Bad backwards indentation - previous level not found.", stack[stack_len].lineNr);
+					goto cleanup;
 				}
 			} else {
 				/* Make sure the indentation matches. */
 				if (memcmp(stack[stack_len].indent, stack[stack_len - 1].indent, stack[stack_len - 1].indent_len)) {
-					error(GT_INVALID_FORMAT, "Indentation not a subset.");
+					res = GT_INVALID_FORMAT;
+					error_log("Indentation not a subset.", stack[stack_len].lineNr);
+					goto cleanup;
 				}
 
 				stack[stack_len].level = stack[stack_len - 1].level;
@@ -781,7 +797,9 @@ static int convertStream(FILE *f) {
 				if (stack[stack_len].indent_len > stack[stack_len - 1].indent_len) {
 					/* A subset of the previous. */
 					if (stack[stack_len - 1].dat_len > 0) {
-						error(GT_INVALID_FORMAT, "A TLV with explicit data may not have nested elements.");
+						res = GT_INVALID_FORMAT;
+						error_log("A TLV with explicit data may not have nested elements.", stack[stack_len].lineNr);
+						goto cleanup;
 					}
 					stack[stack_len].level++;
 				}
@@ -816,7 +834,9 @@ static int convertStream(FILE *f) {
 
 			tmp = realloc(stack, stack_size * sizeof(TlvLine));
 			if (tmp == NULL) {
-				error(GT_OUT_OF_MEMORY, "Unable to reallocate internal buffer.");
+				res = GT_OUT_OF_MEMORY;
+				error_log("Unable to reallocate internal buffer.", stack[stack_len].lineNr);
+				goto cleanup;
 			}
 			stack = tmp;
 		}

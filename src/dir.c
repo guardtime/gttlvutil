@@ -203,13 +203,13 @@ int DIRECTORY_getMyPath(char *path, size_t path_len, char *arg0) {
 
 	if (directory_getMyFullPath(buf, sizeof(buf), arg0) == NULL) {
 		fprintf(stderr, "Unable to retrieve gttlvdump full path.\n");
-		res = GT_INVALID_FORMAT;
+		res = GT_IO_ERROR;
 		goto cleanup;
 	}
 
 	if (path_removeFile(buf, tmp, sizeof(tmp)) == NULL) {
 		fprintf(stderr, "Unable to remove file name from path '%s'.\n", buf);
-		res = GT_INVALID_FORMAT;
+		res = GT_IO_ERROR;
 	}
 
 	GT_strncpy(path, tmp, path_len);

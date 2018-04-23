@@ -165,7 +165,7 @@ TESTCASE: {GTTLVDUMP} -E 64 test/resources/sig/ok-sig-2014-08-01.1.b64
 # Encoding parameter 'hex'.
 
 TESTCASE: echo "812300041102bb8" | {GTTLVDUMP} -E hex
->>>  /TLV\[0123\]: 
+>>> /TLV\[0123\]:.*
   TLV\[11\]: bb80
 /
 >>>= 0
@@ -370,7 +370,7 @@ TESTCASE: echo "123456" | xxd -r -p | {GTTLVDUMP}
 >>>
 >>>2
 (null): Failed to parse 3 bytes.
->>>= 6
+>>>= 8
 
 ###############################################################################
 # Test timezone expression.

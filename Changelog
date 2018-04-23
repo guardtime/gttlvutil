@@ -6,7 +6,8 @@
 * BUGFIX: Fixed rebuild.sh default behaviour.
 * IMPROVEMENT: Optimized gttlvgrep for large TLV files.
 * IMPROVEMENT: Optimized gttlvdump for large TLV files.
-* IMPROVEMENT: Added "b64" as an alias to "base64"
+* IMPROVEMENT: Added "b64" as an alias to "base64".
+* IMPROVEMENT: Internal error handling refactored.
 * BUGFIX: Fixed input data intake in gttlvdump and gttlvgrep, where data pointer is moved instead of copying.
 * BUGFIX: Fixed gttlvdump input data empty buffer handling.
 

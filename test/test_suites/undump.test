@@ -107,7 +107,7 @@ TESTCASE: echo "TLV[q1234567890" | {GTTLVUNDUMP}
 TESTCASE: echo "TLV[1234567890" | {GTTLVUNDUMP}
 >>>
 >>>2 /<stdin>:1 - TLV tag value may not exceed 0x1fff./
->>>= 8
+>>>= 6
 
 TESTCASE: echo "TLV[1 234567890" | {GTTLVUNDUMP}
 >>>
@@ -122,45 +122,65 @@ TESTCASE: echo "TLV[1]234567890" | {GTTLVUNDUMP}
 TESTCASE: echo "TLV[1]:q234567890" | {GTTLVUNDUMP}
 >>>
 >>>2 /<stdin>:1 - Unexpected character: 'q'./
->>>= 8
+>>>= 6
 
 TESTCASE: echo "TLV[1]:2345q67890" | {GTTLVUNDUMP}
 >>>
 >>>2 /<stdin>:1 - Unexpected character: 'q'./
->>>= 8
+>>>= 6
 
 TESTCASE: echo "54 4c 56 5b 31 5d 3a 32 33 34 35 36 37 38 39 30 00" | xxd -r -p | {GTTLVUNDUMP}
 >>>2 /(.*Hex string contains unknown character.*)(.*0x00.*)/
->>>= 8
+>>>= 6
 
 TESTCASE: echo "54 4c 56 5b 31 5d 3a 32 33 34 35 36 37 38 39 30 0a" | xxd -r -p | {GTTLVUNDUMP}
 >>>2 /(.*Hex string contains unknown character.*)(.*0x0a.*)/
->>>= 8
+>>>= 6
 
 TESTCASE: echo 'TLV[1]:234567890z' | {GTTLVUNDUMP}
 >>>2 /(.*Hex string contains unknown character.*)(.*z.*)/
->>>= 8
+>>>= 6
 
 ###############################################################################
 # Verify that TLV hex values are handled in byte-precision.
 
 # Correct TLV value is given
 TESTCASE: {GTTLVUNDUMP} test/resources/tlv/dummy.txt | {GTTLVDUMP}
->>>
-TLV[0123]: 
-  TLV[1f]: 1a
+>>> /TLV\[0123\]:[ ]
+  TLV\[1f\]: 1a/
 >>>= 0
 
 # Half of a byte value is given
 TESTCASE: {GTTLVUNDUMP} test/resources/tlv/dummy-half_byte.txt
 >>>
 >>>2 /.*Hex strings must contain even number of characters./
->>>= 8
+>>>= 6
 
 # One and half byte values are given
 TESTCASE: {GTTLVUNDUMP} test/resources/tlv/dummy-one_and_a_half_byte.txt
 >>>
 >>>2 /.*Hex strings must contain even number of characters./
->>>= 8
+>>>= 6
+
+###############################################################################
+# Verify that A TLV with explicit data may not have nested elements.
+
+# Correct TLV value is given
+TESTCASE: {GTTLVUNDUMP} test/resources/tlv/nok-nested-tlv-with-data-plus-nested-elements.txt
+>>>2 /.*A TLV with explicit data may not have nested elements.*/
+>>>= 6
+
+###############################################################################
+# Verify that A TLV 8 will hold 255 bytes and more than that will throw error.
+
+# Correct TLV value is given
+TESTCASE: echo "TLV8[1]: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" | {GTTLVUNDUMP} | {GTTLVDUMP}
+>>> /.*TLV\[01\]: a{510}[^a]?/
+>>>= 0
+
+# Correct TLV value is given
+TESTCASE: echo "TLV8[1]: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabb" | {GTTLVUNDUMP}
+>>>2 /.*stdin.*1.*Unable to fit data into TLV8.*/
+>>>= 6
 
 ###############################################################################
