@@ -88,7 +88,10 @@ int GT_FTLV_fileRead(FILE *fd, unsigned char *buf, size_t len, size_t *consumed,
 	rd = fread(buf, 1, 2, fd);
 	count += rd;
 
-	if (rd != 2) {
+	if (ferror(fd)) {
+		res = GT_IO_ERROR;
+		goto cleanup;
+	} else if (rd != 2) {
 		res = GT_PARSER_ERROR;
 		goto cleanup;
 	}
@@ -102,7 +105,10 @@ int GT_FTLV_fileRead(FILE *fd, unsigned char *buf, size_t len, size_t *consumed,
 		rd = fread(buf + 2, 1, 2, fd);
 		count += rd;
 
-		if (rd != 2) {
+		if (ferror(fd)) {
+			res = GT_IO_ERROR;
+			goto cleanup;
+		} else if (rd != 2) {
 			res = GT_PARSER_ERROR;
 			goto cleanup;
 		}
@@ -126,7 +132,10 @@ int GT_FTLV_fileRead(FILE *fd, unsigned char *buf, size_t len, size_t *consumed,
 		rd = fread(datap, 1, t->dat_len, fd);
 		count += rd;
 
-		if (rd != t->dat_len) {
+		if (ferror(fd)) {
+			res = GT_IO_ERROR;
+			goto cleanup;
+		} else if (rd != t->dat_len) {
 			res = GT_PARSER_ERROR;
 			goto cleanup;
 		}

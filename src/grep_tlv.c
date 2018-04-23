@@ -76,7 +76,7 @@ int GT_GrepPattern_parse(const char *in, struct pattern_st **out) {
 
 	if (*in == '\0') {
 		fprintf(stderr, "Invalid pattern: the pattern must not be empty.\n");
-		res = GT_PARSER_ERROR;
+		res = GT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
@@ -167,7 +167,7 @@ int GT_GrepPattern_parse(const char *in, struct pattern_st **out) {
 
 			case MODE_ERROR:
 				fprintf(stderr, "Invalid pattern '%s': unexpected character '%c'\n", in, *p);
-				res = GT_PARSER_ERROR;
+				res = GT_INVALID_FORMAT;
 				goto cleanup;
 		}
 	}
