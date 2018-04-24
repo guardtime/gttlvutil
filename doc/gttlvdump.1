@@ -22,7 +22,7 @@ offset: TLV[type, F, N]: (L = length) Name: Value
 .LP
 Or, in case of nested TLVs:
 .LP
-.RS 4     
+.RS 4
 # Name.
 .br
 offset: TLV[type, F, N]: (L = length) Name:
@@ -118,6 +118,34 @@ Print TLV utility version.
 .\"
 .SH FILES
 \fI/usr/share/gttlvutil/*.desc\fR - description files that define known TLV elements. See \fBtlv-desc\fR(5) for more details.
+.\"
+.\"
+.SH EXIT STATUS
+.TP
+\fB0\fR
+\fBExit success.\fR Returned if everything is OK.
+.\"
+.TP
+\fB1
+\fBExit failure.\fR A general failure occurred.
+.\"
+.TP
+\fB3
+\fBInvalid command-line parameter.\fR The content or format of a command-line parameter is invalid or a parameter is missing.
+.\"
+.TP
+\fB4
+\fBInvalid format.\fR Input data can not be parsed or data format is invalid.
+.\"
+.TP
+\fB9
+\fBInput / output error.\fR Unable to read or write file or stream.
+.\"
+.TP
+\fB13
+\fBSystem out of memory.\fR
+.\"
+.br
 .\"
 .SH EXAMPLES
 .TP 2

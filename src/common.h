@@ -79,6 +79,7 @@ typedef enum {
  * Flushes stdout and prints the message to stderr stream.
  */
 int print_error(const char *fmt, ...);
+int tlvutil_ErrToExitcode(int error_code);
 
 enum StatusCodes {
 	/**
@@ -153,6 +154,48 @@ enum StatusCodes {
 	 * Unknown error occurred.
 	 */
 	GT_UNKNOWN_ERROR = 0xffff
+};
+enum TlvUtil_exit {
+//	EXIT_SUCCESS 0
+//	EXIT_FAILURE 1
+//	EXIT_RESERVED_0 = 2,
+
+	/**
+	 * The content or format of a command-line parameter is invalid or a parameter is missing.
+	 */
+	EXIT_INVALID_CL_PARAMETERS = 3,
+
+	/**
+	 * Input data can not be parsed or data format is invalid.
+	 */
+	EXIT_INVALID_FORMAT = 4,
+
+//	EXIT_RESERVED_1 = 5,
+//	EXIT_RESERVED_2 = 6,
+//	EXIT_RESERVED_3 = 7,
+//	EXIT_RESERVED_4 = 8,
+	/**
+	 * Unable to read or write file or stream.
+	 */
+	EXIT_IO_ERROR = 9,
+
+	/**
+	 * Cryptographic operation could not be performed. Likely causes are
+	 * unsupported or unknown cryptographic algorithms during HMAC calculation.
+	 */
+	EXIT_CRYPTO_ERROR = 10,
+
+//	EXIT_RESERVED_5 = 11,
+//	EXIT_RESERVED_6 = 12,
+
+	/**
+	 * System out of memory.
+	 */
+	EXIT_OUT_OF_MEMORY = 13
+
+//	EXIT_RESERVED_7 = 14,
+//	EXIT_RESERVED_8 = 15,
+//	EXIT_RESERVED_9 = 16,
 };
 
 #endif /* COMMON_H_ */

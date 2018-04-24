@@ -38,6 +38,33 @@ Output file for generated TLV. If not specified data will be written to \fIstdou
 \fB-v\fR
 Print TLV utility version.
 .\"
+.\"
+.SH EXIT STATUS
+.TP
+\fB0\fR
+\fBExit success.\fR Returned if everything is OK.
+.\"
+.TP
+\fB1
+\fBExit failure.\fR A general failure occurred.
+.\"
+.TP
+\fB3
+\fBInvalid command-line parameter.\fR The content or format of a command-line parameter is invalid or a parameter is missing.
+.\"
+.TP
+\fB4
+\fBInvalid format.\fR Input data can not be parsed or data format is invalid.
+.\"
+.TP
+\fB9
+\fBInput / output error.\fR Unable to read or write file or stream.
+.\"
+.TP
+\fB13
+\fBSystem out of memory.\fR
+.\"
+.br
 .SH EXAMPLES
 .TP 2
 \fB1

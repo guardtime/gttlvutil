@@ -32,3 +32,29 @@ int print_error(const char *format, ...) {
 	va_end(va);
 	return ret;
 }
+
+int tlvutil_ErrToExitcode(int error_code) {
+	switch (error_code) {
+		case GT_OK:
+			return EXIT_SUCCESS;
+		case GT_BUFFER_OVERFLOW:
+		case GT_UNKNOWN_ERROR:
+		case GT_INVALID_ARGUMENT:
+			return EXIT_FAILURE;
+		case GT_INVALID_CMD_PARAM:
+			return EXIT_INVALID_CL_PARAMETERS;
+		case GT_IO_ERROR:
+			return EXIT_IO_ERROR;
+		case GT_INVALID_FORMAT:
+		case GT_PARSER_ERROR:
+		case GT_DUPLICATE_ERROR:
+		case GT_END_OF_STREAM:
+			return EXIT_INVALID_FORMAT;
+		case GT_CRYPTO_FAILURE:
+			return EXIT_CRYPTO_ERROR;
+		case GT_OUT_OF_MEMORY:
+			return EXIT_OUT_OF_MEMORY;
+		default:
+			return EXIT_FAILURE;
+	}
+}

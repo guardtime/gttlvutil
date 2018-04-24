@@ -44,6 +44,34 @@ Print TLV utility version.
 \fB-E \fIenc\fR
 Specify the encoding for the input. Valid options are \fBbin\fR (default), \fBhex\fR and \fBbase64\fR.
 .\"
+.\"
+.SH EXIT STATUS
+.TP
+\fB0\fR
+\fBExit success.\fR Returned if everything is OK.
+.\"
+.TP
+\fB1
+\fBExit failure.\fR A general failure occurred.
+.\"
+.TP
+\fB3
+\fBInvalid command-line parameter.\fR The content or format of a command-line parameter is invalid or a parameter is missing.
+.\"
+.TP
+\fB4
+\fBInvalid format.\fR Input data can not be parsed or data format is invalid.
+.\"
+.TP
+\fB9
+\fBInput / output error.\fR Unable to read or write file or stream.
+.\"
+.TP
+\fB13
+\fBSystem out of memory.\fR
+.\"
+.br
+.\"
 .SH EXAMPLES
 .TP 2
 \fB1
