@@ -452,7 +452,9 @@ static int read_from(FILE *f, struct conf_st *conf) {
 
 	read_len = conf->consume_stream(&ptr, 0, f);
 	if (read_len < 0 || (read_len == 0 && !feof(f))) {
-		res = GT_IO_ERROR;
+		print_error("Error reading input.\n");
+		if (read_len < 0 && !ferror(f)) res = GT_INVALID_FORMAT;
+		else res = GT_IO_ERROR;
 		goto cleanup;
 	}
 	len = read_len;
@@ -493,7 +495,8 @@ static int read_from(FILE *f, struct conf_st *conf) {
 			read_len = conf->consume_stream(&ptr, off, f);
 			if (read_len < 0 || (read_len == 0 && !feof(f))) {
 				print_error("Error reading input.\n");
-				res = GT_IO_ERROR;
+				if (read_len < 0 && !ferror(f)) res = GT_INVALID_FORMAT;
+				else res = GT_IO_ERROR;
 				goto cleanup;
 			}
 			len = read_len;
@@ -595,7 +598,7 @@ static int loadDescriptions(struct desc_st *desc, const char *path, bool overrid
 }
 
 static int getOptionDecValue(char opt, char *arg, size_t *val, char *excstr, size_t excval) {
-	int res = GT_INVALID_ARGUMENT;
+	int res = GT_INVALID_CMD_PARAM;
 	char *endptr = NULL;
 	long int li = strtol(arg, &endptr, 10);
 	size_t tmp = 0;
@@ -822,5 +825,5 @@ cleanup:
 	if (desc_loaded) desc_cleanup(&conf.desc);
 	if (usr_desc_path) free(usr_desc_path);
 
-	return res;
+	return tlvutil_ErrToExitcode(res);
 }

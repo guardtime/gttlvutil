@@ -36,14 +36,14 @@ TESTCASE: {GTTLVDUMP} -V
 >>>
 >>>2 /.*(invalid option)|(illegal option).*--.*V.*
 .*Unknown parameter, try -h./
->>>= 1
+>>>= 3
 
 # Missing file.
 TESTCASE: {GTTLVDUMP} test/missing/file
 >>>
 >>>2
 test/missing/file: Unable to open file.
->>>= 4
+>>>= 9
 
 ###############################################################################
 # Tlvdump KSI signature.
@@ -105,6 +105,7 @@ TESTCASE: {GTTLVDUMP} -E 16 test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 >>>2
 Invalid hex character 0x88.
+Error reading input.
 >>>= 4
 
 ###############################################################################
@@ -232,35 +233,35 @@ TESTCASE: {GTTLVDUMP} -w -5 test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 >>>2
 Option w cannot be negative.
->>>= 5
+>>>= 3
 
 # Try hex value '0f'.
 TESTCASE: {GTTLVDUMP} -w 0f test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 >>>2
 Option w must be a decimal integer.
->>>= 5
+>>>= 3
 
 # Try hex value '0x0f'.
 TESTCASE: {GTTLVDUMP} -w 0x0f test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 >>>2
 Option w must be a decimal integer.
->>>= 5
+>>>= 3
 
 # Try string 'qwerty'.
 TESTCASE: {GTTLVDUMP} -w qwerty test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 >>>2
 Option w must be a decimal integer.
->>>= 5
+>>>= 3
 
 # Try string '-qwerty'.
 TESTCASE: {GTTLVDUMP} -w -qwerty test/resources/sig/ok-sig-2014-08-01.1.ksig
 >>>
 >>>2
 Option w must be a decimal integer.
->>>= 5
+>>>= 3
 
 ###############################################################################
 # Tlvdump KSI signature.
@@ -370,7 +371,7 @@ TESTCASE: echo "123456" | xxd -r -p | {GTTLVDUMP}
 >>>
 >>>2
 (null): Failed to parse 3 bytes.
->>>= 8
+>>>= 4
 
 ###############################################################################
 # Test timezone expression.

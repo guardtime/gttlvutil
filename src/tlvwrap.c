@@ -192,5 +192,5 @@ cleanup:
 	if (out != NULL && out != stdout) fclose(out);
 	free(conf.in_file);
 
-	return res;
+	return tlvutil_ErrToExitcode(res);
 }

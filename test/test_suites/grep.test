@@ -37,7 +37,7 @@ TESTCASE: {GTTLVGREP} -V
 >>>
 >>>2 /(invalid option)|(illegal option).*--.*V.*
 .*Unknown parameter, try -h./
->>>= 1
+>>>= 3
 
 ###############################################################################
 # Tlvgrep entire KSI signature from KSI signature file.
@@ -107,7 +107,7 @@ TESTCASE: {GTTLVGREP} -E 16 800.801[1].07[1],08[1] test/resources/sig/ok-sig-201
 >>>
 >>>2
 Invalid hex character 0x88.
->>>= 4
+>>>= 9
 
 ###############################################################################
 # Tlvgrep 2nd aggregation hash chain 2nd right and left links.
@@ -373,7 +373,7 @@ TESTCASE: {GTTLVGREP} -n 0321.01.02 test/resources/tlv/V2ExtendResponse-oldHmac.
 TESTCASE: {GTTLVGREP}
 >>>2 /Usage:.*
 .*gttlvgrep.*/
->>>= 1
+>>>= 3
 
 ###############################################################################
 

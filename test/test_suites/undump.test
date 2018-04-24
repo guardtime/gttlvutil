@@ -37,7 +37,7 @@ TESTCASE: {GTTLVUNDUMP} -V
 >>>
 >>>2 /(invalid option)|(illegal option).*--.*V.*
 .*Unknown parameter, try -h./
->>>= 1
+>>>= 3
 
 # Missing file.
 TESTCASE: {GTTLVUNDUMP} test/missing/file
@@ -77,69 +77,69 @@ TESTCASE: {GTTLVUNDUMP} test/resources/tlv/test2-extend_response-reqId_1.txt tes
 TESTCASE: echo "T1234567890" | {GTTLVUNDUMP}
 >>>
 >>>2 /<stdin>:1 - Expected 'L'./
->>>= 8
+>>>= 4
 
 TESTCASE: echo "TL1234567890" | {GTTLVUNDUMP}
 >>>
 >>>2 /<stdin>:1 - Expected 'V'./
->>>= 8
+>>>= 4
 
 TESTCASE: echo "TLV01234567890" | {GTTLVUNDUMP}
 >>>
 >>>2 /<stdin>:1 - Expected '\['./
->>>= 8
+>>>= 4
 
 TESTCASE: echo "TLV1234567890" | {GTTLVUNDUMP}
 >>>
 >>>2 /<stdin>:1 - Expected '6'./
->>>= 8
+>>>= 4
 
 TESTCASE: echo "TLV16234567890" | {GTTLVUNDUMP}
 >>>
 >>>2 /<stdin>:1 - Expected '\['./
->>>= 8
+>>>= 4
 
 TESTCASE: echo "TLV[q1234567890" | {GTTLVUNDUMP}
 >>>
 >>>2 /<stdin>:1 - Expected hex tag value./
->>>= 8
+>>>= 4
 
 TESTCASE: echo "TLV[1234567890" | {GTTLVUNDUMP}
 >>>
 >>>2 /<stdin>:1 - TLV tag value may not exceed 0x1fff./
->>>= 6
+>>>= 4
 
 TESTCASE: echo "TLV[1 234567890" | {GTTLVUNDUMP}
 >>>
 >>>2 /<stdin>:1 - Expected ']'./
->>>= 8
+>>>= 4
 
 TESTCASE: echo "TLV[1]234567890" | {GTTLVUNDUMP}
 >>>
 >>>2 /<stdin>:1 - Expected ':'./
->>>= 8
+>>>= 4
 
 TESTCASE: echo "TLV[1]:q234567890" | {GTTLVUNDUMP}
 >>>
 >>>2 /<stdin>:1 - Unexpected character: 'q'./
->>>= 6
+>>>= 4
 
 TESTCASE: echo "TLV[1]:2345q67890" | {GTTLVUNDUMP}
 >>>
 >>>2 /<stdin>:1 - Unexpected character: 'q'./
->>>= 6
+>>>= 4
 
 TESTCASE: echo "54 4c 56 5b 31 5d 3a 32 33 34 35 36 37 38 39 30 00" | xxd -r -p | {GTTLVUNDUMP}
 >>>2 /(.*Hex string contains unknown character.*)(.*0x00.*)/
->>>= 6
+>>>= 4
 
 TESTCASE: echo "54 4c 56 5b 31 5d 3a 32 33 34 35 36 37 38 39 30 0a" | xxd -r -p | {GTTLVUNDUMP}
 >>>2 /(.*Hex string contains unknown character.*)(.*0x0a.*)/
->>>= 6
+>>>= 4
 
 TESTCASE: echo 'TLV[1]:234567890z' | {GTTLVUNDUMP}
 >>>2 /(.*Hex string contains unknown character.*)(.*z.*)/
->>>= 6
+>>>= 4
 
 ###############################################################################
 # Verify that TLV hex values are handled in byte-precision.
@@ -154,13 +154,13 @@ TESTCASE: {GTTLVUNDUMP} test/resources/tlv/dummy.txt | {GTTLVDUMP}
 TESTCASE: {GTTLVUNDUMP} test/resources/tlv/dummy-half_byte.txt
 >>>
 >>>2 /.*Hex strings must contain even number of characters./
->>>= 6
+>>>= 4
 
 # One and half byte values are given
 TESTCASE: {GTTLVUNDUMP} test/resources/tlv/dummy-one_and_a_half_byte.txt
 >>>
 >>>2 /.*Hex strings must contain even number of characters./
->>>= 6
+>>>= 4
 
 ###############################################################################
 # Verify that A TLV with explicit data may not have nested elements.
@@ -168,7 +168,7 @@ TESTCASE: {GTTLVUNDUMP} test/resources/tlv/dummy-one_and_a_half_byte.txt
 # Correct TLV value is given
 TESTCASE: {GTTLVUNDUMP} test/resources/tlv/nok-nested-tlv-with-data-plus-nested-elements.txt
 >>>2 /.*A TLV with explicit data may not have nested elements.*/
->>>= 6
+>>>= 4
 
 ###############################################################################
 # Verify that A TLV 8 will hold 255 bytes and more than that will throw error.
@@ -181,6 +181,6 @@ TESTCASE: echo "TLV8[1]: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 # Correct TLV value is given
 TESTCASE: echo "TLV8[1]: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabb" | {GTTLVUNDUMP}
 >>>2 /.*stdin.*1.*Unable to fit data into TLV8.*/
->>>= 6
+>>>= 4
 
 ###############################################################################

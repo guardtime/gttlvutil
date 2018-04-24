@@ -1008,6 +1008,6 @@ int main(int argc, char **argv) {
 cleanup:
 	if (f != NULL && f != stdin) fclose(f);
 
-	return res;
+	return tlvutil_ErrToExitcode(res);
 }
 
