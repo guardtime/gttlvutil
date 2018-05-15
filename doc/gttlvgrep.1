@@ -64,7 +64,7 @@ Specify the encoding for the input. Valid options are \fBbin\fR (default), \fBhe
 .\"
 .TP
 \fB9
-\fBInput / output error.\fR Unable to read or write file or stream.
+\fBInput/output error.\fR Unable to read or write file or stream.
 .\"
 .TP
 \fB13
@@ -75,7 +75,7 @@ Specify the encoding for the input. Valid options are \fBbin\fR (default), \fBhe
 .SH EXAMPLES
 .TP 2
 \fB1
-\fRTo extract first verification certificate from the KSI publications file '\fIpubfile\fR', the 'KSIPUBLF' must be ignored in the beginning of the file. Only value of the TLV is printed in binary:
+\fRExtract first verification certificate from the KSI publications file '\fIpubfile\fR' and ignore the 'KSIPUBLF' in the beginning of the file. Only value of the TLV is printed in binary:
 .LP
 .RS 4
 \fBgttlvgrep -H \fI8 \fB-r \fI702[0].02 pubfile \fR> \fItest/ksi-verify.crt\fR
@@ -83,7 +83,7 @@ Specify the encoding for the input. Valid options are \fBbin\fR (default), \fBhe
 .\"
 .TP 2
 \fB2
-\fRTo dump TLV from \fIfile.tlv\fR and verify the correctness of the result, the entire TLV including type and length must be printed:
+\fRDump TLV from \fIfile.tlv\fR and verify the correctness of the result. The entire TLV including type and length is printed:
 .LP
 .RS 4
 \fBgttlvgrep -re \fI1000[0] file.tlv\fR | gttlvdump -pP
@@ -91,7 +91,7 @@ Specify the encoding for the input. Valid options are \fBbin\fR (default), \fBhe
 \"
 .TP 2
 \fB3
-\fRTo dump all the hash chain links (left \fI07\fR and right \fI08\fR) in the second aggregation chain from KSI signature \fItest.ksig\fR in human-readable format:
+\fRDump all the hash chain links (left \fI07\fR and right \fI08\fR) in the second aggregation chain from KSI signature \fItest.ksig\fR in human-readable format:
 .LP
 .RS 4
 \fBgttlvgrep -ni \fI800.801[1].07,08 test.ksig\fR

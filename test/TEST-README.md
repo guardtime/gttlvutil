@@ -1,6 +1,6 @@
 # gttlvutil TEST-README
 
-This document describes how to configure and run `gttlvutil` automated test. Also the dependencies and brief overview of files related to the tests will be described.
+This document describes how to configure and run `gttlvutil` automated test. Also brief overview of the dependencies and files related to the tests is given.
 
 Tests can be run with `gttlvutil` package installed on the machine, or within the project directory. On Unix platform executables are located in `src` directory. If the executables are present in the project directory then the tests are run with the corresponding binaries, otherwise the installed binaries are used.
 
