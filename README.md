@@ -14,9 +14,8 @@ The following utils are provided:
 
 `gttlvdump` uses description files (found under `src/*.desc`) for pretty printing and formating TLV elements. Depending on the used build configuration and installation of `gttlvutil` package, the default description
 files are loaded from:
-* installed location on the machine (e.g. `/usr/share/gttlvutil`);
-* within the directory where executable files are located; or
-* location defined in build configuration (see `--with-data-dir` option).
+* installed location on the machine (e.g. `/usr/share/gttlvutil`); or
+* location defined in build configuration (see `./configure -h` and `--with-data-dir` option).
 
 In order to use user defined description files check out `gttlvdump` `-D`, `-o`, `-i` flags.
 
