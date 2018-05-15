@@ -26,7 +26,7 @@ For more information about TLV desctiption files see `man tlv-desc(5)`.
 
 ### Latest Release from Guardtime Repository
 
-In order to install the `gttlvutil` CentOS / RHEL:
+In order to install the `gttlvutil` on CentOS / RHEL:
 
 ```
 cd /etc/yum.repos.d
