@@ -139,7 +139,7 @@ Print TLV utility version.
 .\"
 .TP
 \fB9
-\fBInput / output error.\fR Unable to read or write file or stream.
+\fBInput/output error.\fR Unable to read or write file or stream.
 .\"
 .TP
 \fB13
@@ -150,7 +150,7 @@ Print TLV utility version.
 .SH EXAMPLES
 .TP 2
 \fB1
-\fRTo dump KSI publications file "\fIpubfile\fR", the "KSIPUBLF" in the beginning of the file must be ignored:
+\fRDump KSI publications file "\fIpubfile\fR" and ignore the "KSIPUBLF" in the beginning of the file:
 .LP
 .RS 4
 \fBgttlvdump -H\fR \fI8 pubfile\fR
@@ -158,7 +158,7 @@ Print TLV utility version.
 .\"
 .TP 2
 \fB2
-\fRTo dump KSI signature with all known TLVs described by the name and values according to their data type:
+\fRDump KSI signature with all known TLVs described by the name and values according to their data type:
 .LP
 .RS 4
 \fBgttlvdump -pP \fIsigfile\fR
@@ -166,7 +166,7 @@ Print TLV utility version.
 .\"
 .TP 2
 \fB3
-\fRTo dump only one layer of nested TLVs and print the lower level TLVs as binary value:
+\fRDump only one layer of nested TLVs and print the lower level TLVs as binary value:
 .LP
 .RS 4
 \fBgttlvdump -d \fI2 tlvfile\fR

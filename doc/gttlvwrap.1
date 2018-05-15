@@ -58,7 +58,7 @@ Print TLV utility version.
 .\"
 .TP
 \fB9
-\fBInput / output error.\fR Unable to read or write file or stream.
+\fBInput/output error.\fR Unable to read or write file or stream.
 .\"
 .TP
 \fB13
@@ -68,7 +68,7 @@ Print TLV utility version.
 .SH EXAMPLES
 .TP 2
 \fB1
-\fRTo wrap  string '\fITEST\fR' with TLV header using type 1000 and dump the result with \fBgttlvdump\fR:
+\fRWrap a string '\fITEST\fR' with TLV header using type 1000 and dump the result with \fBgttlvdump\fR:
 .LP
 .RS 4
 \fBecho \fI"TEST" \fR| \fBgttlvwrap -t \fI1000 \fR| \fB gttlvdump\fR
@@ -76,7 +76,7 @@ Print TLV utility version.
 .\"
 .TP 2
 \fB2
-\fRTo wrap a file '\fIfile\fR' with TLV header and set the Non-Critical flag:
+\fRWrap a file '\fIfile\fR' with TLV header and set the Non-Critical flag:
 .LP
 .RS 4
 \fBgttlvwrap -t \fI1000\fR \fB-N -i \fIfile\fR \fB-o \fIfile.tlv\fR

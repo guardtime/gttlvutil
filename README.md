@@ -1,6 +1,8 @@
 # gttlvutil
 
-Guardtime Keyless Signature Infrastructure (KSI) is an industrial scale blockchain platform that cryptographically ensures data integrity and proves time of existence. Its keyless signatures, based on hash chains, link data to global calendar blockchain. The checkpoints of the blockchain, published in newspapers and electronic media, enable long term integrity of any digital asset without the need to trust any system. There are many applications for KSI, a classical example is signing of any type of logs - system logs, financial transactions, call records, etc. For more, see [https://guardtime.com](https://guardtime.com).
+Guardtime's KSI is an industrial scale blockchain platform that cryptographically ensures data integrity and proves time of existence. Its keyless signatures, based on hash chains, link data to global calendar blockchain. The checkpoints of the blockchain, published in newspapers and electronic media, enable long term integrity of any digital asset without the need to trust any system.
+
+There are many applications for KSI, a classical example is signing of any type of logs - system logs, financial transactions, call records, etc. For more, see [https://guardtime.com](https://guardtime.com).
 
 The `gttlvutil` is a collection of utils for working with the KSI type-length-value (TLV) encoded binary data. This encoding is used throughout the KSI infrastructure: for KSI signature, publications file and network communication.
 
@@ -10,13 +12,13 @@ The following utils are provided:
 * `gttlvwrap` - wraps given data into TLV data structure.
 * `gttlvgrep` - extracts TLV value, that is described via TLV type pattern, from TLV binary data.
 
-`gttlvdump` is using description files (found under `src/*.desc`) for pretty printing and formating TLV elements. Depending on the used build configuration and installation of `gttlvutil` package, the default description
-files are loaded:
-* from installed location on the machine (e.g. `/usr/share/gttlvutil`);
-* from within the directory where executable files are located;
-* from location defined in build configuration (see `--with-data-dir` option).
+`gttlvdump` uses description files (found under `src/*.desc`) for pretty printing and formating TLV elements. Depending on the used build configuration and installation of `gttlvutil` package, the default description
+files are loaded from:
+* installed location on the machine (e.g. `/usr/share/gttlvutil`);
+* within the directory where executable files are located; or
+* location defined in build configuration (see `--with-data-dir` option).
 
-In order to use user defined description files check out gttlvdump `-D`, `-o`, `-i` flags.
+In order to use user defined description files check out `gttlvdump` `-D`, `-o`, `-i` flags.
 
 For more information about TLV desctiption files see `man tlv-desc(5)`.
 
@@ -90,7 +92,7 @@ See `test/TEST-README.md` to learn how to run `gttlvutil` tests on Linux.
   gttlvgrep 800.805.10.02 signature.ksig
   ```
 
-Detailed usage information is described in individual tool help (`-h`) and in man pages: `gttlvdump(1)`, `gttlvgrep(1)`, `gttlvwrap(1)`, `tlv-desc(5)`.
+Detailed usage information is described in individual tool help (`-h`) and in man pages: `gttlvdump(1)`, `gttlvgrep(1)`, `gttlvwrap(1)`, `tlv-desc(5)`, or respective documentation as pdf from `doc/` directory.
 
 For more information about TLV encoding see also man page `tlv(5)`.
 
