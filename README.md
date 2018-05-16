@@ -26,19 +26,43 @@ For more information about TLV desctiption files see `man tlv-desc(5)`.
 
 ### Latest Release from Guardtime Repository
 
-In order to install the `gttlvutil` CentOS/RHEL packages directly from the Guardtime public repository, download and
-save the repository configuration to the `/etc/yum.repos.d/` folder:
+In order to install the `gttlvutil` on CentOS / RHEL:
 
 ```
 cd /etc/yum.repos.d
 
-# In case of RHEL/CentOS 6
+# In case of RHEL / CentOS 6
 sudo curl -O http://download.guardtime.com/ksi/configuration/guardtime.el6.repo
 
-# In case of RHEL/CentOS 7
+# In case of RHEL / CentOS 7
 sudo curl -O http://download.guardtime.com/ksi/configuration/guardtime.el7.repo
 
+# In case of Fedora 26
+sudo curl -O http://download.guardtime.com/ksi/configuration/guardtime.fc26.repo
+
 sudo yum install gttlvutil
+```
+
+In order to install the `gttlvutil` on Debian / Ubuntu:
+
+```
+# Add Guardtime pgp key.
+sudo curl http://download.guardtime.com/ksi/GUARDTIME-GPG-KEY | sudo apt-key add -
+
+# In case of Ubuntu 16 (Xenial)
+sudo curl -o /etc/apt/sources.list.d/guardtime.list http://download.guardtime.com/ksi/configuration/guardtime.xenial.list
+
+# In case of Debian 9 (Stretch)
+sudo curl -o /etc/apt/sources.list.d/guardtime.list http://download.guardtime.com/ksi/configuration/guardtime.stretch.list
+
+sudo apt update
+sudo apt-get install gttlvutil
+```
+
+In order to install the `gttlvutil` on OS X:
+```
+brew tap guardtime/ksi
+brew install gttlvutil
 ```
 
 ### From Source Code
@@ -49,7 +73,9 @@ To build the `gttlvutil`, a cryptography provider has to be installed in the sys
 * OpenSSL (recommended)
 * Windows native CryptoAPI
 
-Use `rebuild-rpm.sh` script to build an RPM installation package on CentOS/RHEL.
+Use `rebuild-rpm.sh` script to build an RPM installation package on CentOS / RHEL.
+
+Use `rebuild-deb.sh` script to build an DEB installation package on Debian / Ubuntu.
 
 See `WinBuild.txt` to read how to build `gttlvutil` on Windows.
 
