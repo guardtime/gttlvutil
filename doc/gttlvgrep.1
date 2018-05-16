@@ -40,10 +40,42 @@ Print index of the TLV element in the context of its nesting TLV. Has no effect 
 \fB-v\fR
 Print TLV utility version.
 .\"
+.TP
+\fB-E \fIenc\fR
+Specify the encoding for the input. Valid options are \fBbin\fR (default), \fBhex\fR and \fBbase64\fR.
+.\"
+.\"
+.SH EXIT STATUS
+.TP
+\fB0\fR
+\fBExit success.\fR Returned if everything is OK.
+.\"
+.TP
+\fB1
+\fBExit failure.\fR A general failure occurred.
+.\"
+.TP
+\fB3
+\fBInvalid command-line parameter.\fR The content or format of a command-line parameter is invalid or a parameter is missing.
+.\"
+.TP
+\fB4
+\fBInvalid format.\fR Input data can not be parsed or data format is invalid.
+.\"
+.TP
+\fB9
+\fBInput/output error.\fR Unable to read or write file or stream.
+.\"
+.TP
+\fB13
+\fBSystem out of memory.\fR
+.\"
+.br
+.\"
 .SH EXAMPLES
 .TP 2
 \fB1
-\fRTo extract first verification certificate from the KSI publications file '\fIpubfile\fR', the 'KSIPUBLF' must be ignored in the beginning of the file. Only value of the TLV is printed in binary:
+\fRExtract first verification certificate from the KSI publications file '\fIpubfile\fR' and ignore the 'KSIPUBLF' in the beginning of the file. Only value of the TLV is printed in binary:
 .LP
 .RS 4
 \fBgttlvgrep -H \fI8 \fB-r \fI702[0].02 pubfile \fR> \fItest/ksi-verify.crt\fR
@@ -51,7 +83,7 @@ Print TLV utility version.
 .\"
 .TP 2
 \fB2
-\fRTo dump TLV from \fIfile.tlv\fR and verify the correctness of the result, the entire TLV including type and length must be printed:
+\fRDump TLV from \fIfile.tlv\fR and verify the correctness of the result. The entire TLV including type and length is printed:
 .LP
 .RS 4
 \fBgttlvgrep -re \fI1000[0] file.tlv\fR | gttlvdump -pP
@@ -59,7 +91,7 @@ Print TLV utility version.
 \"
 .TP 2
 \fB3
-\fRTo dump all the hash chain links (left \fI07\fR and right \fI08\fR) in the second aggregation chain from KSI signature \fItest.ksig\fR in human-readable format:
+\fRDump all the hash chain links (left \fI07\fR and right \fI08\fR) in the second aggregation chain from KSI signature \fItest.ksig\fR in human-readable format:
 .LP
 .RS 4
 \fBgttlvgrep -ni \fI800.801[1].07,08 test.ksig\fR

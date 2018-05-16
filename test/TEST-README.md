@@ -1,13 +1,10 @@
 # gttlvutil TEST-README
 
-This document describes how to configure and run `gttlvutil` automated test. Also the dependencies and brief overview of files related to the tests will be described.
+This document describes how to configure and run `gttlvutil` automated test. Also brief overview of the dependencies and files related to the tests is given.
 
 Tests can be run with `gttlvutil` package installed on the machine, or within the project directory. On Unix platform executables are located in `src` directory. If the executables are present in the project directory then the tests are run with the corresponding binaries, otherwise the installed binaries are used.
 
-Unit tests are using default description files. In case the project has been built without explicit setup of `--with-data-dir` option:
-- via `rebuild.sh` script, then the files are loaded from `src` directory.
-- via `rebuild-rpm.sh` script, then the files are loaded from default system
-directory (e.g. `/usr/share/gttlvutil`).
+Unit tests are using default description files. To run tests with description files from `src` directory, configuration option `--with-data-dir=-` must be used. See `./configure -h` for more information.
 
 
 ## DEPENDENCIES

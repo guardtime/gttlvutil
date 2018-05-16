@@ -22,7 +22,7 @@ offset: TLV[type, F, N]: (L = length) Name: Value
 .LP
 Or, in case of nested TLVs:
 .LP
-.RS 4     
+.RS 4
 # Name.
 .br
 offset: TLV[type, F, N]: (L = length) Name:
@@ -105,6 +105,10 @@ Print time in local timezone. Is valid with \fB-p\fR.
 Output format of binary value. Available: 'hex', 'base64'. If \fB-e\fR is not set, ’hex’ is used.
 .\"
 .TP
+\fB-E \fIenc\fR
+Specify the encoding for the input. Valid options are \fBbin\fR (default), \fBhex\fR and \fBbase64\fR.
+.\"
+.TP
 \fB-D \fIpth\fR
 Set TLV description files directory. Only files with \fI*.desc\fR extention are loaded.
 .\"
@@ -115,10 +119,38 @@ Print TLV utility version.
 .SH FILES
 \fI/usr/share/gttlvutil/*.desc\fR - description files that define known TLV elements. See \fBtlv-desc\fR(5) for more details.
 .\"
+.\"
+.SH EXIT STATUS
+.TP
+\fB0\fR
+\fBExit success.\fR Returned if everything is OK.
+.\"
+.TP
+\fB1
+\fBExit failure.\fR A general failure occurred.
+.\"
+.TP
+\fB3
+\fBInvalid command-line parameter.\fR The content or format of a command-line parameter is invalid or a parameter is missing.
+.\"
+.TP
+\fB4
+\fBInvalid format.\fR Input data can not be parsed or data format is invalid.
+.\"
+.TP
+\fB9
+\fBInput/output error.\fR Unable to read or write file or stream.
+.\"
+.TP
+\fB13
+\fBSystem out of memory.\fR
+.\"
+.br
+.\"
 .SH EXAMPLES
 .TP 2
 \fB1
-\fRTo dump KSI publications file "\fIpubfile\fR", the "KSIPUBLF" in the beginning of the file must be ignored:
+\fRDump KSI publications file "\fIpubfile\fR" and ignore the "KSIPUBLF" in the beginning of the file:
 .LP
 .RS 4
 \fBgttlvdump -H\fR \fI8 pubfile\fR
@@ -126,7 +158,7 @@ Print TLV utility version.
 .\"
 .TP 2
 \fB2
-\fRTo dump KSI signature with all known TLVs described by the name and values according to their data type:
+\fRDump KSI signature with all known TLVs described by the name and values according to their data type:
 .LP
 .RS 4
 \fBgttlvdump -pP \fIsigfile\fR
@@ -134,7 +166,7 @@ Print TLV utility version.
 .\"
 .TP 2
 \fB3
-\fRTo dump only one layer of nested TLVs and print the lower level TLVs as binary value:
+\fRDump only one layer of nested TLVs and print the lower level TLVs as binary value:
 .LP
 .RS 4
 \fBgttlvdump -d \fI2 tlvfile\fR

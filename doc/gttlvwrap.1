@@ -38,10 +38,37 @@ Output file for generated TLV. If not specified data will be written to \fIstdou
 \fB-v\fR
 Print TLV utility version.
 .\"
+.\"
+.SH EXIT STATUS
+.TP
+\fB0\fR
+\fBExit success.\fR Returned if everything is OK.
+.\"
+.TP
+\fB1
+\fBExit failure.\fR A general failure occurred.
+.\"
+.TP
+\fB3
+\fBInvalid command-line parameter.\fR The content or format of a command-line parameter is invalid or a parameter is missing.
+.\"
+.TP
+\fB4
+\fBInvalid format.\fR Input data can not be parsed or data format is invalid.
+.\"
+.TP
+\fB9
+\fBInput/output error.\fR Unable to read or write file or stream.
+.\"
+.TP
+\fB13
+\fBSystem out of memory.\fR
+.\"
+.br
 .SH EXAMPLES
 .TP 2
 \fB1
-\fRTo wrap  string '\fITEST\fR' with TLV header using type 1000 and dump the result with \fBgttlvdump\fR:
+\fRWrap a string '\fITEST\fR' with TLV header using type 1000 and dump the result with \fBgttlvdump\fR:
 .LP
 .RS 4
 \fBecho \fI"TEST" \fR| \fBgttlvwrap -t \fI1000 \fR| \fB gttlvdump\fR
@@ -49,7 +76,7 @@ Print TLV utility version.
 .\"
 .TP 2
 \fB2
-\fRTo wrap a file '\fIfile\fR' with TLV header and set the Non-Critical flag:
+\fRWrap a file '\fIfile\fR' with TLV header and set the Non-Critical flag:
 .LP
 .RS 4
 \fBgttlvwrap -t \fI1000\fR \fB-N -i \fIfile\fR \fB-o \fIfile.tlv\fR

@@ -1,9 +1,5 @@
-#!/bin/sh
-
 #
-# Copyright 2013-2016 Guardtime, Inc.
-#
-# This file is part of the Guardtime client SDK.
+# Copyright 2013-2018 Guardtime, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License").
 # You may not use this file except in compliance with the License.
@@ -18,18 +14,21 @@
 # Guardtime, Inc., and no license to trademarks is granted; Guardtime
 # reserves and retains all trademark rights.
 
-PRF=gttlvutil-$(tr -d [:space:] < VERSION)
 
-if [ $# -gt  0 ]; then
-  conf_args=$* 
-fi
+Source: @PACKAGE@
+Section: utils
+Priority: optional
+Maintainer: Guardtime <support@guardtime.com>
+Standards-Version: 3.9.8
+Build-Depends: libssl1.0-dev | libssl-dev
 
-rm -f ${PRF}*.tar.gz && \
-mkdir -p config m4 && \
-echo Running autoreconf... && \
-autoreconf -if && \
-echo Running configure script... && \
-./configure $conf_args && \
-echo Running make... && \
-make clean && \
-make \
+Package: @PACKAGE@
+Architecture: any
+Section: utils
+Priority: optional
+Depends: ${shlibs:Depends}
+Description: KSI type-length-value (TLV) encoded data utility.
+ The gttlvutil is a collection of utils for working with the KSI
+ type-length-value (TLV) encoded binary data. This encoding is used throughout
+ the KSI infrastructure: for KSI signature, publications file and network
+ communication.

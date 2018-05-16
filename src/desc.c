@@ -158,6 +158,7 @@ cleanup:
 static int get_type(const char *ts) {
 	if (!strcmp("*", ts)) return TLV_COMPOSITE;
 	if (!strcmp("INT", ts)) return TLV_INT;
+	if (!strcmp("SINT", ts)) return TLV_SINT;
 	if (!strcmp("RAW", ts)) return TLV_RAW;
 	if (!strcmp("STR", ts)) return TLV_STR;
 	if (!strcmp("TIME", ts)) return TLV_TIME;
@@ -216,7 +217,7 @@ static int store_magic(struct desc_st *map_in, const char *key, const char *desc
 		} else if (c >= 'a' && c <= 'f') {
 			octet = (octet << 4) + (c - 'a') + 10;
 		} else {
-			fprintf(stderr, "Unexpected character '%c' (%d) while processing magic header value.\n", c, c);
+			fprintf(stderr, "Unexpected hex character '%c' (%d) while processing magic header value.\n", c, c);
 			res = GT_INVALID_FORMAT;
 			goto cleanup;
 		}
@@ -303,7 +304,7 @@ static int store_line(struct desc_st *map_in, const char *key, const char *ts, c
 	/* Convert the type into a number .*/
 	type = get_type(ts);
 	if (type < 0) {
-		fprintf(stderr, "Unexpected type: '%s'\n", ts);
+		fprintf(stderr, "Unknown value format: '%s'\n", ts);
 		res = GT_INVALID_FORMAT;
 		goto cleanup;
 	}

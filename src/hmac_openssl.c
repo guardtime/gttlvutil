@@ -27,6 +27,16 @@
 #include <stdio.h>
 #include <openssl/evp.h>
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#  define EVP_MD_CTX_create_() EVP_MD_CTX_create()
+#  define EVP_MD_CTX_destroy_(md) EVP_MD_CTX_destroy((md))
+#  define EVP_MD_CTX_cleanup_(md) EVP_MD_CTX_cleanup((md))
+#else
+#  define EVP_MD_CTX_create_() EVP_MD_CTX_new()
+#  define EVP_MD_CTX_destroy_(md) EVP_MD_CTX_free((md))
+#  define EVP_MD_CTX_cleanup_(md) EVP_MD_CTX_reset((md))
+#endif
+
 /**
  * Converts hash function ID to OpenSSL identifier
  */
@@ -85,7 +95,7 @@ static int initEvpCtx(GT_Hash_AlgorithmId alg, EVP_MD_CTX **ctx) {
 		goto cleanup;
 	}
 
-	*ctx = EVP_MD_CTX_create();
+	*ctx = EVP_MD_CTX_create_();
 	if (*ctx == NULL) {
 		res = GT_OUT_OF_MEMORY;
 		goto cleanup;
@@ -209,8 +219,8 @@ int GT_Hmac_Calculate(GT_Hash_AlgorithmId alg, const void *key, size_t key_len, 
 cleanup:
 
 	if (ctx != NULL) {
-		EVP_MD_CTX_cleanup(ctx);
-		EVP_MD_CTX_destroy(ctx);
+		EVP_MD_CTX_cleanup_(ctx);
+		EVP_MD_CTX_destroy_(ctx);
 	}
 
 	return res;

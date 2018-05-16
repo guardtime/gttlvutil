@@ -8,6 +8,8 @@ enum {
 	TLV_COMPOSITE,
 	/** Unsigned integer value. */
 	TLV_INT,
+	/** Unsigned integer value. */
+	TLV_SINT,
 	/** Raw, uninterpreded value. */
 	TLV_RAW,
 	/** Utf-8 string value. */

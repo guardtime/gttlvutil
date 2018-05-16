@@ -40,6 +40,7 @@ struct conf_st {
 	struct desc_st desc;
 	GT_Encoding out_enc;
 	GT_Encoding in_enc;
+	long (*consume_stream)(unsigned char **buf, size_t consumed, FILE *file);
 };
 
 static char *hash_alg[] = {
@@ -74,6 +75,29 @@ static uint64_t get_uint64(unsigned char *buf, size_t len) {
 
 	for (i = 0; i < len; i++) {
 		val = (val << 8) | buf[i];
+	}
+
+	return val;
+}
+
+static long long get_int64(unsigned char *buf, size_t len) {
+	long long val = 0;
+	size_t i;
+
+	for (i = 0; i < len; i++) {
+		val = (val << 8);
+		val += buf[i];
+	}
+	/* ZigZag encoded integer decoding (0x00 => 0, 0x01 => -1, 0x02 => 1, ...)*/
+	/*Negative values:*/
+	if (val & 0x01) {
+		/*Set sign to "-" and shift right*/
+		val = -(long long)(val >> 1) - 1;
+	}
+	/*Positive values:*/
+	else {
+		/*Just shift right*/
+		val = (long long)(val >> 1);
 	}
 
 	return val;
@@ -175,7 +199,13 @@ static int get_payload_type(unsigned char *buf, size_t buf_len, struct conf_st *
 			struct desc_st *d = NULL;
 
 			res = GT_FTLV_memRead(ptr, len, &n);
+			if (res == GT_OK && len < n.hdr_len + n.dat_len) {
+				res = GT_PARSER_ERROR;
+			}
 			if (res != GT_OK) goto cleanup;
+
+
+
 
 			/* Try to find sub type. */
 			if (desc != NULL) {
@@ -203,12 +233,20 @@ cleanup:
 }
 
 static void print_int(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
-
 	if (len > 8) {
 		printf("0x");
 		print_raw_data(buf, len, prefix_len, true, conf);
 	} else {
 		printf("%llu\n", (unsigned long long)get_uint64(buf, len));
+	}
+}
+
+static void print_signed_int(unsigned char *buf, size_t len, int prefix_len, struct conf_st *conf) {
+	if (len > 8) {
+		printf("0x");
+		print_raw_data(buf, len, prefix_len, true, conf);
+	} else {
+		printf("%lld\n", (long long)get_int64(buf, len));
 	}
 }
 
@@ -337,7 +375,7 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 	prefix_len += printf("%*s", level * INDENT_LEN, "");
 
 	if (t->tag > 31 || t->dat_len > 255) {
-		prefix_len += printf("TLV[%04x%s%s]:", t->tag, (t->is_fwd ? ",F" : ""), (t->is_nc ? ",N" : ""));
+		prefix_len += printf("TLV[%04x%s%s]: ", t->tag, (t->is_fwd ? ",F" : ""), (t->is_nc ? ",N" : ""));
 	} else {
 		prefix_len += printf("TLV%s[%02x%s%s]: ", t->force16 ? "16" : "", t->tag, (t->is_fwd ? ",F" : ""), (t->is_nc ? ",N" : ""));
 	}
@@ -377,6 +415,9 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 			case TLV_INT:
 				print_int(ptr, len, prefix_len, conf);
 				break;
+			case TLV_SINT:
+				print_signed_int(ptr, len, prefix_len, conf);
+				break;
 			case TLV_STR:
 				print_str(ptr, len, prefix_len, conf);
 				break;
@@ -401,19 +442,28 @@ static void printTlv(unsigned char *buf, size_t buf_len, GT_FTLV *t, int level, 
 static int read_from(FILE *f, struct conf_st *conf) {
 	int res;
 	GT_FTLV t;
-	unsigned char *buf = NULL;
-	size_t len;
+	size_t len = 0;
 	size_t off = 0;
+	size_t global_off = 0;
 	struct file_magic_st *pMagic = NULL;
 	size_t hdr_len = 0;
+	unsigned char *ptr = NULL;
+	long read_len;
 
-	if ((res = GT_fread(conf->in_enc, &buf, &len, f)) != GT_OK) goto cleanup;
+	read_len = conf->consume_stream(&ptr, 0, f);
+	if (read_len < 0 || (read_len == 0 && !feof(f))) {
+		print_error("Error reading input.\n");
+		if (read_len < 0 && !ferror(f)) res = GT_INVALID_FORMAT;
+		else res = GT_IO_ERROR;
+		goto cleanup;
+	}
+	len = read_len;
 
 	if (conf->auto_hdr) {
 		size_t i;
 		for (i = 0; i < conf->desc.magics_len; i++) {
 			size_t hdr_len = conf->desc.magics[i].len;
-			if (hdr_len < len && !memcmp(conf->desc.magics[i].val, buf, hdr_len)) {
+			if (hdr_len < len && !memcmp(conf->desc.magics[i].val, ptr, hdr_len)) {
 				pMagic = conf->desc.magics + i;
 				break;
 			}
@@ -426,42 +476,54 @@ static int read_from(FILE *f, struct conf_st *conf) {
 		if (conf->pretty_key && pMagic != NULL) {
 			printf("%s: ", pMagic->desc);
 		}
-		print_raw_data(buf, hdr_len, 0, false, conf);
+		print_raw_data(ptr, hdr_len, 0, false, conf);
 
 		len -= hdr_len;
-		/* Shift the contents. */
-		memmove(buf, buf + hdr_len, len);
+		off += hdr_len;
 	}
 
-	while (len > 0) {
+	while (1) {
 		size_t consumed;
 
-		res = GT_FTLV_memRead(buf, len, &t);
+		/* Try to read the next TLV. */
+		res = GT_FTLV_memRead(ptr + off, len - off, &t);
 		consumed = t.hdr_len + t.dat_len;
-		if (res != GT_OK) {
-			if (consumed == 0) {
-				if (feof(f)) break;
-				continue;
+		t.off = global_off + off;
+
+		if (((res != GT_OK) || (len - off < 2) || ((res == GT_OK) && (consumed > len - off))) && off != 0) {
+			/* We have reached the end of the buffer, we need to shift. */
+			read_len = conf->consume_stream(&ptr, off, f);
+			if (read_len < 0 || (read_len == 0 && !feof(f))) {
+				print_error("Error reading input.\n");
+				if (read_len < 0 && !ferror(f)) res = GT_INVALID_FORMAT;
+				else res = GT_IO_ERROR;
+				goto cleanup;
 			}
-			fprintf(stderr, "%s: Failed to parse %llu bytes.\n", conf->file_name, (unsigned long long) len);
-			res = GT_INVALID_FORMAT;
+			len = read_len;
+			global_off += off;
+			off = 0;
+
+			continue;
+		}
+
+		/* If the code did not enter the previous block, exit if there's nothing left to do. */
+		if (len == off) {
+			break;
+		}
+
+		if (res != GT_OK || consumed > len - off) {
+			print_error("%s: Failed to parse %llu bytes.\n", conf->file_name, (unsigned long long) len - off);
+			res = GT_PARSER_ERROR;
 			goto cleanup;
 		}
 
-		t.off = off;
-
-		printTlv(buf, len, &t, 0, conf, NULL);
+		printTlv(ptr + off, len - off, &t, 0, conf, NULL);
 		off += consumed;
-
-		len -= consumed;
-		memmove(buf, buf + consumed, len);
 	}
 
 	res = GT_OK;
 
 cleanup:
-
-	free(buf);
 
 	return res;
 }
@@ -472,7 +534,7 @@ static int read_desc_dir(struct desc_st *desc, const char *dir_name, bool overri
 	ENTITY *ent;
 
 	if (DIRECTORY_open(dir_name, &dir) != DIR_OK) {
-		fprintf(stderr, "%s:Unable to access description directory.\n", dir_name);
+		print_error("%s: Unable to access description directory.\n", dir_name);
 		res = GT_IO_ERROR;
 		goto cleanup;
 	}
@@ -491,7 +553,7 @@ static int read_desc_dir(struct desc_st *desc, const char *dir_name, bool overri
 
 			res = desc_add_file(desc, buf, override);
 			if (res != GT_OK) {
-				fprintf(stderr, "%s/%s: Unable to read description file.\n", dir_name, name);
+				print_error("%s/%s: Unable to read description file.\n", dir_name, name);
 			}
 		}
 	}
@@ -517,7 +579,7 @@ static void initDefaultDescriptionFileDir(char *arg0) {
 		char buf[PATH_SIZE];
 
 		if (DIRECTORY_getMyPath(buf, sizeof(buf), arg0) != GT_OK) {
-			fprintf(stderr, "Unable to get path to gttlvdump.\n");
+			print_error("Unable to get path to gttlvdump.\n");
 		}
 		setDescriptionFileDir(buf);
 	}
@@ -529,29 +591,29 @@ static int loadDescriptions(struct desc_st *desc, const char *path, bool overrid
 	/* Read user description files. */
 	res = read_desc_dir(desc, path, override);
 	if (res != GT_OK) {
-		fprintf(stderr, "Unable to load descriptions from '%s'.\n", path);
+		print_error("Unable to load descriptions from '%s'.\n", path);
 	}
 
 	return res;
 }
 
 static int getOptionDecValue(char opt, char *arg, size_t *val, char *excstr, size_t excval) {
-	int res = GT_INVALID_ARGUMENT;
+	int res = GT_INVALID_CMD_PARAM;
 	char *endptr = NULL;
 	long int li = strtol(arg, &endptr, 10);
 	size_t tmp = 0;
 
 	if (errno == ERANGE) {
-		fprintf(stderr, "Option %c is out of range.\n", opt);
+		print_error("Option %c is out of range.\n", opt);
 		goto cleanup;
 	} else if (li < 0) {
-		fprintf(stderr, "Option %c cannot be negative.\n", opt);
+		print_error("Option %c cannot be negative.\n", opt);
 		goto cleanup;
 	} else if (li == 0 && endptr != NULL && *endptr != '\0') {
 		if (excstr && strcmp(endptr, excstr) == 0) {
 			tmp = excval;
 		} else {
-			fprintf(stderr, "Option %c must be a decimal integer.\n", opt);
+			print_error("Option %c must be a decimal integer.\n", opt);
 			goto cleanup;
 		}
 	} else {
@@ -572,7 +634,12 @@ int main(int argc, char **argv) {
 	bool desc_loaded = false;
 	char *usr_desc_path = NULL;
 
+	/* Change the output and cache mode. */
+	setvbuf(stdout, NULL, _IOFBF, 0xffff);
+
 	memset(&conf, 0, sizeof(conf));
+
+	conf.consume_stream = GT_consume_raw;
 
 	/* Set the auto header value to true. */
 	conf.auto_hdr = true;
@@ -629,20 +696,28 @@ int main(int argc, char **argv) {
 			case 'e': {
 				conf.out_enc = GT_ParseEncoding(optarg);
 				if (conf.out_enc == GT_BASE_NA) {
-					fprintf(stderr, "Unknown encoding '%s', defaulting to 'hex'.\n", optarg);
+					print_error("Unknown encoding '%s', defaulting to 'hex'.\n", optarg);
 					conf.out_enc = GT_BASE_16;
 				}
 				break;
 			}
-			case 'E': {
-				conf.in_enc = GT_ParseEncoding(optarg);
-				if (conf.in_enc == GT_BASE_NA) {
-					fprintf(stderr, "Unknown input data encoding: '%s'\n", optarg);
-					res = GT_INVALID_CMD_PARAM;
-					goto cleanup;
+			case 'E':
+				switch(conf.in_enc = GT_ParseEncoding(optarg)) {
+					case GT_BASE_2:
+						conf.consume_stream = GT_consume_raw;
+						break;
+					case GT_BASE_16:
+						conf.consume_stream = GT_consume_hex;
+						break;
+					case GT_BASE_64:
+						conf.consume_stream = GT_consume_b64;
+						break;
+					default:
+						print_error("Unknown input data encoding: '%s'\n", optarg);
+						res = GT_INVALID_CMD_PARAM;
+						goto cleanup;
 				}
 				break;
-			}
 			case 'D':
 				usr_desc_path = calloc(PATH_SIZE, sizeof(char));
 				if (!usr_desc_path) {
@@ -691,7 +766,7 @@ int main(int argc, char **argv) {
 				goto cleanup;
 				break;
 			default:
-				fprintf(stderr, "Unknown parameter, try -h.\n");
+				print_error("Unknown parameter, try -h.\n");
 				res = GT_INVALID_CMD_PARAM;
 				goto cleanup;
 		}
@@ -724,13 +799,13 @@ int main(int argc, char **argv) {
 	} else {
 		int i;
 
-		/* Loop over all the inputfiles. */
+		/* Loop over all the input files. */
 		for (i = 0; optind + i < argc; i++) {
 			conf.file_name = argv[optind + i];
 
 			input = fopen(conf.file_name, "rb");
 			if (input == NULL) {
-				fprintf(stderr, "%s: Unable to open file.\n", argv[optind + i]);
+				print_error("%s: Unable to open file.\n", argv[optind + i]);
 				res = GT_IO_ERROR;
 				goto cleanup;
 			}
@@ -744,9 +819,11 @@ int main(int argc, char **argv) {
 
 cleanup:
 
+	fflush(stdout);
+
 	if (input != NULL) fclose(input);
 	if (desc_loaded) desc_cleanup(&conf.desc);
 	if (usr_desc_path) free(usr_desc_path);
 
-	return res;
+	return tlvutil_ErrToExitcode(res);
 }

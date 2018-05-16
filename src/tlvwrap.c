@@ -27,8 +27,8 @@ int encode(struct conf_st *conf, FILE *in, FILE *out) {
 	if ((res = GT_fread(conf->in_enc, &buf, &len, in)) != GT_OK) goto cleanup;
 
 	if (len >> 8 > UCHAR_MAX) {
-		res = GT_INVALID_ARGUMENT;
-		fprintf(stderr, "Len is too great: '%llu'.\n", (unsigned long long)len);
+		res = GT_INVALID_FORMAT;
+		fprintf(stderr, "The size of the TLV payload is too great: '%llu'.\n", (unsigned long long)len);
 		goto cleanup;
 	}
 
@@ -40,17 +40,23 @@ int encode(struct conf_st *conf, FILE *in, FILE *out) {
 		*(hdr + 3) = len & 0xff;
 		if (fwrite(hdr, 1, 4, out) != 4) {
 			fprintf(stderr, "Failed to write to stream.");
+			res = GT_IO_ERROR;
+			goto cleanup;
 		}
 	} else {
 		*hdr = (conf->non_critical * GT_TLV_MASK_NON_CRITICAL) | (conf->forward * GT_TLV_MASK_FORWARD) | (conf->type);
 		*(hdr + 1) = len & 0xff;
 		if (fwrite(hdr, 1, 2, out) != 2) {
 			fprintf(stderr, "Failed to write to stream.");
+			res = GT_IO_ERROR;
+			goto cleanup;
 		}
 	}
 
 	if (fwrite(buf, 1, len, out) != len) {
 		fprintf(stderr, "Failed to write to stream.");
+		res = GT_IO_ERROR;
+		goto cleanup;
 	}
 
 	res = GT_OK;
@@ -107,12 +113,12 @@ int main(int argc, char **argv) {
 					conf.type = strtol(optarg, &tail, 16);
 					if (*tail != 0) {
 						fprintf(stderr, "Bad tag value: '%s'.", optarg);
-						res = GT_INVALID_FORMAT;
+						res = GT_INVALID_CMD_PARAM;
 						goto cleanup;
 					}
 					if (conf.type <= 0 || conf.type > 0x1fff) {
 						fprintf(stderr, "Tag value out of range.");
-						res = GT_INVALID_FORMAT;
+						res = GT_INVALID_CMD_PARAM;
 						goto cleanup;
 					}
 				}
@@ -158,7 +164,7 @@ int main(int argc, char **argv) {
 
 	if (conf.type < 0) {
 		fprintf(stderr, "Tlv tag (-t) must be specified.\n");
-		res = GT_INVALID_FORMAT;
+		res = GT_INVALID_CMD_PARAM;
 		goto cleanup;
 	}
 
@@ -186,5 +192,5 @@ cleanup:
 	if (out != NULL && out != stdout) fclose(out);
 	free(conf.in_file);
 
-	return res;
+	return tlvutil_ErrToExitcode(res);
 }

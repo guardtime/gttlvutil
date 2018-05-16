@@ -15,9 +15,13 @@
 static int grepFile(GT_GrepTlvConf *conf, FILE *f) {
 	int res = GT_OK;
 	GT_FTLV t;
-	unsigned char *buf = NULL;
 	GT_ElementCounter *idx = NULL;
 	size_t len = 0;
+	size_t off = 0;
+
+	long read_len;
+	unsigned char *ptr = NULL;
+	size_t global_off = 0;
 
 	idx = calloc(sizeof(GT_ElementCounter), 1);
 	if (idx == NULL) {
@@ -25,36 +29,58 @@ static int grepFile(GT_GrepTlvConf *conf, FILE *f) {
 		goto cleanup;
 	}
 
-	if ((res = GT_fread(conf->in_enc, &buf, &len, f)) != GT_OK) goto cleanup;
+	read_len = conf->consume_stream(&ptr, 0, f);
+	if (read_len < 0 || (read_len == 0 && !feof(f))) {
+		res = GT_IO_ERROR;
+		goto cleanup;
+	}
+	len = read_len;
 
 	/* Handle binary TLV data. */
-	while (len) {
+	while (1) {
 		size_t consumed;
 
-		res = GT_FTLV_memRead(buf, len, &t);
+		/* Try to read the next TLV. */
+		res = GT_FTLV_memRead(ptr + off, len - off, &t);
 		consumed = t.hdr_len + t.dat_len;
-		len -= consumed;
-		if (res != GT_OK) {
-			if (consumed == 0) {
-				if (len == 0) break;
-				continue;
+		t.off = global_off + off;
+
+		if (((res != GT_OK) || (len - off < 2) || ((res == GT_OK) && (consumed > len - off))) && off != 0) {
+			/* We have reached the end of the buffer, we need to shift. */
+			read_len = conf->consume_stream(&ptr, off, f);
+			if (read_len < 0 || (read_len == 0 && !feof(f))) {
+				print_error("Error reading input.\n");
+				res = GT_IO_ERROR;
+				goto cleanup;
 			}
-			fprintf(stderr, "%s: Failed to parse %llu bytes.\n", conf->file_name, (unsigned long long) len);
-			res = GT_INVALID_FORMAT;
+			len = read_len;
+			global_off += off;
+			off = 0;
+
+			continue;
+		}
+
+		/* If the code did not enter the previous block, exit if there's nothing left to do. */
+		if (len == off) {
+			break;
+		}
+
+		if (res != GT_OK || consumed > len - off) {
+			print_error("%s: Failed to parse %llu bytes.\n", conf->file_name, (unsigned long long) len - off);
+			res = GT_PARSER_ERROR;
 			goto cleanup;
 		}
 
-		res = GT_grepTlv(conf, conf->pattern, NULL, idx, buf, &t, NULL, NULL);
+		res = GT_grepTlv(conf, conf->pattern, NULL, idx, ptr + off, &t, NULL, NULL);
 		if (res != GT_OK) goto cleanup;
 
-		memmove(buf, buf + consumed, len);
+		off += consumed;
 	}
 
 	res = GT_OK;
 
 cleanup:
 
-	free(buf);
 	free(idx);
 
 	return res;
@@ -97,6 +123,8 @@ int main(int argc, char **argv) {
 
 	/* Default conf. */
 	GT_GrepTlv_initConf(&conf);
+	conf.consume_stream = GT_consume_raw;
+	conf.pattern = NULL;
 
 	if (argc < 2) {
 		printHelp(stderr);
@@ -127,11 +155,20 @@ int main(int argc, char **argv) {
 				conf.print_path_index = true;
 				break;
 			case 'E':
-				conf.in_enc = GT_ParseEncoding(optarg);
-				if (conf.in_enc == GT_BASE_NA) {
-					fprintf(stderr, "Unknown input data encoding: '%s'\n", optarg);
-					res = GT_INVALID_CMD_PARAM;
-					goto cleanup;
+				switch(conf.in_enc = GT_ParseEncoding(optarg)) {
+					case GT_BASE_2:
+						conf.consume_stream = GT_consume_raw;
+						break;
+					case GT_BASE_16:
+						conf.consume_stream = GT_consume_hex;
+						break;
+					case GT_BASE_64:
+						conf.consume_stream = GT_consume_b64;
+						break;
+					default:
+						print_error("Unknown input data encoding: '%s'\n", optarg);
+						res = GT_INVALID_CMD_PARAM;
+						goto cleanup;
 				}
 				break;
 			case 'h':
@@ -151,6 +188,10 @@ int main(int argc, char **argv) {
 
 	if (optind >= argc) {
 		fprintf(stderr, "Error: no pattern provided!\n");
+		res = GT_INVALID_CMD_PARAM;
+		goto cleanup;
+	} else if (*(argv[optind]) == '\0') {
+		fprintf(stderr, "Invalid pattern: the pattern must not be empty.\n");
 		res = GT_INVALID_CMD_PARAM;
 		goto cleanup;
 	}
@@ -199,5 +240,5 @@ cleanup:
 
 	if (f != NULL && f != stdin) fclose(f);
 
-	return res;
+	return tlvutil_ErrToExitcode(res);
 }

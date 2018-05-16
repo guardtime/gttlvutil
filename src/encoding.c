@@ -102,7 +102,7 @@ int GT_Base64_decode(const char *encoded, unsigned char *raw, size_t *raw_len) {
 		} while (r < outLen && *p);
 
 		if (r != outLen) {
-			res = GT_PARSER_ERROR;
+			res = GT_INVALID_FORMAT;
 			goto cleanup;
 		}
 	}
@@ -175,7 +175,7 @@ int GT_Base16_decode(const char *encoded, unsigned char *raw, size_t *raw_len) {
 		}
 
 		if (i != outLen) {
-			res = GT_PARSER_ERROR;
+			res = GT_INVALID_FORMAT;
 			goto cleanup;
 		}
 	}
@@ -216,6 +216,7 @@ static const encoding_map enc_map[] = {
 	{ "base16",	GT_BASE_16 },
 	{ "64",		GT_BASE_64 },
 	{ "base64", GT_BASE_64 },
+	{ "b64",	GT_BASE_64 },
 	{ NULL,     GT_BASE_NA }
 };
 

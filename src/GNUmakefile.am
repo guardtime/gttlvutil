@@ -27,6 +27,7 @@ endif #USE_DATA_DIR
 gttlvdump_SOURCES=\
 	tlvdump.c \
 	common.h \
+	common.c \
 	fast_tlv.h \
 	fast_tlv.c \
 	desc.h \
@@ -43,6 +44,7 @@ gttlvdump_SOURCES=\
 gttlvwrap_SOURCES=\
 	tlvwrap.c \
 	common.h \
+	common.c \
 	encoding.c \
 	encoding.h \
 	file_io.c \
@@ -51,6 +53,7 @@ gttlvwrap_SOURCES=\
 gttlvgrep_SOURCES=\
 	tlvgrep.c \
 	common.h \
+	common.c \
 	fast_tlv.h \
 	fast_tlv.c \
 	grep_tlv.h \
@@ -65,6 +68,7 @@ gttlvgrep_SOURCES=\
 gttlvundump_SOURCES=\
 	tlvundump.c \
 	common.h \
+	common.c \
 	fast_tlv.h \
 	fast_tlv.c \
 	hash.h \

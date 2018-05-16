@@ -5,6 +5,7 @@
 
 #include "common.h"
 #include "fast_tlv.h"
+#include "file_io.h"
 
 struct pattern_st {
 	bool match_tag;
@@ -75,7 +76,7 @@ int GT_GrepPattern_parse(const char *in, struct pattern_st **out) {
 
 	if (*in == '\0') {
 		fprintf(stderr, "Invalid pattern: the pattern must not be empty.\n");
-		res = GT_INVALID_CMD_PARAM;
+		res = GT_INVALID_ARGUMENT;
 		goto cleanup;
 	}
 
@@ -166,7 +167,7 @@ int GT_GrepPattern_parse(const char *in, struct pattern_st **out) {
 
 			case MODE_ERROR:
 				fprintf(stderr, "Invalid pattern '%s': unexpected character '%c'\n", in, *p);
-				res = GT_INVALID_CMD_PARAM;
+				res = GT_INVALID_FORMAT;
 				goto cleanup;
 		}
 	}
@@ -199,6 +200,7 @@ void GT_GrepTlv_initConf(GT_GrepTlvConf *conf) {
 	conf->print_tlv_hdr_only = false;
 	conf->pattern = NULL;
 	conf->in_enc = GT_BASE_2;
+	conf->consume_stream = NULL;
 }
 
 int GT_grepTlv(GT_GrepTlvConf *conf, struct pattern_st *pattern, char *prefix, GT_ElementCounter *map, unsigned char *buf, GT_FTLV *t, unsigned char *raw, size_t *rlen) {
@@ -294,7 +296,7 @@ int GT_grepTlv(GT_GrepTlvConf *conf, struct pattern_st *pattern, char *prefix, G
 
 			while (len > 0) {
 				res = GT_FTLV_memRead(ptr, len, &n);
-				if (res != GT_OK) break;
+				if (res != GT_OK || len < n.hdr_len + n.dat_len) break;
 
 				res = GT_grepTlv(conf, pt->match, pre, idx_map, ptr, &n, raw, rlen);
 				if (res != GT_OK) goto cleanup;

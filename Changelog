@@ -1,3 +1,22 @@
+Version 1.3
+
+2018-05-16 1.3.505
+
+* IMPROVEMENT: Added --with-openssl flag to configure.
+* IMPROVEMENT: Added support for OpenSSL 1.1.
+* IMPROVEMENT: Debian packaging implemented.
+* IMPROVEMENT: Redhat packaging files moved to 'packaging/redhat'.
+* IMPROVEMENT: Corrected alignment when using '-y' flag.
+* IMPROVEMENT: Optimized gttlvgrep for large TLV files.
+* IMPROVEMENT: Optimized gttlvdump for large TLV files.
+* IMPROVEMENT: Added "b64" as an alias to "base64".
+* IMPROVEMENT: Internal error handling refactored.
+* IMPROVEMENT: Exit codes refactored and documented.
+* BUGFIX: Fixed rebuild.sh default behaviour.
+* BUGFIX: Fixed input data intake in gttlvdump and gttlvgrep, where data pointer is moved instead of copying.
+* BUGFIX: Fixed gttlvdump input data empty buffer handling.
+* BUGFIX: Memory leak in gttlvundump fixed.
+
 Versioning 1.2
 
 2017-05-12 1.2.414

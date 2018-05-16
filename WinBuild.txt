@@ -1,27 +1,27 @@
 Building with Microsoft Visual Studio
 =====================================
 
-    This document describes how to build gttlvutils using
+    This document describes how to build gttlvutil using
     Microsoft Visual Studio tools and different libraries.
 
 
 Prerequisites
 =====================================
 
-    To be able to build gttlvutils one must have the following software pieces:
+    To be able to build gttlvutil one must have the following software pieces:
 
         1) Microsoft Visual Studio 10 or Windows SDK 7.1 for building tools.
         2) Cryptography provider. Following are supported:
-            2.1) OpenSSL (recommended). Preffered version 0.9.8g.
+            2.1) OpenSSL (recommended). Preferred version 0.9.8g.
             2.2) Windows native CryptoAPI.
         3) WiX Toolset 3.9 for installer build.
 
-    Given versions are the same used in testing. It is strongly recommended
+    Given versions are used in testing. It is strongly recommended
     to use exactly the same versions.
 
     Windows native libraries are already installed with Windows, but when using
     OpenSSL the location of library must be specified. See makefile option OPENSSL_DIR.
-    
+
     The structure of the OpenSSL directory must be as follows:
 
       dll
@@ -30,18 +30,18 @@ Prerequisites
       lib
 
 
-Build process
+Build Process
 =====================================
 
-    Below is the abstract structure of the project that describes the location
+    Below is the abstract structure of the project, describing the location
     of the documentation, source code, makefiles and output. Root directory
-    contains top-level build scripts that are used to build gttlvutils. After
+    contains top-level build scripts that are used to build gttlvutil. After
     successful build obj and bin directories are created. Obj directory contains
     compiled obj files. Out directory contains executable and if built the msi
     installer file.
 
-    WinBuild32.bat and WinBuild64.bat are default build script for corresponding
-    envirounment. They are using Windows native CryptoAPI as cryptography provider.
+    WinBuild32.bat and WinBuild64.bat are default build scripts for corresponding
+    environment. They use Windows native CryptoAPI as cryptography provider.
 
     Top level build scripts:
 
@@ -49,7 +49,7 @@ Build process
       WinBuild64.bat
       makefile
 
-    Documentation and source code for gttlvutils:
+    Documentation and source code for gttlvutil:
 
       doc
         | *.pdf
@@ -67,17 +67,17 @@ Build process
         |*.msi
 
 
-Configuring build scripts
+Configuring Build Scripts
 =====================================
 
-    For building process, above described top-level makefile, or default 
+    For building process the above described top-level makefile or default
     version of build script must be called. For more sophisticated build
-    configuration the default build scripts must be modified. See the options 
-    of makefile and examples in the end of this document to learn how to 
+    configuration the default build scripts must be modified. See the options
+    of makefile and examples at the end of this document to learn how to
     configure it according to your needs.
 
     Makefile can be executed via CMD shell or Visual Studio command prompt
-    shell. When using CMD shell environment must be configured using setenv
+    shell. When using CMD shell the environment must be configured using setenv
     command. For example setenv /x64 configures the build environment for
     64-bit build. Makefile option INSTALL_MACHINE does not change the build
     environment and is only used to configure the installer build.
@@ -115,14 +115,14 @@ Configuring build scripts
 Examples
 =====================================
 
-    1) Build gttlvutils with Windows native CryptoAPI
+    1) Build gttlvutil with Windows native CryptoAPI:
         nmake HASH_PROVIDER=CRYPTOAPI
 
-    2) Build gttlvutils with OpenSSL
+    2) Build gttlvutil with OpenSSL:
         nmake HASH_PROVIDER=OPENSSL OPENSSL_DIR="C:\OpenSSL"
 
-    3) Build gttlvutils using MTd RTL and OpenSSL
+    3) Build gttlvutil using MTd RTL and OpenSSL:
         nmake HASH_PROVIDER=OPENSSL OPENSSL_DIR="C:\OpenSSL" RTL=MTd
 
-    4) Build gttlvutils installer for 64bit OS with Windows native CryptoAPI:
+    4) Build gttlvutil installer for 64bit OS with Windows native CryptoAPI:
         nmake HASH_PROVIDER=CRYPTOAPI INSTALL_MACHINE=64 installer
