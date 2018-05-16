@@ -73,9 +73,9 @@ To build the `gttlvutil`, a cryptography provider has to be installed in the sys
 * OpenSSL (recommended)
 * Windows native CryptoAPI
 
-Use `rebuild-rpm.sh` script to build an RPM installation package on CentOS/RHEL.
+Use `rebuild-rpm.sh` script to build an RPM installation package on CentOS / RHEL.
 
-Use `rebuild-deb.sh` script to build an DEB installation package on Debian/Ubuntu.
+Use `rebuild-deb.sh` script to build an DEB installation package on Debian / Ubuntu.
 
 See `WinBuild.txt` to read how to build `gttlvutil` on Windows.
 
