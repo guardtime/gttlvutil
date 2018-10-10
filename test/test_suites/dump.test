@@ -368,9 +368,8 @@ TESTCASE: {GTTLVDUMP} -H auto test/resources/pub/ksi-publications.bin
 # Try to dump garbage.
 
 TESTCASE: echo "123456" | xxd -r -p | {GTTLVDUMP}
->>>
->>>2
-(null): Failed to parse 3 bytes.
+>>> /### UNABLE TO PARSE 3 BYTES! ###
+123456/
 >>>= 4
 
 ###############################################################################
