@@ -1,3 +1,7 @@
+Version 1.4
+
+* FEATURE: When there are trailing unparsable bytes, gttlvdump will print them out.
+
 Version 1.3
 
 2018-05-16 1.3.505

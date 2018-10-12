@@ -512,7 +512,8 @@ static int read_from(FILE *f, struct conf_st *conf) {
 		}
 
 		if (res != GT_OK || consumed > len - off) {
-			print_error("%s: Failed to parse %llu bytes.\n", conf->file_name, (unsigned long long) len - off);
+			printf("### UNABLE TO PARSE %lu BYTES! ###\n", len - off);
+			print_raw_data(ptr + off, len - off, 0, false, conf);
 			res = GT_PARSER_ERROR;
 			goto cleanup;
 		}
@@ -726,7 +727,6 @@ int main(int argc, char **argv) {
 				}
 				strcpy(usr_desc_path, optarg);
 				break;
-
 			case 'h':
 				printf("Usage:\n"
 						"  gttlvdump [-h] [-v] [options] tlvfile\n"
@@ -750,7 +750,7 @@ int main(int argc, char **argv) {
 						"    -e enc   Output format of binary value. Available: 'hex', 'base64'.\n"
 						"    -E enc   Input data encoding. Available: 'bin', 'hex', 'base64'.\n"
 						"    -D <pth> Set TLV description files directory.\n"
-						"    -v       Print TLV utility version..\n"
+						"    -v       Print TLV utility version.\n"
 						"\n"
 						"Default description files directory:\n"
 						"  %s\n"
