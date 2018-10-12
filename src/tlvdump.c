@@ -512,7 +512,6 @@ static int read_from(FILE *f, struct conf_st *conf) {
 		}
 
 		if (res != GT_OK || consumed > len - off) {
-			//print_error("%s: Failed to parse %llu bytes.\n", conf->file_name, (unsigned long long) len - off);
 			printf("### UNABLE TO PARSE %lu BYTES! ###\n", len - off);
 			print_raw_data(ptr + off, len - off, 0, false, conf);
 			res = GT_PARSER_ERROR;
