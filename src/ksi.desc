@@ -3,7 +3,7 @@
 0502			*			Forest
 0502.01			INT 		Forest round
 0502.02			*			Forest item
-0502.02.01		INT			Forest indx
+0502.02.01		INT			Forest index
 0502.02.02		IMPRINT		Forest hash
 0502.07			RAW			crc8
 
@@ -191,7 +191,7 @@
 0202.10.02		INT			Aggregation algorithm
 0202.10.03		INT			Aggregation period
 0202.10.04		STR			Parent URI
-0202.11			*			Request acknowledgement
+0202.11			*			Request acknowledgment
 0202.11.01		INT			Aggregation period
 0202.11.02		INT			Aggregation delay
 
