@@ -1,8 +1,9 @@
-* BUGFIX: Some typos fixed in description files.
-
 Version 1.4
 
+2019-01-23 1.4.513
+
 * FEATURE: When there are trailing unparsable bytes, gttlvdump will print them out.
+* BUGFIX: Some typos fixed in description files.
 
 Version 1.3
 
