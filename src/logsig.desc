@@ -25,7 +25,7 @@
 0907.03.01	INT			Level correction value
 0907.03.02	IMPRINT		Sibling hash value
 0911		*			Header record of the log meta record
-0911.01		INT			Meta reocrd index
+0911.01		INT			Meta record index
 0911.02		*			Meta record pair
 0911.02.01	STR			Meta-data key
 0911.02.02	RAW			Meta-data value
