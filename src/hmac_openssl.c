@@ -26,6 +26,30 @@
 #include <string.h>
 #include <stdio.h>
 #include <openssl/evp.h>
+#include <openssl/opensslv.h>
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+#	include <openssl/provider.h>
+#endif
+
+
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+	static OSSL_PROVIDER *_legacy = NULL;
+	static OSSL_PROVIDER *_default = NULL;
+
+	void GT_Hmac_Setup(void) {
+		_default = OSSL_PROVIDER_load(NULL, "default"); // To support ripemd160.
+		_legacy = OSSL_PROVIDER_load(NULL, "legacy"); // To support ripemd160.
+	}
+
+	void GT_Hmac_Cleanup(void) {
+		OSSL_PROVIDER_unload(_legacy);
+		OSSL_PROVIDER_unload(_default);
+	}
+#else
+	void GT_Hmac_Setup(void) {return;}
+	void GT_Hmac_Cleanup(void) {return;}
+#endif
+
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
 #  define EVP_MD_CTX_create_() EVP_MD_CTX_create()

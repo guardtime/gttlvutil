@@ -200,4 +200,7 @@ cleanup:
 	return res;
 }
 
+void GT_Hmac_Setup(void) {return;}
+void GT_Hmac_Cleanup(void) {return;}
+
 #endif /*CRYPTO_IMPL*/
