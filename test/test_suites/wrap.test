@@ -100,10 +100,10 @@ TESTUTIL: diff test/resources/tlv/ok_aggr_err_response-1.tlv {TEST_DIR}/wrap_ok_
 >>>= 0
 
 ###############################################################################
-# Wrap tlvutil package varsion number around a dummy tag.
-# Note: For compatibility only exit code is compared.
+# Wrap file content inside tlv 0x123.
 
-TESTCASE: {GTTLVWRAP} -t 0123 -i VERSION | grep -E "([0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,4})$"
+TESTCASE: {GTTLVWRAP} -t 0123 -i test/resources/bin/data | xxd -p
+>>> /(8123000454455354)/
 >>>= 0
 
 ###############################################################################

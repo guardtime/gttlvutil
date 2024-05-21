@@ -37,7 +37,6 @@
 	static OSSL_PROVIDER *_default = NULL;
 
 	void GT_Hmac_Setup(void) {
-//		OPENSSL_init_crypto(OPENSSL_INIT_ADD_ALL_DIGESTS, NULL);
 		_default = OSSL_PROVIDER_load(NULL, "default"); // To support ripemd160.
 		_legacy = OSSL_PROVIDER_load(NULL, "legacy"); // To support ripemd160.
 	}
@@ -45,7 +44,6 @@
 	void GT_Hmac_Cleanup(void) {
 		OSSL_PROVIDER_unload(_legacy);
 		OSSL_PROVIDER_unload(_default);
-//		OPENSSL_cleanup();
 	}
 #else
 	void GT_Hmac_Setup(void) {return;}
