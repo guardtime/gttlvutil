@@ -901,6 +901,8 @@ int main(int argc, char **argv) {
 	FILE *f = NULL;
 	int c;
 
+	GT_Hmac_Setup();
+
 	while ((c = getopt(argc, argv, "hv")) != -1) {
 		switch(c) {
 			case 'h':
@@ -1007,6 +1009,8 @@ int main(int argc, char **argv) {
 	res = GT_OK;
 cleanup:
 	if (f != NULL && f != stdin) fclose(f);
+
+	GT_Hmac_Cleanup();
 
 	return tlvutil_ErrToExitcode(res);
 }
