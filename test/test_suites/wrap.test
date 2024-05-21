@@ -104,7 +104,6 @@ TESTUTIL: diff test/resources/tlv/ok_aggr_err_response-1.tlv {TEST_DIR}/wrap_ok_
 # Note: For compatibility only exit code is compared.
 
 TESTCASE: {GTTLVWRAP} -t 0123 -i VERSION | grep -E "([0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,4})$"
->>>
 >>>= 0
 
 ###############################################################################
