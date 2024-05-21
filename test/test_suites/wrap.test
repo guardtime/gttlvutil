@@ -101,6 +101,7 @@ TESTUTIL: diff test/resources/tlv/ok_aggr_err_response-1.tlv {TEST_DIR}/wrap_ok_
 
 ###############################################################################
 # Wrap tlvutil package varsion number around a dummy tag.
+# Note: For compatibility only exit code is compared.
 
 TESTCASE: {GTTLVWRAP} -t 0123 -i VERSION | grep -E "([0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,4})$"
 >>>
